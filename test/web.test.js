@@ -91,6 +91,10 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /\/xtgl\/comm_cxJcsjList\.html\?lxdm=0036/);
   assert.match(app, /selection\.choose/);
   assert.match(app, /selection\.drop/);
+  assert.match(app, /formatDropRestriction/);
+  assert.match(app, /dropRestriction/);
+  assert.match(app, /chosen-state/);
+  assert.match(app, /sfxkbj=0/);
   assert.match(app, /selection\.reorder/);
   assert.match(app, /draggable = true/);
   assert.match(app, /dragstart/);
@@ -109,6 +113,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /schedule-grid/);
   assert.match(css, /course-ownership-value/);
   assert.match(css, /schedule-course/);
+  assert.match(css, /\.chosen-state/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
   assert.match(css, /\.catalog-pane,\s*\.detail-pane,\s*\.chosen-pane\s*\{[^}]*height:\s*100vh/s);
@@ -173,7 +178,8 @@ test('selected-course export separates current selection details without Map fie
     weight: 2,
     selectedBySystem: true,
     selfSelected: false,
-    canDrop: true,
+    canDrop: false,
+    dropRestriction: { code: 'SELECT_FLAG_DISABLED', message: 'sfxkbj=0' },
     credit: 3,
     teachers: [{ id: 'T1', name: '李老师', title: '教授', raw: 'T1/李老师/教授' }],
     scheduleText: '星期一第1-2节{1-16周}',
@@ -218,7 +224,8 @@ test('selected-course export separates current selection details without Map fie
   assert.equal(exportData.已选课程[0].课程名称, '数据库');
   assert.equal(exportData.已选课程[0].教学班[0].志愿顺序, 1);
   assert.equal(exportData.已选教学班[0].教师[0].姓名, '李老师');
-  assert.equal(exportData.已选教学班[0].标志.是否可退, true);
+  assert.equal(exportData.已选教学班[0].标志.是否可退, false);
+  assert.deepEqual(exportData.已选教学班[0].标志.不可退原因, { code: 'SELECT_FLAG_DISABLED', message: 'sfxkbj=0' });
   assert.equal(exportData.已选教学班[0].额外原始字段.extra_selected_field, 'keep');
   assert.doesNotMatch(JSON.stringify(exportData), /"byClassId"|"byCourseId"|"jxb_id"|"do_jxb_id"|"t_kch_id"|"jsxx"/);
 });

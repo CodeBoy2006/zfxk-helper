@@ -237,3 +237,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and confirm the three lists use the full available column height without changing card styling.
 - **Context:** Narrow layouts still use viewport-relative list caps so stacked columns do not become unbounded.
+
+## [2026-06-29 21:01] Selected-Course Drop Eligibility
+- **Changes:** Matched selected-course `canDrop` to the original ZZXK page predicate, added structured `dropRestriction`, rendered non-droppable Web rows as `已选`, exported drop restrictions, and regenerated API docs.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend with a live session and confirm non-droppable selected courses show `已选` while droppable rows still show `退选`.
+- **Context:** Read-only live inspection showed the screenshot difference is caused by row-level `sfxkbj`: rows with `sfxkbj=0` are hidden behind `已选`; the droppable `嵌入式系统` row had `sfxkbj=1`.

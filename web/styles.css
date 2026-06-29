@@ -741,6 +741,12 @@ textarea {
   color: var(--danger);
 }
 
+.chosen-state {
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 900;
+}
+
 .class-actions,
 .chosen-actions {
   display: grid;

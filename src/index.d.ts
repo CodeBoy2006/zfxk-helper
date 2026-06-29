@@ -95,6 +95,10 @@ export interface SelectedClass {
   selectedBySystem: boolean;
   selfSelected: boolean;
   canDrop: boolean;
+  dropRestriction?: {
+    code: string;
+    message: string;
+  };
   credit?: number;
   teachers?: Teacher[];
   scheduleText?: string;

@@ -385,13 +385,19 @@ async function chooseClass(teachingClass) {
 }
 
 async function dropClass(selection) {
+  if (!selection.canDrop) {
+    log(`${selection.name} 不可退选：${formatDropRestriction(selection.dropRestriction)}`);
+    return;
+  }
   if (!window.confirm(`确认退选 ${selection.name}？`)) return;
   await runTask('提交退课', async () => {
     const result = await state.client.selection.drop(
       {
         courseId: selection.courseId,
         classId: selection.classId,
-        submitClassId: selection.submitClassId
+        submitClassId: selection.submitClassId,
+        canDrop: selection.canDrop,
+        dropRestriction: selection.dropRestriction
       },
       {
         confirm: async (event) => window.confirm(event.message || '确认退课？'),
@@ -623,6 +629,7 @@ function renderChosen() {
             <div class="class-card-badges">
               <span class="tag ${item.selectedBySystem ? 'ok' : 'warn'}">${item.selectedBySystem ? '已选上' : '待筛选'}</span>
               <span class="tag">${item.selfSelected ? '自选' : '系统调整'}</span>
+              ${item.canDrop ? '<span class="tag ok">可退</span>' : `<span class="tag warn" title="${escapeHtml(formatDropRestriction(item.dropRestriction))}">不可退</span>`}
             </div>
           </div>
           ${renderMeetingList(item.scheduleText, item.locationText)}
@@ -656,16 +663,33 @@ function renderChosen() {
 
     const actions = document.createElement('div');
     actions.className = 'chosen-actions class-card-action';
-    const dropButton = document.createElement('button');
-    dropButton.type = 'button';
-    dropButton.className = 'danger';
-    dropButton.textContent = '退选';
-    dropButton.disabled = !item.canDrop;
-    dropButton.addEventListener('click', () => dropClass(item));
-    actions.append(dropButton);
+    if (item.canDrop) {
+      const dropButton = document.createElement('button');
+      dropButton.type = 'button';
+      dropButton.className = 'danger';
+      dropButton.textContent = '退选';
+      dropButton.addEventListener('click', () => dropClass(item));
+      actions.append(dropButton);
+    } else {
+      const status = document.createElement('span');
+      status.className = 'chosen-state';
+      status.textContent = '已选';
+      status.title = formatDropRestriction(item.dropRestriction);
+      actions.append(status);
+    }
     card.append(actions);
     elements.chosenList.append(card);
   });
+}
+
+function formatDropRestriction(restriction) {
+  const code = restriction?.code;
+  if (code === 'SELECT_FLAG_DISABLED') return '教务系统该行 sfxkbj=0，原页面显示为“已选”，不开放退选按钮。';
+  if (code === 'DROP_THRESHOLD_REACHED') return '已选人数未高于退课临界人数，原页面不开放退选按钮。';
+  if (code === 'OUTSIDE_SELECTION_TIME') return '不在当前选课时间内，原页面不开放退选按钮。';
+  if (code === 'DROP_FLAG_DISABLED') return '该行未带可退标志，原页面不开放退选按钮。';
+  if (code === 'REGULAR_SELECTION_LOCKED') return '该行受正选控制限制，原页面不开放退选按钮。';
+  return restriction?.message || '教务系统未开放退选按钮。';
 }
 
 function moveSelectedClass(sourceClassId, targetClassId, placement = 'before') {

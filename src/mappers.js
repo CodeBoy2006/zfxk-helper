@@ -119,7 +119,7 @@ export function mapSelectionSnapshot(records = []) {
       weight: number(row.qz) === 0 ? undefined : number(row.qz),
       selectedBySystem: bool(row.sxbj),
       selfSelected: bool(row.zixf),
-      canDrop: firstDefined(row.sfktk, row.canDrop) === undefined ? true : bool(firstDefined(row.sfktk, row.canDrop)),
+      ...selectedDropEligibility(row),
       credit: number(firstDefined(row.jxbxf, row.xf, row.credit)),
       teachers: parseTeachers(row.jsxx),
       scheduleText: firstDefined(row.sksj, row.scheduleText),
@@ -147,5 +147,45 @@ export function mapSelectionSnapshot(records = []) {
     byClassId,
     version: String(Date.now()),
     fetchedAt: new Date()
+  };
+}
+
+function selectedDropEligibility(row = {}) {
+  const dropFlag = firstDefined(row.sfktk, row.canDrop);
+  const smartDropFlag = firstDefined(row.zntgpk, row.smartDropAllowed);
+  if ((dropFlag !== undefined || smartDropFlag !== undefined) && !bool(dropFlag) && !bool(smartDropFlag)) {
+    return dropBlocked('DROP_FLAG_DISABLED', 'Selected row is not marked as droppable by sfktk or zntgpk.');
+  }
+
+  const selectedCount = firstDefined(row.yxzrs, row.jxbrs, row.selectedCount);
+  const dropThreshold = firstDefined(row.tktjrs, row.dropThreshold);
+  if (selectedCount !== undefined && dropThreshold !== undefined && number(selectedCount) <= number(dropThreshold)) {
+    return dropBlocked('DROP_THRESHOLD_REACHED', 'Selected count is not greater than the drop threshold.');
+  }
+
+  const inSelectionTime = firstDefined(row.isInxksj, row.isInSelectionTime);
+  if (inSelectionTime !== undefined && !bool(inSelectionTime)) {
+    return dropBlocked('OUTSIDE_SELECTION_TIME', 'Selected row is outside the active selection time.');
+  }
+
+  let selectableFlag = firstDefined(row.sfxkbj, row.canSelect);
+  if (String(row.xxdm ?? '') === '10511' || bool(row.bhbcyxkjxb)) selectableFlag = '1';
+  if (selectableFlag !== undefined && !bool(selectableFlag)) {
+    return dropBlocked('SELECT_FLAG_DISABLED', 'Selected row has sfxkbj=0, so the original page shows it as already selected instead of a drop action.');
+  }
+
+  const regularControl = String(row.zckz ?? '');
+  const regularDropFlag = String(row.bdzcbj ?? '');
+  if (regularControl === '1' && regularDropFlag !== '2' && regularDropFlag !== '3') {
+    return dropBlocked('REGULAR_SELECTION_LOCKED', 'Selected row is blocked by the regular-selection control flag.');
+  }
+
+  return { canDrop: true };
+}
+
+function dropBlocked(code, message) {
+  return {
+    canDrop: false,
+    dropRestriction: { code, message }
   };
 }

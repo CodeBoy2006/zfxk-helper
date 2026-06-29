@@ -339,6 +339,76 @@ test('chosen.snapshot groups selected classes by course and builds indexes', asy
   assert.equal(snapshot.byClassId.get('JXB1').submitClassId, 'DO1');
 });
 
+test('chosen.snapshot mirrors original drop-button eligibility for selected rows', async () => {
+  const { client } = makeClient({
+    [endpoints.chosenDisplay]: [
+      {
+        t_kch_id: 'KC1',
+        kch_id: 'KC1',
+        kch: 'G237003',
+        kcmc: '马克思主义基本原理',
+        xf: '3',
+        kklxdm: '01',
+        jxb_id: 'JXB_LOCKED',
+        do_jxb_id: 'DO_LOCKED',
+        jxbmc: '马克思主义基本原理-0012',
+        sxbj: '1',
+        zixf: '0',
+        sfktk: '1',
+        sfxkbj: '0',
+        isInxksj: '1',
+        yxzrs: '99',
+        tktjrs: '0'
+      },
+      {
+        t_kch_id: 'KC2',
+        kch_id: 'KC2',
+        kch: 'G126059',
+        kcmc: '嵌入式系统',
+        xf: '3',
+        kklxdm: '01',
+        jxb_id: 'JXB_OPEN',
+        do_jxb_id: 'DO_OPEN',
+        jxbmc: '嵌入式系统-0001',
+        sxbj: '1',
+        zixf: '0',
+        sfktk: '1',
+        sfxkbj: '1',
+        isInxksj: '1',
+        yxzrs: '110',
+        tktjrs: '0'
+      },
+      {
+        t_kch_id: 'KC3',
+        kch_id: 'KC3',
+        kch: 'G126085',
+        kcmc: '数据结构',
+        xf: '4',
+        kklxdm: '01',
+        jxb_id: 'JXB_THRESHOLD',
+        do_jxb_id: 'DO_THRESHOLD',
+        jxbmc: '数据结构-0002',
+        sxbj: '1',
+        zixf: '0',
+        sfktk: '1',
+        sfxkbj: '1',
+        isInxksj: '1',
+        yxzrs: '0',
+        tktjrs: '0'
+      }
+    ]
+  });
+
+  const snapshot = await client.chosen.snapshot();
+
+  assert.equal(snapshot.byClassId.get('JXB_LOCKED').canDrop, false);
+  assert.equal(snapshot.byClassId.get('JXB_LOCKED').dropRestriction.code, 'SELECT_FLAG_DISABLED');
+  assert.equal(snapshot.byClassId.get('JXB_OPEN').canDrop, true);
+  assert.equal(snapshot.byClassId.get('JXB_OPEN').dropRestriction, undefined);
+  assert.equal(snapshot.byClassId.get('JXB_THRESHOLD').canDrop, false);
+  assert.equal(snapshot.byClassId.get('JXB_THRESHOLD').dropRestriction.code, 'DROP_THRESHOLD_REACHED');
+});
+
 test('selection.choose runs title, conflict, textbook, save, and snapshot refresh', async () => {
   const { client, transport } = makeClient({
     [endpoints.teachingClasses]: [
@@ -440,6 +510,26 @@ test('selection.drop supports confirm and SMS flows before refreshing snapshot',
   assert.equal(transport.calls[0].data.jxb_id, 'DO1');
   assert.equal(transport.calls[2].data.dxyzm, '123456');
   assert.equal(transport.calls[3].data.jxb_ids, 'DO1');
+});
+
+test('selection.drop rejects locally when a selected row is not droppable', async () => {
+  const { client, transport } = makeClient({});
+
+  const result = await client.selection.drop({
+    courseId: 'KC1',
+    classId: 'JXB_LOCKED',
+    submitClassId: 'DO_LOCKED',
+    canDrop: false,
+    dropRestriction: {
+      code: 'SELECT_FLAG_DISABLED',
+      message: 'Selected row has sfxkbj=0.'
+    }
+  });
+
+  assert.equal(result.status, 'rejected');
+  assert.equal(result.reason, 'NOT_DROPPABLE');
+  assert.equal(result.dropRestriction.code, 'SELECT_FLAG_DISABLED');
+  assert.equal(transport.calls.length, 0);
 });
 
 test('reorder posts ordinary wish order and refreshes snapshot', async () => {

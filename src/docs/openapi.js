@@ -322,6 +322,10 @@ const schemas = {
     selectedBySystem: boolean(),
     selfSelected: boolean(),
     canDrop: boolean(),
+    dropRestriction: object({
+      code: string(),
+      message: string()
+    }, ['code', 'message']),
     credit: number(),
     teachers: arrayOf(ref('Teacher')),
     scheduleText: string(),

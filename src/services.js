@@ -141,6 +141,9 @@ export class SelectionService {
 
   async drop(input, policy = {}) {
     const context = this.client.requireContext();
+    const localBlock = this.localDropPrecheck(input);
+    if (localBlock) return localBlock;
+
     const submitClassId = input.submitClassId ?? input.doJxbId ?? input.classId;
     const controlId = input.controlId ?? context.current.xkkzId;
 
@@ -267,6 +270,21 @@ export class SelectionService {
       return { status: 'rejected', reason: 'REJECTED', messages: [{ code: 'REJECTED', message: 'Teaching class is not selectable.' }] };
     }
     return null;
+  }
+
+  localDropPrecheck(input = {}) {
+    const source = input.selection ?? input.selectedClass ?? input;
+    if (source.canDrop !== false) return null;
+    const dropRestriction = source.dropRestriction ?? {
+      code: 'NOT_DROPPABLE',
+      message: 'Selected class is not droppable.'
+    };
+    return {
+      status: 'rejected',
+      reason: 'NOT_DROPPABLE',
+      message: dropRestriction.message,
+      dropRestriction
+    };
   }
 
   titleChecksFor(target) {

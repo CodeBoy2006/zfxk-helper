@@ -47,7 +47,8 @@ const TEACHER_FIELDS = [
 const SELECTED_CLASS_FLAG_FIELDS = [
   ['selectedBySystem', '是否已选上'],
   ['selfSelected', '是否自选'],
-  ['canDrop', '是否可退']
+  ['canDrop', '是否可退'],
+  ['dropRestriction', '不可退原因']
 ];
 
 const RAW_FIELD_LABELS = {
@@ -107,6 +108,11 @@ const RAW_FIELD_LABELS = {
   sfxz: '是否已选',
   sfxkbj: '是否可选',
   sfktk: '是否可退',
+  zntgpk: '智能调排可退',
+  isInxksj: '是否在选课时间',
+  tktjrs: '退课临界人数',
+  zckz: '正选控制',
+  bdzcbj: '补退正选标记',
   sfydjc: '是否有教材',
   fxbj: '是否辅修',
   zypx: '志愿顺序',

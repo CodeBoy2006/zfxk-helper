@@ -890,6 +890,21 @@
           "canDrop": {
             "type": "boolean"
           },
+          "dropRestriction": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          },
           "credit": {
             "type": "number"
           },
