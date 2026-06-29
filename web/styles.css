@@ -371,6 +371,10 @@ textarea {
   box-shadow: 0 3px 14px rgba(39, 57, 96, 0.04);
 }
 
+.catalog-pane {
+  height: clamp(620px, calc(100vh - 320px), 900px);
+}
+
 .search-bar {
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -433,7 +437,8 @@ textarea {
 .course-list {
   display: flex;
   flex-direction: column;
-  max-height: clamp(360px, 58vh, 720px);
+  flex: 1 1 auto;
+  max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -1021,7 +1026,12 @@ textarea {
   .catalog-pane,
   .detail-pane,
   .chosen-pane {
+    height: auto;
     min-height: auto;
+  }
+
+  .course-list {
+    max-height: clamp(360px, 64vh, 720px);
   }
 
   .meeting-item {

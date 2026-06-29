@@ -207,3 +207,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and confirm course cards no longer overlap or expose inner metadata between rows.
 - **Context:** The prior scroll cap could compress grid rows visually when many courses were loaded.
+
+## [2026-06-29 20:31] Course List Fill Height
+- **Changes:** Gave the Web catalog pane a viewport-aware height and let the course list flex to fill the remaining pane space while preserving internal scrolling.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and confirm the left course list fills the blank area before scrolling.
+- **Context:** Narrow layouts keep a separate viewport-relative list cap to avoid excessive page height.
