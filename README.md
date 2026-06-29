@@ -34,7 +34,7 @@ const courses = await client.catalog.searchCourses({
 });
 
 const classes = await client.catalog.getTeachingClasses(courses[0].courseId);
-const target = classes.find((item) => item.flags.canSelect && !item.flags.full);
+const target = classes.find((item) => item.flags.canSelect);
 
 const result = await client.selection.choose(
   { courseId: target.courseId, classId: target.classId },

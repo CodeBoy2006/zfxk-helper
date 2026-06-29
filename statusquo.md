@@ -63,3 +63,9 @@
 - **Status:** Completed
 - **Next Steps:** Re-check live data with unusually long teacher names or classroom names.
 - **Context:** This is a CSS-only visual refinement; SDK behavior and proxy requests are unchanged.
+
+## [2026-06-29 17:28] Full Teaching-Class Selection
+- **Changes:** Decoupled `flags.full` from `flags.canSelect`, allowed full teaching classes to reach the save endpoint when `sfxkbj` permits selection, and updated Web button disabling plus README/TypeDoc.
+- **Status:** Completed
+- **Next Steps:** Validate against live first-round and second-round sessions to confirm `sfxkbj` and save response flags match the school workflow.
+- **Context:** Fullness comes from `yxzrs >= jxbrl`; eligibility comes from `sfxkbj` and the server-side save result. Capacity overflow remains represented by save flag `-1`.

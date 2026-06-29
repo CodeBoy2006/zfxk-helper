@@ -405,7 +405,7 @@ function renderClasses() {
     const chooseButton = document.createElement('button');
     chooseButton.type = 'button';
     chooseButton.textContent = selected ? '已选' : '选课';
-    chooseButton.disabled = selected || item.flags.full || !item.flags.canSelect;
+    chooseButton.disabled = selected || !item.flags.canSelect;
     chooseButton.addEventListener('click', () => chooseClass(item));
     actions.append(chooseButton);
     card.append(actions);

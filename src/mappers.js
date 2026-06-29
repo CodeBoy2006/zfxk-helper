@@ -68,7 +68,7 @@ export function mapTeachingClass(row = {}) {
     flags: {
       selected: bool(firstDefined(row.sfxz, row.selected)),
       full,
-      canSelect: firstDefined(row.sfxkbj, row.canSelect) !== '0' && !full,
+      canSelect: firstDefined(row.sfxkbj, row.canSelect) !== '0',
       canDrop: firstDefined(row.sfktk, row.canDrop) === undefined ? undefined : bool(firstDefined(row.sfktk, row.canDrop)),
       hasTextbook: firstDefined(row.sfydjc, row.hasTextbook) === undefined ? undefined : bool(firstDefined(row.sfydjc, row.hasTextbook)),
       retake: firstDefined(row.cxbj, row.retake) === undefined ? undefined : bool(firstDefined(row.cxbj, row.retake)),

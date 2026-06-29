@@ -239,7 +239,6 @@ export class SelectionService {
   async plan(input, resolvedTarget) {
     const target = resolvedTarget ?? await this.resolveTeachingClass(input);
     const blockers = [];
-    if (target.flags.full) blockers.push({ code: 'CAPACITY_FULL', message: 'Teaching class capacity is full.' });
     if (!target.flags.canSelect) blockers.push({ code: 'REJECTED', message: 'Teaching class is not selectable.' });
     return {
       target,
@@ -264,9 +263,6 @@ export class SelectionService {
   }
 
   localPrecheck(target) {
-    if (target.flags.full) {
-      return { status: 'capacity-full', waitlistAvailable: true, messages: [{ code: 'CAPACITY_FULL', message: 'Teaching class capacity is full.' }] };
-    }
     if (!target.flags.canSelect) {
       return { status: 'rejected', reason: 'REJECTED', messages: [{ code: 'REJECTED', message: 'Teaching class is not selectable.' }] };
     }

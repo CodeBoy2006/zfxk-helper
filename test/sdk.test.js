@@ -234,7 +234,26 @@ test('maps course and teaching-class rows into SDK models', () => {
   assert.equal(teachingClass.selectedCount, 29);
   assert.equal(teachingClass.capacity, 30);
   assert.equal(teachingClass.flags.full, false);
+  assert.equal(teachingClass.flags.canSelect, true);
   assert.equal(teachingClass.teachers[1].name, '李四');
+
+  const fullButSelectable = mapTeachingClass({
+    jxb_id: 'JXB_FULL',
+    yxzrs: '30',
+    jxbrl: '30',
+    sfxkbj: '1'
+  });
+  assert.equal(fullButSelectable.flags.full, true);
+  assert.equal(fullButSelectable.flags.canSelect, true);
+
+  const rejectedByServerFlag = mapTeachingClass({
+    jxb_id: 'JXB_REJECTED',
+    yxzrs: '10',
+    jxbrl: '30',
+    sfxkbj: '0'
+  });
+  assert.equal(rejectedByServerFlag.flags.full, false);
+  assert.equal(rejectedByServerFlag.flags.canSelect, false);
 
   const actualFormat = mapTeachingClass({
     jxb_id: 'JXB2',
@@ -374,7 +393,7 @@ test('selection.choose runs title, conflict, textbook, save, and snapshot refres
 test('selection.choose returns capacity-full from save flag -1', async () => {
   const { client, transport } = makeClient({
     [endpoints.teachingClasses]: [
-      { jxb_id: 'JXB1', do_jxb_id: 'DO1', kch_id: 'KC1', jxbmc: '数据库-01', jxbzls: '1', xf: '3', yxzrs: '1', jxbrl: '20' }
+      { jxb_id: 'JXB1', do_jxb_id: 'DO1', kch_id: 'KC1', jxbmc: '数据库-01', jxbzls: '1', xf: '3', yxzrs: '20', jxbrl: '20', sfxkbj: '1' }
     ]
   });
   transport.queue(endpoints.titleCheck, { flag: '1' });
@@ -387,6 +406,7 @@ test('selection.choose returns capacity-full from save flag -1', async () => {
 
   assert.equal(result.status, 'capacity-full');
   assert.equal(result.waitlistAvailable, true);
+  assert.ok(transport.calls.some((call) => call.path === endpoints.saveSelection));
 });
 
 test('selection.drop supports confirm and SMS flows before refreshing snapshot', async () => {
