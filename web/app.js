@@ -487,7 +487,7 @@ function renderClasses() {
       <div class="class-card-content">
         <div class="class-card-main">
           <div class="class-card-top">
-            ${renderTeacherLine(item)}
+            ${renderClassSummaryLine(item)}
             <div class="class-card-badges">
               <span class="tag ${item.flags.full ? 'danger' : 'ok'}">${item.flags.full ? '已满' : '可选'}</span>
               ${selected ? '<span class="tag ok">已在志愿</span>' : ''}
@@ -783,8 +783,27 @@ function renderTeacherLine(item) {
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
     <div class="class-detail-line">
-      <span class="detail-label">教师</span>
-      <span>${escapeHtml(teachers)}</span>
+      <span class="class-detail-pair">
+        <span class="detail-label">教师</span>
+        <span class="detail-value">${escapeHtml(teachers)}</span>
+      </span>
+    </div>
+  `;
+}
+
+function renderClassSummaryLine(item) {
+  const className = item.name?.trim() || '教学班待定';
+  const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
+  return `
+    <div class="class-detail-line">
+      <span class="class-detail-pair">
+        <span class="detail-label">教学班</span>
+        <span class="detail-value">${escapeHtml(className)}</span>
+      </span>
+      <span class="class-detail-pair">
+        <span class="detail-label">教师</span>
+        <span class="detail-value">${escapeHtml(teachers)}</span>
+      </span>
     </div>
   `;
 }

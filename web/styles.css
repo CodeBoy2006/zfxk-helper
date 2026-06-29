@@ -592,6 +592,7 @@ textarea {
 .class-detail-line {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   color: #68758d;
   font-size: 14px;
@@ -601,11 +602,23 @@ textarea {
   min-width: 0;
 }
 
+.class-detail-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .detail-label {
   flex: 0 0 auto;
   color: #1d2740;
   font-size: 14px;
   font-weight: 850;
+}
+
+.detail-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .meeting-list {

@@ -159,3 +159,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and use drag-and-drop to adjust selected-course order.
 - **Context:** The selected-course action column is back to the single 退选 button.
+
+## [2026-06-29 19:42] Teaching-Class Label Placement
+- **Changes:** Updated Web teaching-class cards to show the teaching-class name immediately before the teacher field, and added wrapping styles for long class or teacher names.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and confirm populated teaching-class cards match the requested order.
+- **Context:** Selected-course cards still keep the teaching-class name in their existing title row to avoid duplicate labels.
