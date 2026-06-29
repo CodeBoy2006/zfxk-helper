@@ -279,3 +279,9 @@
 - **Status:** Completed
 - **Next Steps:** Execute the plan against the current worktree, starting with config contracts and failing unit tests.
 - **Context:** The plan follows the uploaded dense three-column UI reference and keeps credentials out of exported configs.
+
+## [2026-06-29 22:14] Auto Selection Background Tasks
+- **Changes:** Implemented automatic selection config contracts, outcome normalization, group and upgrade runners, task manager, local Web API routes, dense automatic-selection UI controls, JSON import/export, SDK typings, OpenAPI/TypeDoc docs, README docs, and focused tests.
+- **Status:** Completed
+- **Next Steps:** Validate with a real school account and live selectable teaching classes; exported configs intentionally omit password and Cookie.
+- **Context:** Background tasks are in-memory and continue only while `npm run web` keeps the local Node process running. Browser verification used `http://127.0.0.1:4174/` because port 4173 was already occupied.
