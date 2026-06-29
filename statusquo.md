@@ -285,3 +285,9 @@
 - **Status:** Completed
 - **Next Steps:** Validate with a real school account and live selectable teaching classes; exported configs intentionally omit password and Cookie.
 - **Context:** Background tasks are in-memory and continue only while `npm run web` keeps the local Node process running. Browser verification used `http://127.0.0.1:4174/` because port 4173 was already occupied.
+
+## [2026-06-29 22:27] Local Course Filtering
+- **Changes:** Added Web course-filter helpers, split filter execution into local/hybrid/remote modes, cached remote course result sets, and documented which filters stay local.
+- **Status:** Completed
+- **Next Steps:** Validate in a live session that keyword, teaching-class, retake, and course-ownership filters no longer reload courses unless remote filters change.
+- **Context:** Capacity and schedule-conflict filters remain remote to preserve backend range and real-time rules.

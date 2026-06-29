@@ -1,5 +1,6 @@
 import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
+import { applyLocalCourseFilters, filterPayloadSignature, splitFilterPayload } from './course-filters.js';
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from './course-groups.js';
 import { loadAllCoursePages } from './course-pages.js';
 import { buildCoursesForExport, buildSelectedSnapshotForExport } from './export-builders.js';
@@ -73,6 +74,8 @@ const SESSION_CACHE_FIELDS = [
 const state = {
   client: null,
   transport: null,
+  sourceCourses: [],
+  sourceCoursesLoaded: false,
   courses: [],
   classes: [],
   selectedCourseId: null,
@@ -82,6 +85,7 @@ const state = {
   activeCourseTypeKey: '',
   filterGroups: [],
   filters: {},
+  remoteCourseFilterSignature: '',
   expandedFilterRows: new Set(),
   filtersCollapsed: false,
   draggedSelectedClassId: null,
@@ -229,6 +233,9 @@ async function initialize() {
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
     await state.client.bootstrap({ html: state.entryHtml, raw: activeType ? courseTypeRaw(activeType) : undefined });
+    state.sourceCourses = [];
+    state.sourceCoursesLoaded = false;
+    state.remoteCourseFilterSignature = '';
     state.filters = {};
     state.expandedFilterRows = new Set();
     state.filtersCollapsed = false;
@@ -295,10 +302,13 @@ async function switchCourseType(key) {
   await runTask(`切换到${courseType.label}`, async () => {
     state.activeCourseTypeKey = key;
     state.filters = {};
+    state.sourceCourses = [];
+    state.sourceCoursesLoaded = false;
     state.expandedFilterRows = new Set();
     state.courses = [];
     state.classes = [];
     state.selectedCourseId = null;
+    state.remoteCourseFilterSignature = '';
     await state.client.refreshContext({ html: state.entryHtml, raw: courseTypeRaw(courseType) });
     state.filterGroups = await loadFilterGroups(state.transport, state.client.context);
     renderCourseTypeTabs();
@@ -321,12 +331,24 @@ async function searchCourses() {
 }
 
 async function searchCoursesCore() {
+  const filterPayload = selectedFilterPayload();
+  const splitFilters = splitFilterPayload(state.filterGroups, filterPayload);
+  const remoteSignature = filterPayloadSignature(splitFilters.remote);
   const query = {
-    keyword: elements.keywordInput.value.trim(),
-    extra: selectedFilterPayload()
+    extra: splitFilters.remote
   };
-  state.courses = await loadAllCoursePages(state.client.catalog, query);
-  await enrichCourseOwnerships(query);
+  if (!state.sourceCoursesLoaded || state.remoteCourseFilterSignature !== remoteSignature) {
+    state.sourceCourses = await loadAllCoursePages(state.client.catalog, query);
+    state.sourceCoursesLoaded = true;
+    state.remoteCourseFilterSignature = remoteSignature;
+    state.courses = state.sourceCourses;
+    await enrichCourseOwnerships({ ...query, filters: splitFilters.remote });
+    state.sourceCourses = state.courses;
+  }
+  state.courses = applyLocalCourseFilters(state.sourceCourses, {
+    keyword: elements.keywordInput.value.trim(),
+    filters: splitFilters.local
+  });
   state.selectedCourseId = groupCoursesForDisplay(state.courses)[0]?.key ?? null;
   renderCourses();
   if (state.selectedCourseId) {
@@ -358,7 +380,7 @@ async function enrichCourseOwnerships(query) {
   const ownershipGroup = state.filterGroups.find((group) => group.key === 'kcgs_list');
   if (!ownershipGroup?.options?.length || !state.courses.some(needsCourseOwnership)) return;
 
-  const selectedOwnership = state.filters.kcgs_list;
+  const selectedOwnership = query.filters ? query.filters.kcgs_list : state.filters.kcgs_list;
   if (selectedOwnership) {
     const option = ownershipGroup.options.find((item) => item.value === selectedOwnership);
     if (option) state.courses.forEach((course) => applyOwnershipOptions(course, [option]));
@@ -1589,21 +1611,22 @@ function filterDefinitions(context) {
     remoteFilter('zyh_id_list', '专业', raw.zzxkgjcxkg_zy, `/xkgl/common_queryZyPaged.html?localeKey=${locale}&zyh_id=${sameMajor ? encodeURIComponent(context.student.zyhId || '') : 'w'}`, 'zyh_id', 'zymc', 'zyxh', 'asc', 6),
     remoteFilter('kclb_id_list', '课程类别', raw.zzxkgjcxkg_kclb, '/xkgl/common_queryKclbListPaged.html', 'kclbdm', 'kclbmc', 'kclbdm', 'asc', 6),
     remoteFilter('kcxzdm_list', '课程性质', raw.zzxkgjcxkg_kcxz, '/xkgl/common_queryKcxzPaged.html', 'dm', 'mc', 'dm', 'asc', 6),
-    remoteFilter('kcgs_list', '课程归属', raw.zzxkgjcxkg_kcgs, '/xkgl/common_queryKcgsPaged.html', 'kcgsdm', 'kcgsmc', 'px,kcgsdm', 'asc', 7),
+    remoteFilter('kcgs_list', '课程归属', raw.zzxkgjcxkg_kcgs, '/xkgl/common_queryKcgsPaged.html', 'kcgsdm', 'kcgsmc', 'px,kcgsdm', 'asc', 7, 'hybrid'),
     remoteFilter('jxms_list', '教学模式', raw.zzxkgjcxkg_jxms, '/xtgl/comm_cxJcsjList.html?lxdm=0032', 'dm', 'mc', undefined, undefined, 7),
     remoteFilter('sksj_list', '上课星期', raw.zzxkgjcxkg_skxq, '/xtgl/comm_cxJcsjList.html?lxdm=0036', 'dm', 'mc', undefined, undefined, 7),
     remoteFilter('skjc_list', '上课节次', raw.zzxkgjcxkg_skjc, '/xkgl/common_querySkjcList.html', 'dm', 'dm', 'dm', 'asc', 15),
-    { key: 'jxbmc_list', label: '教学班', type: 'text', enabled: raw.zzxkgjcxkg_jxb === '1', showSize: 1 },
-    fixedFilter('cxbj_list', '是否重修', raw.zzxkgjcxkg_sfcx, [{ value: '1', text: '是' }, { value: '0', text: '否' }]),
+    { key: 'jxbmc_list', label: '教学班', type: 'text', enabled: raw.zzxkgjcxkg_jxb === '1', showSize: 1, mode: 'local' },
+    fixedFilter('cxbj_list', '是否重修', raw.zzxkgjcxkg_sfcx, [{ value: '1', text: '是' }, { value: '0', text: '否' }], 'local'),
     fixedFilter('yl_list', '有无余量', raw.zzxkgjcxkg_ywyl, [{ value: '1', text: '有' }, { value: '0', text: '无' }]),
     fixedFilter('sksjct_list', '上课时间冲突', raw.zzxkgjcxkg_sksjct, [{ value: '1', text: '是' }, { value: '0', text: '否' }])
   ];
 }
 
-function remoteFilter(key, label, flag, path, valueField, textField, sortName, sortOrder, showSize) {
+function remoteFilter(key, label, flag, path, valueField, textField, sortName, sortOrder, showSize, mode = 'remote') {
   return {
     key,
     label,
+    mode,
     enabled: flag === '1',
     path,
     valueField,
@@ -1615,8 +1638,8 @@ function remoteFilter(key, label, flag, path, valueField, textField, sortName, s
   };
 }
 
-function fixedFilter(key, label, flag, options) {
-  return { key, label, enabled: flag === '1', options, showSize: options.length };
+function fixedFilter(key, label, flag, options, mode = 'remote') {
+  return { key, label, mode, enabled: flag === '1', options, showSize: options.length };
 }
 
 async function loadRemoteOptions(transport, definition) {
