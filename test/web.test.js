@@ -62,7 +62,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(app, /pollAutoSelectionTasks/);
   assert.doesNotMatch(app, /\/api\/auto-selection\/tasks/);
   assert.doesNotMatch(app, /\/api\/auto-selection\/config\/import/);
-  assert.doesNotMatch(app, /加入自动选课/);
+  assert.doesNotMatch(app, /textContent = '加入自动选课'/);
   assert.match(app, /buildCourseExport/);
   assert.match(app, /buildSelectedCoursesExport/);
   assert.match(app, /buildCoursesForExport/);
@@ -87,6 +87,10 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /restoreSessionCache/);
   assert.match(app, /persistSessionCache/);
   assert.match(app, /localStorage/);
+  assert.match(app, /AUTO_SELECTION_DRAFT_STORAGE_KEY/);
+  assert.match(app, /renderAutoClassMenu/);
+  assert.match(app, /addTeachingClassToAutoGroup/);
+  assert.match(app, /auto-class-button/);
   assert.match(app, /switchCourseType/);
   assert.match(app, /renderCourseTypeTabs/);
   assert.match(app, /\/api\/proxy\/post/);
@@ -144,6 +148,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
   assert.match(css, /topbar-link-button/);
+  assert.match(css, /auto-class-menu/);
   assert.doesNotMatch(css, /auto-selection-workspace/);
   assert.match(css, /auto-config-pane/);
   assert.match(css, /auto-groups-pane/);
@@ -202,12 +207,17 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(html, /value="equivalent">等价模式/);
   assert.match(html, /id="autoClearGroupBtn"/);
   assert.match(html, /id="autoTargetList"/);
-  assert.match(html, /id="autoTeachingClassList"/);
-  assert.match(html, /id="autoSearchForm"/);
-  assert.match(html, /id="autoKeywordInput"/);
-  assert.match(html, /id="autoCollegeFilter"/);
-  assert.match(html, /id="autoCourseFilter"/);
-  assert.match(html, /id="autoRefreshClassesBtn"/);
+  assert.match(html, /id="autoIdTargetForm"/);
+  assert.match(html, /id="autoCourseIdInput"/);
+  assert.match(html, /id="autoClassIdInput"/);
+  assert.match(html, /id="autoSubmitClassIdInput"/);
+  assert.match(html, /id="autoTargetLabelInput"/);
+  assert.doesNotMatch(html, /id="autoTeachingClassList"/);
+  assert.doesNotMatch(html, /id="autoSearchForm"/);
+  assert.doesNotMatch(html, /id="autoKeywordInput"/);
+  assert.doesNotMatch(html, /id="autoCollegeFilter"/);
+  assert.doesNotMatch(html, /id="autoCourseFilter"/);
+  assert.doesNotMatch(html, /id="autoRefreshClassesBtn"/);
   assert.match(html, /id="autoTaskStatusPanel"/);
   assert.match(html, /id="autoTaskSummary"/);
   assert.match(html, /id="autoAuthRefreshBtn"/);
@@ -220,7 +230,7 @@ test('standalone auto-selection page implements the reference workflow surface',
 
   assert.match(app, /createZfxkClient/);
   assert.match(app, /parseCourseTypeOptions/);
-  assert.match(app, /loadAllCoursePages/);
+  assert.doesNotMatch(app, /loadAllCoursePages/);
   assert.match(app, /MAIN_SESSION_STORAGE_KEY/);
   assert.match(app, /zfxk\.web\.session\.v1/);
   assert.match(app, /readStoredSession\(MAIN_SESSION_STORAGE_KEY\)/);
@@ -228,8 +238,8 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /AUTO_SELECTION_DRAFT_STORAGE_KEY/);
   assert.doesNotMatch(app, /renderCourseTypeTabs/);
   assert.doesNotMatch(app, /switchCourseType/);
-  assert.match(app, /renderTeachingClasses/);
-  assert.match(app, /addClassToAutoSelection/);
+  assert.doesNotMatch(app, /renderTeachingClasses/);
+  assert.match(app, /addIdTargetToAutoSelection/);
   assert.match(app, /reorderTarget/);
   assert.match(app, /normalizeDraftGroupStrategy/);
   assert.match(app, /strategy: normalizeDraftGroupStrategy/);
@@ -247,7 +257,8 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(css, /auto-page-shell/);
   assert.match(css, /auto-page-topbar/);
   assert.match(css, /auto-page-workspace/);
-  assert.match(css, /auto-teaching-table/);
+  assert.match(css, /auto-id-target-form/);
+  assert.doesNotMatch(css, /auto-teaching-table/);
   assert.match(css, /auto-state-grid/);
   assert.match(css, /grid-template-columns:\s*minmax\(300px,\s*0\.82fr\)\s*minmax\(560px,\s*1\.5fr\)\s*minmax\(360px,\s*0\.96fr\)/);
   assert.match(server, /action === 'pause'/);

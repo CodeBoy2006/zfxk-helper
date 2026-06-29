@@ -133,22 +133,29 @@
             <div id="autoTargetList" class="auto-target-list" aria-live="polite"></div>
           </section>
 
-          <section class="auto-teaching-source" aria-label="可加入选课组的教学班">
+          <section class="auto-id-source" aria-label="按 ID 加入选课组">
             <div class="section-heading auto-subheading">
-              <h3>教学班列表 <small>可加入选课组</small></h3>
-              <button id="autoRefreshClassesBtn" type="button" class="secondary">刷新</button>
+              <h3>按 ID 添加 <small>直接加入当前选课组</small></h3>
             </div>
-            <form id="autoSearchForm" class="auto-teaching-filters">
-              <select id="autoCollegeFilter" aria-label="学院筛选">
-                <option value="">全部学院</option>
-              </select>
-              <select id="autoCourseFilter" aria-label="课程筛选">
-                <option value="">全部课程</option>
-              </select>
-              <input id="autoKeywordInput" placeholder="请输入课程名/教学班名/教师" autocomplete="off">
-              <button type="submit" class="secondary">查询</button>
+            <form id="autoIdTargetForm" class="auto-id-target-form">
+              <label>
+                课程 ID
+                <input id="autoCourseIdInput" placeholder="t_kch_id / courseId" autocomplete="off">
+              </label>
+              <label>
+                班级 ID
+                <input id="autoClassIdInput" placeholder="jxb_id / do_jxb_id" autocomplete="off">
+              </label>
+              <label>
+                提交 ID
+                <input id="autoSubmitClassIdInput" placeholder="可选" autocomplete="off">
+              </label>
+              <label>
+                名称
+                <input id="autoTargetLabelInput" placeholder="可选" autocomplete="off">
+              </label>
+              <button id="autoAddIdTargetBtn" type="submit">加入当前组</button>
             </form>
-            <div id="autoTeachingClassList" class="auto-teaching-class-list" aria-live="polite"></div>
           </section>
         </section>
 
@@ -183,7 +190,7 @@
             <h2>使用帮助</h2>
             <button type="submit" class="secondary">关闭</button>
           </div>
-          <p>先初始化账号会话，再把教学班加入选课组。组内高优先级先抢；低优先级可作为保底，占位后继续观察更高优先级目标。</p>
+          <p>先初始化账号会话，再通过课程 ID 和班级 ID 把目标加入选课组。优先级模式会保底并升级；等价模式选中任一目标即满足该组。</p>
           <p>导出配置只保存目标和策略，不保存密码或 Cookie。后台任务只在本地 Node 进程存活期间运行。</p>
         </form>
       </dialog>

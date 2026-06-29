@@ -321,3 +321,9 @@
 - **Status:** Completed
 - **Next Steps:** Use `优先级模式` when lower-priority targets are backups, and `等价模式` when any target in the group is acceptable.
 - **Context:** Equivalent groups treat any selected active target as satisfying the group and do not attempt priority upgrades within that group.
+
+## [2026-06-29 23:24] Auto Selection Direct Target Entry
+- **Changes:** Replaced the standalone teaching-class search/list with direct course/class ID target entry, added per-class main-page auto-selection group menus, shared localStorage draft updates, updated docs, and refreshed Web tests.
+- **Status:** Completed
+- **Next Steps:** Use the main-page class-card `自动选课` button to add parsed classes to groups, or add manual targets by ID on `/auto-selection`.
+- **Context:** Main-page buttons update the standalone auto-selection draft only; background tasks still start from the standalone control page.

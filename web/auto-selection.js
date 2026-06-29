@@ -1,7 +1,5 @@
 import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
-import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from './course-groups.js';
-import { loadAllCoursePages } from './course-pages.js';
 import { downloadJson } from './export-data.js';
 
 const DEFAULT_PAGE_PATH = '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512';
@@ -36,12 +34,11 @@ const elements = {
   autoGroupStrategyInput: document.querySelector('#autoGroupStrategyInput'),
   autoClearGroupBtn: document.querySelector('#autoClearGroupBtn'),
   autoTargetList: document.querySelector('#autoTargetList'),
-  autoTeachingClassList: document.querySelector('#autoTeachingClassList'),
-  autoSearchForm: document.querySelector('#autoSearchForm'),
-  autoKeywordInput: document.querySelector('#autoKeywordInput'),
-  autoCollegeFilter: document.querySelector('#autoCollegeFilter'),
-  autoCourseFilter: document.querySelector('#autoCourseFilter'),
-  autoRefreshClassesBtn: document.querySelector('#autoRefreshClassesBtn'),
+  autoIdTargetForm: document.querySelector('#autoIdTargetForm'),
+  autoCourseIdInput: document.querySelector('#autoCourseIdInput'),
+  autoClassIdInput: document.querySelector('#autoClassIdInput'),
+  autoSubmitClassIdInput: document.querySelector('#autoSubmitClassIdInput'),
+  autoTargetLabelInput: document.querySelector('#autoTargetLabelInput'),
   autoRefreshTasksBtn: document.querySelector('#autoRefreshTasksBtn'),
   autoTaskSummary: document.querySelector('#autoTaskSummary'),
   autoAuthRefreshBtn: document.querySelector('#autoAuthRefreshBtn'),
@@ -58,9 +55,6 @@ const state = {
   entryHtml: '',
   courseTypes: [],
   activeCourseTypeKey: '',
-  courses: [],
-  classes: [],
-  selectedCourseKey: '',
   draft: {
     groups: [defaultGroup('体育课')],
     activeGroupIndex: 0
@@ -78,8 +72,6 @@ restoreSession();
 restoreDraft();
 bindEvents();
 renderAutoSelectionDraft();
-renderTeachingFilters();
-renderTeachingClasses();
 renderAutoTaskStatus();
 pollAutoSelectionTasks();
 
@@ -90,14 +82,10 @@ function bindEvents() {
   });
   elements.loginWithCaptchaBtn.addEventListener('click', () => loginWithCaptchaCookie());
   elements.solveCaptchaBtn.addEventListener('click', () => solveCaptchaCookie());
-  elements.autoSearchForm.addEventListener('submit', async (event) => {
+  elements.autoIdTargetForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    await searchCourses();
+    addIdTargetToAutoSelection();
   });
-  elements.autoCourseFilter.addEventListener('change', () => loadClasses(elements.autoCourseFilter.value || state.selectedCourseKey));
-  elements.autoCollegeFilter.addEventListener('change', () => renderTeachingClasses());
-  elements.autoKeywordInput.addEventListener('input', () => renderTeachingClasses());
-  elements.autoRefreshClassesBtn.addEventListener('click', () => refreshTeachingClasses());
   elements.autoEnabledSwitch.addEventListener('change', () => renderAutoTaskStatus());
   elements.autoHelpBtn.addEventListener('click', () => showHelpDialog());
   elements.autoCollapseBtn.addEventListener('click', () => toggleChromeCompactMode());
@@ -111,7 +99,6 @@ function bindEvents() {
   elements.autoTargetList.addEventListener('dragstart', (event) => handleTargetDragStart(event));
   elements.autoTargetList.addEventListener('dragover', (event) => handleTargetDragOver(event));
   elements.autoTargetList.addEventListener('drop', (event) => handleTargetDrop(event));
-  elements.autoTeachingClassList.addEventListener('click', (event) => handleTeachingClassAction(event));
   elements.autoStartBtn.addEventListener('click', () => startAutoSelectionTask());
   elements.autoPauseBtn.addEventListener('click', () => pauseCurrentAutoTask());
   elements.autoResumeBtn.addEventListener('click', () => resumeCurrentAutoTask());
@@ -148,8 +135,7 @@ async function initializeSession() {
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
     await state.client.bootstrap({ html: state.entryHtml, raw: activeType ? courseTypeRaw(activeType) : undefined });
-    await searchCoursesCore();
-    log('会话已初始化，可从教学班列表加入目标。');
+    log('会话已初始化，可按课程 ID 和班级 ID 加入目标。');
   });
 }
 
@@ -194,110 +180,6 @@ async function loginWithCaptchaCookie(options = {}) {
   return options.silent ? operation() : runTask('登录获取 Cookie', operation);
 }
 
-async function searchCourses() {
-  if (!state.client) {
-    log('请先初始化页面。');
-    return;
-  }
-  await runTask('查询教学班', searchCoursesCore);
-}
-
-async function searchCoursesCore() {
-  const keyword = elements.autoKeywordInput.value.trim();
-  state.courses = await loadAllCoursePages(state.client.catalog, { keyword, extra: {} });
-  const displayCourses = groupCoursesForDisplay(state.courses);
-  state.selectedCourseKey = displayCourses[0]?.key ?? '';
-  renderTeachingFilters();
-  if (state.selectedCourseKey) await loadClassesCore(state.selectedCourseKey);
-  else {
-    state.classes = [];
-    renderTeachingClasses();
-  }
-  log(`找到 ${state.courses.length} 条课程记录。`);
-}
-
-async function refreshTeachingClasses() {
-  if (!state.client) {
-    log('请先初始化页面。');
-    return;
-  }
-  const selected = elements.autoCourseFilter.value || state.selectedCourseKey;
-  if (selected) await loadClasses(selected);
-  else await searchCourses();
-}
-
-async function loadClasses(courseKey) {
-  if (!state.client || !courseKey) return;
-  await runTask('加载教学班', () => loadClassesCore(courseKey));
-}
-
-async function loadClassesCore(courseKey) {
-  state.selectedCourseKey = courseKey;
-  elements.autoCourseFilter.value = courseKey;
-  const courseIds = courseIdsForDisplayKey(state.courses, courseKey);
-  const classGroups = await Promise.all(courseIds.map((courseId) => state.client.catalog.getTeachingClasses(courseId)));
-  const classNames = teachingClassNamesById(state.courses, courseIds);
-  state.classes = classGroups.flat().map((item) => inheritCourseData(mergeTeachingClassName(item, classNames)));
-  renderTeachingFilters();
-  elements.autoCourseFilter.value = courseKey;
-  renderTeachingClasses();
-}
-
-function renderTeachingFilters() {
-  const courseValue = elements.autoCourseFilter.value || state.selectedCourseKey;
-  elements.autoCourseFilter.replaceChildren(option('', '全部课程'));
-  for (const course of groupCoursesForDisplay(state.courses)) {
-    elements.autoCourseFilter.append(option(course.key, `${course.name} (${course.courseCode || course.key})`));
-  }
-  elements.autoCourseFilter.value = courseValue;
-
-  const collegeValue = elements.autoCollegeFilter.value;
-  const colleges = uniqueValues(state.classes.map((item) => item.collegeName || item.ownershipName || item.ownershipCode));
-  elements.autoCollegeFilter.replaceChildren(option('', '全部学院'));
-  for (const college of colleges) elements.autoCollegeFilter.append(option(college, college));
-  elements.autoCollegeFilter.value = colleges.includes(collegeValue) ? collegeValue : '';
-}
-
-function renderTeachingClasses() {
-  const rows = filteredTeachingClasses();
-
-  if (!rows.length) {
-    elements.autoTeachingClassList.replaceChildren(empty('初始化并查询后显示可加入的教学班'));
-    return;
-  }
-
-  const table = document.createElement('table');
-  table.className = 'auto-teaching-table';
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>教学班名称</th>
-        <th>课程</th>
-        <th>教师</th>
-        <th>时间/地点</th>
-        <th>容量</th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  `;
-  const tbody = table.querySelector('tbody');
-  rows.forEach((item, index) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td><strong>${escapeHtml(classLabel(item))}</strong><span>${escapeHtml(item.submitClassId || item.classId)}</span></td>
-      <td>${escapeHtml(courseNameForClass(item))}</td>
-      <td>${escapeHtml(teacherNames(item) || '教师待定')}</td>
-      <td>${renderCompactMeeting(item)}</td>
-      <td><span class="capacity-pill">${escapeHtml(capacityText(item))}</span></td>
-      <td><button type="button" data-add-class-index="${index}">加入</button></td>
-    `;
-    row.dataset.classId = item.classId;
-    tbody.append(row);
-  });
-  elements.autoTeachingClassList.replaceChildren(table);
-}
-
 function addAutoSelectionGroup() {
   const next = state.draft.groups.length + 1;
   state.draft.groups.push(defaultGroup(`选课组 ${next}`));
@@ -331,60 +213,41 @@ function clearActiveGroupTargets() {
   log(`${group.name} 已清空。`);
 }
 
-function handleTeachingClassAction(event) {
-  const button = event.target.closest('[data-add-class-index]');
-  if (!button) return;
-  const index = Number(button.dataset.addClassIndex);
-  const rows = filteredTeachingClasses();
-  const teachingClass = rows[index];
-  if (teachingClass) addClassToAutoSelection(teachingClass);
-}
-
-function filteredTeachingClasses() {
-  const keyword = elements.autoKeywordInput.value.trim().toLowerCase();
-  const college = elements.autoCollegeFilter.value;
-  return state.classes.filter((item) => {
-    const text = [
-      item.name,
-      item.raw?.jxbmc,
-      teacherNames(item),
-      item.courseId,
-      item.classId,
-      item.submitClassId,
-      item.scheduleText,
-      item.locationText
-    ].join(' ').toLowerCase();
-    const collegeName = item.collegeName || item.ownershipName || item.ownershipCode || '';
-    return (!keyword || text.includes(keyword)) && (!college || collegeName === college);
-  });
-}
-
-function addClassToAutoSelection(teachingClass) {
+function addIdTargetToAutoSelection() {
   const group = activeGroup();
+  const courseId = elements.autoCourseIdInput.value.trim();
+  const classId = elements.autoClassIdInput.value.trim();
+  const submitClassId = elements.autoSubmitClassIdInput.value.trim();
+  const label = elements.autoTargetLabelInput.value.trim();
+  if (!courseId || !classId) {
+    log('请填写课程 ID 和班级 ID。');
+    return;
+  }
   const target = {
-    courseId: teachingClass.courseId,
-    classId: teachingClass.classId,
-    submitClassId: teachingClass.submitClassId,
-    label: classLabel(teachingClass),
-    courseName: courseNameForClass(teachingClass),
-    teachers: teacherNames(teachingClass),
-    scheduleText: teachingClass.scheduleText,
-    locationText: teachingClass.locationText,
-    selectedCount: teachingClass.selectedCount,
-    capacity: teachingClass.capacity,
+    courseId,
+    classId,
+    submitClassId: submitClassId || undefined,
+    label: label || classId,
     priority: nextPriority(group),
-    isBackup: group.targets.length > 0,
-    allowAutoDrop: group.targets.length > 0,
+    isBackup: group.strategy !== 'equivalent' && group.targets.length > 0,
+    allowAutoDrop: group.strategy !== 'equivalent' && group.targets.length > 0,
     recoverOnUpgradeFailure: true,
     skipAfterNonCapacityFailure: true,
     status: 'watching'
   };
   const exists = group.targets.some((item) => sameTargetDraft(item, target));
-  if (!exists) group.targets.push(target);
+  if (!exists) {
+    group.targets.push(target);
+    log(`已加入目标：${target.label}`);
+  } else {
+    log(`目标已在当前组：${target.label}`);
+  }
   sortTargets(group);
   persistDraft();
   renderAutoSelectionDraft();
-  log(`已加入目标：${target.label}`);
+  elements.autoClassIdInput.value = '';
+  elements.autoSubmitClassIdInput.value = '';
+  elements.autoTargetLabelInput.value = '';
 }
 
 function renderAutoSelectionDraft() {
@@ -394,7 +257,7 @@ function renderAutoSelectionDraft() {
   elements.autoGroupStrategyInput.value = normalizeDraftGroupStrategy(group.strategy);
 
   if (!group.targets.length) {
-    elements.autoTargetList.replaceChildren(empty('从教学班列表加入目标'));
+    elements.autoTargetList.replaceChildren(empty('按课程 ID 和班级 ID 添加目标'));
     return;
   }
 
@@ -787,6 +650,7 @@ function nextPriority(group) {
 }
 
 function sortTargets(group) {
+  if (normalizeDraftGroupStrategy(group.strategy) === 'equivalent') return;
   group.targets.sort((a, b) => Number(b.priority) - Number(a.priority));
 }
 
@@ -896,52 +760,6 @@ function restoreDraft() {
 
 function persistDraft() {
   localStorage.setItem(AUTO_SELECTION_DRAFT_STORAGE_KEY, JSON.stringify(state.draft));
-}
-
-function mergeTeachingClassName(item, classNames) {
-  const className = classNames.get(String(item.classId)) ?? classNames.get(String(item.submitClassId));
-  if (!className) return item;
-  return { ...item, raw: { ...item.raw, jxbmc: className } };
-}
-
-function inheritCourseData(item) {
-  const course = state.courses.find((candidate) => String(candidate.courseId) === String(item.courseId));
-  if (!course) return item;
-  return {
-    ...item,
-    courseName: course.name,
-    courseCode: course.courseCode,
-    ownershipName: item.ownershipName || course.ownershipName,
-    ownershipCode: item.ownershipCode || course.ownershipCode
-  };
-}
-
-function classLabel(item) {
-  return String(item.raw?.jxbmc || item.name || item.classId || '未命名教学班');
-}
-
-function courseNameForClass(item) {
-  return String(item.courseName || state.courses.find((course) => String(course.courseId) === String(item.courseId))?.name || item.courseId || '');
-}
-
-function teacherNames(item) {
-  return item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '';
-}
-
-function capacityText(item) {
-  const selected = Number(item.selectedCount);
-  const capacity = Number(item.capacity);
-  if (Number.isFinite(selected) && Number.isFinite(capacity) && capacity > 0) return `${selected}/${capacity}`;
-  return '--';
-}
-
-function renderCompactMeeting(item) {
-  return `
-    <div class="auto-meeting-cell">
-      <strong>${escapeHtml(stripHtml(item.scheduleText) || '时间待定')}</strong>
-      <span>${escapeHtml(stripHtml(item.locationText) || '地点待定')}</span>
-    </div>
-  `;
 }
 
 function renderTargetMeeting(target) {

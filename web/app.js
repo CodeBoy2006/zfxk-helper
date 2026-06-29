@@ -46,6 +46,8 @@ const elements = {
 const WEEKDAYS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
 const PERIODS = Array.from({ length: 12 }, (_, index) => index + 1);
 const SESSION_STORAGE_KEY = 'zfxk.web.session.v1';
+const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
+const DEFAULT_AUTO_GROUP_STRATEGY = 'priority';
 const SESSION_CACHE_FIELDS = [
   ['baseUrl', elements.baseUrlInput],
   ['cookie', elements.cookieInput],
@@ -165,6 +167,9 @@ elements.classSortBtn.addEventListener('click', () => {
 elements.clearLogBtn.addEventListener('click', () => {
   elements.activityLog.replaceChildren();
   setStatus('idle');
+});
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.auto-class-menu-wrap')) closeAutoClassMenus();
 });
 
 renderCourses();
@@ -635,9 +640,163 @@ function renderClasses() {
     chooseButton.disabled = selected || !item.flags.canSelect;
     chooseButton.addEventListener('click', () => chooseClass(item));
     actions.append(chooseButton);
+    actions.append(renderAutoClassMenu(item));
     card.append(actions);
     elements.classList.append(card);
   }
+}
+
+function renderAutoClassMenu(teachingClass) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'auto-class-menu-wrap';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'secondary auto-class-button';
+  button.textContent = '自动选课';
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleAutoClassMenu(wrapper, teachingClass);
+  });
+
+  const menu = document.createElement('div');
+  menu.className = 'auto-class-menu';
+  menu.hidden = true;
+  wrapper.append(button, menu);
+  return wrapper;
+}
+
+function toggleAutoClassMenu(wrapper, teachingClass) {
+  const menu = wrapper.querySelector('.auto-class-menu');
+  const shouldOpen = menu.hidden;
+  closeAutoClassMenus();
+  if (!shouldOpen) return;
+  const draft = readAutoSelectionDraft();
+  menu.replaceChildren(...draft.groups.map((group, index) => {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'auto-class-menu-item';
+    option.textContent = group.name || `选课组 ${index + 1}`;
+    option.disabled = group.targets.some((target) => sameAutoTarget(target, teachingClass));
+    option.title = option.disabled ? '该教学班已在此选课组' : '加入此选课组';
+    option.addEventListener('click', (event) => {
+      event.stopPropagation();
+      addTeachingClassToAutoGroup(teachingClass, index);
+      closeAutoClassMenus();
+    });
+    return option;
+  }));
+  menu.hidden = false;
+}
+
+function closeAutoClassMenus() {
+  document.querySelectorAll('.auto-class-menu:not([hidden])').forEach((menu) => {
+    menu.hidden = true;
+  });
+}
+
+function addTeachingClassToAutoGroup(teachingClass, groupIndex) {
+  const draft = readAutoSelectionDraft();
+  const group = draft.groups[groupIndex] ?? draft.groups[0];
+  const target = buildAutoTarget(teachingClass, group);
+  if (group.targets.some((candidate) => sameAutoTarget(candidate, target))) {
+    log(`自动选课目标已存在：${target.label}`);
+    return;
+  }
+  group.targets.push(target);
+  sortAutoTargets(group);
+  draft.activeGroupIndex = groupIndex;
+  writeAutoSelectionDraft(draft);
+  log(`已加入自动选课组「${group.name}」：${target.label}`);
+}
+
+function buildAutoTarget(teachingClass, group) {
+  const isPriorityBackup = group.strategy !== 'equivalent' && group.targets.length > 0;
+  return {
+    courseId: teachingClass.courseId,
+    classId: teachingClass.classId,
+    submitClassId: teachingClass.submitClassId,
+    label: autoClassLabel(teachingClass),
+    courseName: autoCourseName(teachingClass),
+    teachers: autoTeacherNames(teachingClass),
+    scheduleText: teachingClass.scheduleText,
+    locationText: teachingClass.locationText,
+    selectedCount: teachingClass.selectedCount,
+    capacity: teachingClass.capacity,
+    priority: nextAutoPriority(group),
+    isBackup: isPriorityBackup,
+    allowAutoDrop: isPriorityBackup,
+    recoverOnUpgradeFailure: true,
+    skipAfterNonCapacityFailure: true,
+    status: 'watching'
+  };
+}
+
+function readAutoSelectionDraft() {
+  try {
+    return normalizeAutoSelectionDraft(JSON.parse(window.localStorage.getItem(AUTO_SELECTION_DRAFT_STORAGE_KEY) || '{}'));
+  } catch {
+    return normalizeAutoSelectionDraft({});
+  }
+}
+
+function writeAutoSelectionDraft(draft) {
+  try {
+    window.localStorage.setItem(AUTO_SELECTION_DRAFT_STORAGE_KEY, JSON.stringify(normalizeAutoSelectionDraft(draft)));
+  } catch {
+    log('自动选课草稿保存失败：浏览器本地存储不可用。');
+  }
+}
+
+function normalizeAutoSelectionDraft(draft) {
+  const sourceGroups = Array.isArray(draft.groups) && draft.groups.length
+    ? draft.groups
+    : [defaultAutoGroup('体育课')];
+  const groups = sourceGroups.map((group, index) => ({
+    name: group.name || `选课组 ${index + 1}`,
+    strategy: normalizeAutoGroupStrategy(group.strategy),
+    targets: Array.isArray(group.targets) ? group.targets : []
+  }));
+  return {
+    groups,
+    activeGroupIndex: Math.max(0, Math.min(Number(draft.activeGroupIndex) || 0, groups.length - 1))
+  };
+}
+
+function defaultAutoGroup(name) {
+  return { name, strategy: DEFAULT_AUTO_GROUP_STRATEGY, targets: [] };
+}
+
+function normalizeAutoGroupStrategy(value) {
+  const text = String(value || '').trim().toLowerCase();
+  if (text === 'equivalent' || text === 'equal' || text.includes('等价')) return 'equivalent';
+  return DEFAULT_AUTO_GROUP_STRATEGY;
+}
+
+function nextAutoPriority(group) {
+  const priorities = group.targets.map((target) => Number(target.priority)).filter(Number.isFinite);
+  return priorities.length ? Math.max(1, Math.min(...priorities) - 10) : 100;
+}
+
+function sortAutoTargets(group) {
+  if (group.strategy === 'equivalent') return;
+  group.targets.sort((a, b) => Number(b.priority) - Number(a.priority));
+}
+
+function sameAutoTarget(left, right) {
+  return String(left.courseId) === String(right.courseId)
+    && [left.classId, left.submitClassId].filter(Boolean).some((id) => [right.classId, right.submitClassId].filter(Boolean).includes(id));
+}
+
+function autoClassLabel(item) {
+  return String(item.raw?.jxbmc || item.name || item.classId || item.submitClassId || '未命名教学班');
+}
+
+function autoCourseName(item) {
+  return String(state.courses.find((course) => String(course.courseId) === String(item.courseId))?.name || item.courseName || item.courseId || '');
+}
+
+function autoTeacherNames(item) {
+  return item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '';
 }
 
 function renderChosen() {

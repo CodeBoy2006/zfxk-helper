@@ -825,7 +825,7 @@ body[data-page="auto-selection"] #sessionForm {
 }
 
 .auto-group-detail,
-.auto-teaching-source {
+.auto-id-source {
   margin-top: 12px;
   border: 1px solid #e3ebf5;
   border-radius: 8px;
@@ -863,52 +863,25 @@ body[data-page="auto-selection"] #sessionForm {
   color: #1f2a44;
 }
 
-.auto-teaching-filters {
+.auto-id-target-form {
   display: grid;
-  grid-template-columns: 130px 170px minmax(160px, 1fr) auto;
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   padding: 10px 12px;
-  border-bottom: 1px solid #edf2f8;
 }
 
-.auto-teaching-class-list {
-  max-height: min(330px, 38vh);
-  overflow: auto;
+.auto-id-target-form label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 850;
 }
 
-.auto-teaching-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.auto-teaching-table th,
-.auto-teaching-table td {
-  border-bottom: 1px solid #e7edf6;
-  padding: 9px 10px;
-  text-align: left;
-  vertical-align: middle;
-}
-
-.auto-teaching-table th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: #f8fbff;
-  color: #5d6d86;
-  font-size: 12px;
+.auto-id-target-form #autoAddIdTargetBtn {
+  grid-column: 1 / -1;
+  min-height: 38px;
   font-weight: 900;
-}
-
-.auto-teaching-table td strong,
-.auto-teaching-table td span {
-  display: block;
-}
-
-.auto-teaching-table td span {
-  color: #16a06d;
-  font-size: 12px;
-  font-weight: 800;
 }
 
 .auto-meeting-cell {
@@ -1524,6 +1497,47 @@ body.auto-chrome-compact .auto-page-title {
   gap: 8px;
 }
 
+.auto-class-menu-wrap {
+  position: relative;
+  display: grid;
+  justify-items: center;
+}
+
+.auto-class-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  z-index: 8;
+  display: grid;
+  min-width: 132px;
+  border: 1px solid #d7e4f2;
+  border-radius: 7px;
+  padding: 6px;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(31, 48, 78, 0.16);
+}
+
+.auto-class-menu[hidden] {
+  display: none;
+}
+
+.auto-class-menu-item {
+  min-height: 32px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #1f2a44;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 850;
+  text-align: left;
+}
+
+.auto-class-menu-item:hover:not(:disabled) {
+  background: #eef6ff;
+  color: #155fa0;
+}
+
 .chosen-card .chosen-actions button {
   min-width: 64px;
   min-height: 40px;
@@ -1748,7 +1762,7 @@ body.auto-chrome-compact .auto-page-title {
   }
 
   .auto-group-fields,
-  .auto-teaching-filters {
+  .auto-id-target-form {
     grid-template-columns: 1fr;
   }
 
