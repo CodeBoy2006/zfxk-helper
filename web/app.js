@@ -1,6 +1,7 @@
 import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
 import { courseIdsForDisplayKey, groupCoursesForDisplay } from './course-groups.js';
+import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from './schedule-layout.js';
 
 const elements = {
   sessionForm: document.querySelector('#sessionForm'),
@@ -35,7 +36,6 @@ const elements = {
 
 const WEEKDAYS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
 const PERIODS = Array.from({ length: 12 }, (_, index) => index + 1);
-const COURSE_COLORS = ['#1769aa', '#0d8a72', '#b54708', '#7a3db8', '#b42318', '#2563eb', '#6f5e00', '#0f766e'];
 
 const state = {
   client: null,
@@ -520,7 +520,7 @@ function renderChosen() {
 function renderSelectedSchedule(snapshot = state.snapshot) {
   elements.selectedScheduleBody.replaceChildren();
   const classes = snapshot?.selectedClasses ?? [];
-  const { slots, timedCourseKeys } = buildSelectedScheduleSlots(snapshot);
+  const { blocksByStart, coveredKeys, timedCourseKeys } = buildSelectedScheduleLayout(snapshot);
   const courseCount = snapshot?.totals.courseCount ?? classes.length;
   elements.scheduleStatus.textContent = classes.length
     ? `${timedCourseKeys.size}/${courseCount} 门有时间 · ${classes.length} 个教学班`
@@ -534,18 +534,35 @@ function renderSelectedSchedule(snapshot = state.snapshot) {
     row.append(header);
 
     for (const day of WEEKDAYS) {
-      const entries = slots.get(scheduleSlotKey(day, period)) ?? [];
+      const key = scheduleSlotKey(day, period);
+      if (coveredKeys.has(key)) continue;
+
+      const block = blocksByStart.get(key);
       const cell = document.createElement('td');
-      cell.className = `schedule-cell ${entries.length > 1 ? 'conflict' : entries.length ? 'busy' : 'free'}`;
-      if (entries.length) {
+      const entries = block?.entries ?? [];
+      cell.className = `schedule-cell ${entries.length > 1 ? 'conflict' : entries.length ? 'busy' : 'free'} ${block?.rowSpan > 1 ? 'merged' : ''}`;
+
+      if (block) {
+        cell.rowSpan = block.rowSpan;
+        cell.style.setProperty('--course-span', String(block.rowSpan));
         cell.title = entries.map(formatScheduleTitle).join('\n');
         const stack = document.createElement('div');
         stack.className = 'schedule-cell-stack';
         for (const entry of entries.slice(0, 2)) {
           const label = document.createElement('span');
           label.className = 'schedule-course';
-          label.style.setProperty('--course-color', entry.color);
-          label.textContent = entry.courseName;
+          setScheduleCourseColor(label, entry.color);
+          const name = document.createElement('span');
+          name.className = 'schedule-course-name';
+          name.textContent = entry.courseName;
+          label.append(name);
+
+          if (block.rowSpan > 1 && entry.location) {
+            const meta = document.createElement('span');
+            meta.className = 'schedule-course-meta';
+            meta.textContent = entry.location;
+            label.append(meta);
+          }
           stack.append(label);
         }
         if (entries.length > 2) {
@@ -562,9 +579,16 @@ function renderSelectedSchedule(snapshot = state.snapshot) {
   }
 }
 
-function buildSelectedScheduleSlots(snapshot = state.snapshot) {
-  const slots = new Map();
+function setScheduleCourseColor(element, color) {
+  if (!color) return;
+  element.style.setProperty('--course-bg', color.bg);
+  element.style.setProperty('--course-border', color.border);
+  element.style.setProperty('--course-fg', color.fg);
+}
+
+function buildSelectedScheduleLayout(snapshot = state.snapshot) {
   const timedCourseKeys = new Set();
+  const entries = [];
   const selectedCourses = snapshot?.selectedCourses ?? [];
   const courseNameMap = new Map(selectedCourses.map((course) => [String(course.courseId), course.name]));
 
@@ -572,16 +596,14 @@ function buildSelectedScheduleSlots(snapshot = state.snapshot) {
     for (const entry of selectedScheduleEntries(item, index, courseNameMap)) {
       if (!entry.periods.length || !entry.day) continue;
       timedCourseKeys.add(entry.courseKey);
-      for (const period of entry.periods) {
-        const key = scheduleSlotKey(entry.day, period);
-        const slotEntries = slots.get(key) ?? [];
-        slotEntries.push(entry);
-        slots.set(key, slotEntries);
-      }
+      entries.push(entry);
     }
   });
 
-  return { slots, timedCourseKeys };
+  return {
+    ...buildScheduleBlocks(colorScheduleEntries(entries), { weekdays: WEEKDAYS, periods: PERIODS }),
+    timedCourseKeys
+  };
 }
 
 function selectedScheduleEntries(item, index, courseNameMap) {
@@ -594,7 +616,6 @@ function selectedScheduleEntries(item, index, courseNameMap) {
       ?? '未命名课程'
   );
   const className = item.name && item.name !== courseName ? item.name : '';
-  const color = COURSE_COLORS[index % COURSE_COLORS.length];
 
   return parseMeetingLines(item.scheduleText, item.locationText).map((meeting) => {
     const day = meetingWeekday(meeting);
@@ -602,7 +623,6 @@ function selectedScheduleEntries(item, index, courseNameMap) {
       courseKey,
       courseName,
       className,
-      color,
       day,
       periods: parsePeriodNumbers(meeting.period, meeting.raw),
       periodText: meeting.period || '',
@@ -611,10 +631,6 @@ function selectedScheduleEntries(item, index, courseNameMap) {
       teachers: item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || ''
     };
   });
-}
-
-function scheduleSlotKey(day, period) {
-  return `${day}:${period}`;
 }
 
 function meetingWeekday(meeting) {

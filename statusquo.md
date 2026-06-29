@@ -105,3 +105,9 @@
 - **Status:** Completed
 - **Next Steps:** Hard-refresh the Web frontend if the browser cached the old module graph.
 - **Context:** `loginWithZfCaptcha()` remains available through the local Node endpoint; browser code must not load `src/auth/login.js` because it imports `node:crypto`.
+
+## [2026-06-29 18:51] Merged Selected Schedule Blocks
+- **Changes:** Added reusable schedule layout helpers, merged continuous selected-course periods into single timetable blocks, applied course-colored backgrounds with adjacent color de-duplication, and added regression coverage.
+- **Status:** Completed
+- **Next Steps:** Visually confirm with live selected-course data after refreshing the Web frontend.
+- **Context:** Adjacent same-day course blocks avoid reusing the same palette color when possible; identical continuous course slots now render through one row-spanning cell.
