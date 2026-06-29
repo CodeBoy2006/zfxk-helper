@@ -420,6 +420,7 @@ function renderCourses() {
       <div class="meta">
         <span>${escapeHtml(course.courseCode || course.courseId)}</span>
         <span>${escapeHtml(course.typeName || course.typeCode)}</span>
+        ${course.ownershipName ? `<span>课程归属：${escapeHtml(course.ownershipName)}</span>` : ''}
       </div>
       <div class="flags">
         ${course.recommended ? '<span class="tag ok">推荐</span>' : ''}
@@ -456,6 +457,7 @@ function renderClasses() {
             <span class="capacity-pill">${item.selectedCount}/${item.capacity || '--'}</span>
           </div>
         </div>
+        ${renderOwnershipLine(item)}
         ${renderMeetingList(item.scheduleText, item.locationText)}
       </div>
     `;
@@ -688,6 +690,17 @@ function renderTeacherLine(item) {
     <div class="class-detail-line">
       <span class="detail-label">教师</span>
       <span>${escapeHtml(teachers)}</span>
+    </div>
+  `;
+}
+
+function renderOwnershipLine(item) {
+  const ownership = item.ownershipName || item.ownershipCode;
+  if (!ownership) return '';
+  return `
+    <div class="class-detail-line">
+      <span class="detail-label">归属</span>
+      <span>${escapeHtml(ownership)}</span>
     </div>
   `;
 }

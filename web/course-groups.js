@@ -6,8 +6,12 @@ export function groupCoursesForDisplay(courses = []) {
     if (existing) {
       existing.courses.push(course);
       if (!existing.courseIds.includes(course.courseId)) existing.courseIds.push(course.courseId);
+      addUnique(existing.ownershipNames, courseOwnershipLabel(course));
+      existing.ownershipName = existing.ownershipNames.join('、') || undefined;
       continue;
     }
+    const ownershipNames = [];
+    addUnique(ownershipNames, courseOwnershipLabel(course));
     groups.set(key, {
       key,
       courseIds: [course.courseId],
@@ -17,6 +21,9 @@ export function groupCoursesForDisplay(courses = []) {
       credit: course.credit,
       typeName: course.typeName,
       typeCode: course.typeCode,
+      ownershipName: ownershipNames.join('、') || undefined,
+      ownershipCode: course.ownershipCode,
+      ownershipNames,
       recommended: course.recommended,
       hasPrerequisiteHint: course.hasPrerequisiteHint,
       retake: course.retake
@@ -32,4 +39,13 @@ export function courseIdsForDisplayKey(courses = [], key) {
 
 function courseDisplayKey(course = {}) {
   return String(course.courseCode || course.courseId || '');
+}
+
+function courseOwnershipLabel(course = {}) {
+  return String(course.ownershipName || course.ownershipCode || '');
+}
+
+function addUnique(values, value) {
+  const normalized = String(value || '').trim();
+  if (normalized && !values.includes(normalized)) values.push(normalized);
 }

@@ -112,8 +112,8 @@ test('selected schedule layout merges continuous periods and avoids adjacent dup
 
 test('web course list groups rows with the same course code', () => {
   const groups = groupCoursesForDisplay([
-    { courseId: 'KC1-A', courseCode: 'CS101', name: '数据库', credit: 3, typeCode: '01' },
-    { courseId: 'KC1-B', courseCode: 'CS101', name: '数据库', credit: 3, typeCode: '01' },
+    { courseId: 'KC1-A', courseCode: 'CS101', name: '数据库', credit: 3, typeCode: '01', ownershipName: '人文社科' },
+    { courseId: 'KC1-B', courseCode: 'CS101', name: '数据库', credit: 3, typeCode: '01', ownershipName: '自然科学' },
     { courseId: 'KC2', courseCode: 'CS102', name: '算法', credit: 2, typeCode: '01' }
   ]);
 
@@ -121,6 +121,7 @@ test('web course list groups rows with the same course code', () => {
     ['CS101', ['KC1-A', 'KC1-B']],
     ['CS102', ['KC2']]
   ]);
+  assert.equal(groups[0].ownershipName, '人文社科、自然科学');
   assert.deepEqual(courseIdsForDisplayKey(groups.flatMap((group) => group.courses), 'CS101'), ['KC1-A', 'KC1-B']);
 });
 

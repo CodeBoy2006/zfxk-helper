@@ -47,6 +47,8 @@ export interface Course {
   credit: number;
   typeCode: string;
   typeName?: string;
+  ownershipCode?: string;
+  ownershipName?: string;
   retake: boolean;
   hasPrerequisiteHint: boolean;
   recommended?: boolean;
@@ -69,6 +71,8 @@ export interface TeachingClass {
   examText?: string;
   campusId?: string;
   collegeName?: string;
+  ownershipCode?: string;
+  ownershipName?: string;
   flags: {
     selected: boolean;
     full: boolean;
@@ -95,6 +99,8 @@ export interface SelectedClass {
   teachers?: Teacher[];
   scheduleText?: string;
   locationText?: string;
+  ownershipCode?: string;
+  ownershipName?: string;
   raw: Record<string, unknown>;
 }
 
@@ -104,6 +110,8 @@ export interface SelectedCourse {
   name: string;
   credit: number;
   typeCode: string;
+  ownershipCode?: string;
+  ownershipName?: string;
   retake: boolean;
   classes: SelectedClass[];
   raw: Record<string, unknown>;

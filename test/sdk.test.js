@@ -193,6 +193,8 @@ test('maps course and teaching-class rows into SDK models', () => {
     xf: '3.0',
     kklxdm: '10',
     kklxmc: '公选课',
+    kcgsdm: 'RW',
+    kcgsmc: '人文社科',
     cxbj: '0',
     xxkbj: '1',
     sftj: '1'
@@ -210,6 +212,8 @@ test('maps course and teaching-class rows into SDK models', () => {
     blyxrs: '3',
     sksj: '周一1-2',
     jxdd: '一教101',
+    kcgsdm: 'RW',
+    kcgsmc: '人文社科',
     jsxx: 'T1/张三/教授;T2/李四/讲师'
   });
 
@@ -218,6 +222,7 @@ test('maps course and teaching-class rows into SDK models', () => {
       courseId: course.courseId,
       name: course.name,
       credit: course.credit,
+      ownershipName: course.ownershipName,
       hasPrerequisiteHint: course.hasPrerequisiteHint,
       recommended: course.recommended
     },
@@ -225,6 +230,7 @@ test('maps course and teaching-class rows into SDK models', () => {
       courseId: 'KC1',
       name: '数据库',
       credit: 3,
+      ownershipName: '人文社科',
       hasPrerequisiteHint: true,
       recommended: true
     }
@@ -233,6 +239,7 @@ test('maps course and teaching-class rows into SDK models', () => {
   assert.equal(teachingClass.submitClassId, 'DO1');
   assert.equal(teachingClass.selectedCount, 29);
   assert.equal(teachingClass.capacity, 30);
+  assert.equal(teachingClass.ownershipName, '人文社科');
   assert.equal(teachingClass.flags.full, false);
   assert.equal(teachingClass.flags.canSelect, true);
   assert.equal(teachingClass.teachers[1].name, '李四');

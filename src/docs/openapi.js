@@ -255,6 +255,8 @@ const schemas = {
     credit: number(),
     typeCode: string(),
     typeName: string(),
+    ownershipCode: string(),
+    ownershipName: string(),
     retake: boolean(),
     hasPrerequisiteHint: boolean(),
     recommended: boolean(),
@@ -279,6 +281,8 @@ const schemas = {
     examText: string(),
     campusId: string(),
     collegeName: string(),
+    ownershipCode: string(),
+    ownershipName: string(),
     flags: object({
       selected: boolean(),
       full: boolean(),
@@ -302,6 +306,8 @@ const schemas = {
     name: string(),
     credit: number(),
     typeCode: string(),
+    ownershipCode: string(),
+    ownershipName: string(),
     retake: boolean(),
     classes: arrayOf(ref('SelectedClass')),
     raw: mapOf({})
@@ -320,6 +326,8 @@ const schemas = {
     teachers: arrayOf(ref('Teacher')),
     scheduleText: string(),
     locationText: string(),
+    ownershipCode: string(),
+    ownershipName: string(),
     raw: mapOf({})
   }, ['classId', 'submitClassId', 'courseId', 'name', 'selectedBySystem', 'selfSelected', 'canDrop', 'raw']),
   SelectionSnapshot: object({

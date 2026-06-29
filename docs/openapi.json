@@ -642,6 +642,12 @@
           "typeName": {
             "type": "string"
           },
+          "ownershipCode": {
+            "type": "string"
+          },
+          "ownershipName": {
+            "type": "string"
+          },
           "retake": {
             "type": "boolean"
           },
@@ -727,6 +733,12 @@
             "type": "string"
           },
           "collegeName": {
+            "type": "string"
+          },
+          "ownershipCode": {
+            "type": "string"
+          },
+          "ownershipName": {
             "type": "string"
           },
           "flags": {
@@ -818,6 +830,12 @@
           "typeCode": {
             "type": "string"
           },
+          "ownershipCode": {
+            "type": "string"
+          },
+          "ownershipName": {
+            "type": "string"
+          },
           "retake": {
             "type": "boolean"
           },
@@ -885,6 +903,12 @@
             "type": "string"
           },
           "locationText": {
+            "type": "string"
+          },
+          "ownershipCode": {
+            "type": "string"
+          },
+          "ownershipName": {
             "type": "string"
           },
           "raw": {

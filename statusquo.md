@@ -111,3 +111,9 @@
 - **Status:** Completed
 - **Next Steps:** Visually confirm with live selected-course data after refreshing the Web frontend.
 - **Context:** Adjacent same-day course blocks avoid reusing the same palette color when possible; identical continuous course slots now render through one row-spanning cell.
+
+## [2026-06-29 18:56] General Elective Course Ownership
+- **Changes:** Exposed `ownershipCode`/`ownershipName` on course, teaching-class, and selected-course models; displayed course ownership on Web course and teaching-class cards; regenerated OpenAPI/TypeDoc docs and added regression tests.
+- **Status:** Completed
+- **Next Steps:** Verify against live 通识选修课 data where the backend returns `kcgsmc`.
+- **Context:** Grouped course cards aggregate multiple ownership names with `、` when the same course code maps to multiple backend course IDs.

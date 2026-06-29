@@ -34,6 +34,8 @@ export function mapCourse(row = {}) {
     credit: number(firstDefined(row.xf, row.credit)),
     typeCode: String(firstDefined(row.kklxdm, row.typeCode, '')),
     typeName: firstDefined(row.kklxmc, row.kclxmc, row.typeName),
+    ownershipCode: firstDefined(row.kcgsdm, row.kcgs_id, row.kcgs, row.ownershipCode),
+    ownershipName: firstDefined(row.kcgsmc, row.ownershipName, row.courseOwnershipName),
     retake: bool(firstDefined(row.cxbj, row.retake)),
     hasPrerequisiteHint: bool(firstDefined(row.xxkbj, row.hasPrerequisiteHint)),
     recommended: row.sftj === undefined ? undefined : bool(row.sftj),
@@ -65,6 +67,8 @@ export function mapTeachingClass(row = {}) {
     examText: firstDefined(row.kssj, row.examText),
     campusId: firstDefined(row.xqh_id, row.campusId),
     collegeName: firstDefined(row.kkxymc, row.collegeName),
+    ownershipCode: firstDefined(row.kcgsdm, row.kcgs_id, row.kcgs, row.ownershipCode),
+    ownershipName: firstDefined(row.kcgsmc, row.ownershipName, row.courseOwnershipName),
     flags: {
       selected: bool(firstDefined(row.sfxz, row.selected)),
       full,
@@ -95,6 +99,8 @@ export function mapSelectionSnapshot(records = []) {
         name: String(firstDefined(row.kcmc, row.name, '')),
         credit: number(firstDefined(row.xf, row.credit)),
         typeCode: String(firstDefined(row.kklxdm, row.typeCode, '')),
+        ownershipCode: firstDefined(row.kcgsdm, row.kcgs_id, row.kcgs, row.ownershipCode),
+        ownershipName: firstDefined(row.kcgsmc, row.ownershipName, row.courseOwnershipName),
         retake: bool(firstDefined(row.cxbj, row.retake)),
         classes: [],
         raw: row
@@ -118,6 +124,8 @@ export function mapSelectionSnapshot(records = []) {
       teachers: parseTeachers(row.jsxx),
       scheduleText: firstDefined(row.sksj, row.scheduleText),
       locationText: firstDefined(row.jxdd, row.locationText),
+      ownershipCode: firstDefined(row.kcgsdm, row.kcgs_id, row.kcgs, row.ownershipCode),
+      ownershipName: firstDefined(row.kcgsmc, row.ownershipName, row.courseOwnershipName),
       raw: row
     };
 
