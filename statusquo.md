@@ -236,6 +236,12 @@
 - **Status:** Completed
 - **Next Steps:** Re-export courses from an initialized session; large course lists may take longer because the export now queries teaching-class details.
 - **Context:** Course search rows do not reliably include `sksj`/`jxdd`; those fields usually live on the teaching-class detail endpoint.
+
+## [2026-06-29 21:46] Export Detail Retry
+- **Changes:** Added a reusable Web retry helper and applied it to teaching-class detail fetches for both course and selected-course exports, with up to 3 retries and short backoff delays.
+- **Status:** Completed
+- **Next Steps:** Re-export from a live session if transient detail requests previously produced `教学班加载错误`.
+- **Context:** Retry keeps the existing 5-request concurrency cap; a detail fetch still records failure only after the retry budget is exhausted.
 - **Context:** The shared pane height now caps at `100vh`; narrow layouts still switch back to auto pane height.
 
 ## [2026-06-29 20:40] Full-Height Workspace Panes

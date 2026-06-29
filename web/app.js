@@ -3,6 +3,7 @@ import { parseCourseTypeOptions } from '../src/course-types.js';
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from './course-groups.js';
 import { loadAllCoursePages } from './course-pages.js';
 import { buildCourseExport, buildSelectedCoursesExport, downloadJson } from './export-data.js';
+import { withRetry } from './retry.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from './schedule-layout.js';
 
 const elements = {
@@ -475,7 +476,7 @@ async function buildCoursesForExport(courses) {
   const results = await mapWithConcurrency(uniqueCourses, 5, async (course) => {
     try {
       const classNames = teachingClassNamesById(state.courses, [String(course.courseId)]);
-      const teachingClasses = (await state.client.catalog.getTeachingClasses(course.courseId))
+      const teachingClasses = (await withRetry(() => state.client.catalog.getTeachingClasses(course.courseId), { retries: 3 }))
         .map((item) => inheritCourseOwnershipFromCourse(mergeTeachingClassName(item, classNames), course));
       return [String(course.courseId), { teachingClasses }];
     } catch (error) {
@@ -495,7 +496,7 @@ async function buildSelectedSnapshotForExport(snapshot) {
     .filter(Boolean);
   const results = await mapWithConcurrency(courseIds, 5, async (courseId) => {
     try {
-      return await state.client.catalog.getTeachingClasses(courseId);
+      return await withRetry(() => state.client.catalog.getTeachingClasses(courseId), { retries: 3 });
     } catch {
       return [];
     }

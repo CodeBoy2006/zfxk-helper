@@ -5,6 +5,7 @@ import test from 'node:test';
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from '../web/course-groups.js';
 import { buildCourseExport, buildSelectedCoursesExport } from '../web/export-data.js';
 import { loadAllCoursePages } from '../web/course-pages.js';
+import { withRetry } from '../web/retry.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from '../web/schedule-layout.js';
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -42,6 +43,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /buildCourseExport/);
   assert.match(app, /buildSelectedCoursesExport/);
   assert.match(app, /buildCoursesForExport/);
+  assert.match(app, /withRetry/);
   assert.match(app, /downloadJson/);
   assert.match(app, /parseCourseTypeOptions/);
   assert.doesNotMatch(app, /from '..\/src\/index\.js'/);
@@ -126,6 +128,43 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /\.course-list,\s*\.class-list,\s*\.chosen-list\s*\{[^}]*overflow-y:\s*auto/s);
   assert.match(css, /\.course-card,\s*\.class-card,\s*\.chosen-card\s*\{[^}]*flex:\s*0 0 auto/s);
   assert.doesNotMatch(css, /class-title-row/);
+});
+
+test('web retry helper retries transient failures with short backoff delays', async () => {
+  const delays = [];
+  let attempts = 0;
+  const result = await withRetry(async () => {
+    attempts += 1;
+    if (attempts < 4) throw new Error(`fail ${attempts}`);
+    return 'ok';
+  }, {
+    retries: 3,
+    delays: [100, 200, 400],
+    wait: async (delay) => delays.push(delay)
+  });
+
+  assert.equal(result, 'ok');
+  assert.equal(attempts, 4);
+  assert.deepEqual(delays, [100, 200, 400]);
+});
+
+test('web retry helper rethrows after the retry budget is exhausted', async () => {
+  const delays = [];
+  let attempts = 0;
+  await assert.rejects(
+    withRetry(async () => {
+      attempts += 1;
+      throw new Error(`still failing ${attempts}`);
+    }, {
+      retries: 3,
+      delays: [100, 200, 400],
+      wait: async (delay) => delays.push(delay)
+    }),
+    /still failing 4/
+  );
+
+  assert.equal(attempts, 4);
+  assert.deepEqual(delays, [100, 200, 400]);
 });
 
 test('course export uses readable mapped fields and preserves unmapped raw details', () => {
