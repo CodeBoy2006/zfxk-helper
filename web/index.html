@@ -33,9 +33,10 @@
             选课入口 Path
             <input id="pagePathInput" name="pagePath" value="/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512" autocomplete="off">
           </label>
+          <button id="solveCaptchaBtn" type="button" class="secondary">获取验证码 Cookie</button>
           <button type="submit">初始化</button>
         </form>
-        <p class="mode-note">前端请求本地 Node 代理；代理带上这里填写的 Cookie 访问学校教务系统。</p>
+        <p class="mode-note">前端请求本地 Node 代理；可先用验证码接口填入 Cookie，代理再带上这里的 Cookie 访问学校教务系统。</p>
         <div class="course-type-switch" aria-label="课程类型切换">
           <span>当前显示</span>
           <div id="courseTypeTabs" class="course-type-tabs" aria-live="polite"></div>

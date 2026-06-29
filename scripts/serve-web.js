@@ -4,7 +4,10 @@ import { createServer } from 'node:http';
 import { extname, join, normalize, resolve } from 'node:path';
 import { URLSearchParams } from 'node:url';
 
+import { formatCookieHeader, solveZfCaptcha } from '../src/captcha/index.js';
+
 const root = resolve('.');
+const captchaTemplateDir = resolve(root, 'src/captcha/templates');
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || '127.0.0.1';
 
@@ -20,6 +23,10 @@ const server = createServer(async (request, response) => {
   const url = new URL(request.url || '/', `http://${request.headers.host}`);
   if (url.pathname === '/api/proxy/get' || url.pathname === '/api/proxy/post') {
     await handleProxy(request, response, url.pathname);
+    return;
+  }
+  if (url.pathname === '/api/captcha/solve') {
+    await handleCaptchaSolve(request, response);
     return;
   }
 
@@ -74,6 +81,29 @@ async function handleProxy(request, response, endpoint) {
   }
 }
 
+async function handleCaptchaSolve(request, response) {
+  if (request.method !== 'POST') {
+    writeText(response, 405, 'Method not allowed');
+    return;
+  }
+
+  try {
+    const payload = await readJson(request);
+    const result = await solveZfCaptcha({
+      baseUrl: payload.baseUrl,
+      templateDir: captchaTemplateDir
+    });
+    writeJson(response, 200, {
+      status: result.status,
+      cookies: result.cookies,
+      cookie: formatCookieHeader(result.cookies),
+      distance: result.distance
+    });
+  } catch (error) {
+    writeJson(response, 500, { error: error.message });
+  }
+}
+
 function proxyHeaders(payload, method) {
   return {
     accept: method === 'GET' ? 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8' : 'application/json,text/javascript,*/*;q=0.8',
@@ -119,6 +149,11 @@ async function readJson(request) {
 function writeText(response, status, text) {
   response.writeHead(status, { 'content-type': 'text/plain; charset=UTF-8' });
   response.end(text);
+}
+
+function writeJson(response, status, payload) {
+  response.writeHead(status, { 'content-type': 'application/json; charset=UTF-8' });
+  response.end(JSON.stringify(payload));
 }
 
 server.listen(port, host, () => {

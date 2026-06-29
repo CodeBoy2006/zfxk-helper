@@ -81,3 +81,9 @@
 - **Status:** Completed
 - **Next Steps:** Validate with live search results where one course code maps to multiple backend course IDs.
 - **Context:** The selection payload still uses each teaching class's original `courseId`; only the left course display is merged.
+
+## [2026-06-29 18:13] zfCaptcha Integration
+- **Changes:** Added the Node.js `zfCaptcha` solver under `src/captcha/`, bundled template images, exported captcha helper APIs, added `/api/captcha/solve` to the local Web server, and wired a Web button that fills the existing Cookie field.
+- **Status:** Completed
+- **Next Steps:** Validate `/api/captcha/solve` against a live Zhengfang deployment and confirm whether that cookie is sufficient or must be followed by a separate username/password login flow.
+- **Context:** The helper solves the `zfcaptchaLogin` slider flow only; it intentionally does not submit account credentials.

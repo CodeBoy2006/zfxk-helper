@@ -7,6 +7,7 @@ const elements = {
   baseUrlInput: document.querySelector('#baseUrlInput'),
   cookieInput: document.querySelector('#cookieInput'),
   pagePathInput: document.querySelector('#pagePathInput'),
+  solveCaptchaBtn: document.querySelector('#solveCaptchaBtn'),
   keywordInput: document.querySelector('#keywordInput'),
   courseTypeTabs: document.querySelector('#courseTypeTabs'),
   filterPanel: document.querySelector('#filterPanel'),
@@ -47,6 +48,8 @@ elements.sessionForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   await initialize();
 });
+
+elements.solveCaptchaBtn.addEventListener('click', () => solveCaptchaCookie());
 
 elements.searchForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -148,6 +151,23 @@ async function initialize() {
     updateSessionSummary();
     await searchCoursesCore();
     await refreshSnapshotCore();
+  });
+}
+
+async function solveCaptchaCookie() {
+  await runTask('获取验证码 Cookie', async () => {
+    const baseUrl = elements.baseUrlInput.value.trim();
+    if (!baseUrl) throw new Error('请填写教务系统 Base URL。');
+
+    const response = await fetch('/api/captcha/solve', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json; charset=UTF-8' },
+      body: JSON.stringify({ baseUrl })
+    });
+    const result = await readResponse(response, '/api/captcha/solve');
+    if (!result.cookie) throw new Error('验证码接口未返回 Cookie。');
+    elements.cookieInput.value = result.cookie;
+    log('验证码 Cookie 已填入。');
   });
 }
 

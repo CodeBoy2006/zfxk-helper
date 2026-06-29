@@ -144,7 +144,21 @@ export interface Transport {
 
 export declare const endpoints: Record<string, string>;
 
+export interface CaptchaSolveResult {
+  status: 'success';
+  cookies: Record<string, string>;
+  cookieHeader: string;
+  distance: number;
+}
+
 export declare function createZfxkClient(options: ZfxkClientOptions): ZfxkClient;
+export declare function solveZfCaptcha(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string }): Promise<CaptchaSolveResult>;
+export declare function formatCookieHeader(cookies: Record<string, string>): string;
+export declare function resolveAppBaseUrl(baseUrl: string, appPath?: string): string;
+export declare function generateMouseTrack(distance: number, options?: Record<string, unknown>): Array<{ x: number; y: number; t: number }>;
+export declare function buildVerifyPayload(input: { rtk: string; instanceId: string; mouseTrack: Array<{ x: number; y: number; t: number }>; userAgent: string; now?: () => number }): URLSearchParams;
+export declare function generateFingerprint(image: { width: number; height: number; data: Uint8Array }): string;
+export declare function findGapByComparison(background: { width: number; height: number; data: Uint8Array }, template: { width: number; height: number; data: Uint8Array }, options?: Record<string, unknown>): number;
 export declare function loadRuntimeContext(input: { baseUrl?: string; html?: string; raw?: Record<string, string>; context?: RuntimeContext }): RuntimeContext;
 export declare function extractHiddenFields(html: string): Record<string, string>;
 export declare function parseCourseTypeOptions(input: string | { html?: string; raw?: Record<string, string> }): CourseTypeOption[];
@@ -164,6 +178,20 @@ export declare class HttpTransport implements Transport {
   constructor(options: { baseUrl: string; auth?: ZfxkClientOptions['auth']; fetchImpl?: typeof fetch });
   get(path: string, options?: Record<string, unknown>): Promise<unknown>;
   post(path: string, data?: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
+}
+
+export declare class ImageMatcher {
+  templates: Map<string, { name: string; image: { width: number; height: number; data: Uint8Array }; fingerprint: string }>;
+  constructor(entries?: Array<{ name: string; image: { width: number; height: number; data: Uint8Array } }>);
+  static fromDirectory(templateDir: string): Promise<ImageMatcher>;
+  add(name: string, image: { width: number; height: number; data: Uint8Array }): void;
+  findMatch(image: { width: number; height: number; data: Uint8Array }): { name: string; image: { width: number; height: number; data: Uint8Array }; fingerprint: string };
+}
+
+export declare class CaptchaSolver {
+  constructor(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string; matcher?: ImageMatcher });
+  static fromTemplates(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string; matcher?: ImageMatcher }): Promise<CaptchaSolver>;
+  solve(): Promise<CaptchaSolveResult>;
 }
 
 export declare class ZfxkClient {

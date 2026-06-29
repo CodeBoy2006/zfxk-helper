@@ -6,6 +6,17 @@ export { mapCourse, mapTeachingClass, mapSelectionSnapshot, parseTeachers } from
 export { normalizeConflictCheck, normalizeDropSelection, normalizeSaveSelection, normalizeTitleCheck } from './normalizers.js';
 export { HttpTransport, MemoryTransport } from './transport.js';
 export {
+  CaptchaSolver,
+  ImageMatcher,
+  buildVerifyPayload,
+  findGapByComparison,
+  formatCookieHeader,
+  generateFingerprint,
+  generateMouseTrack,
+  resolveAppBaseUrl,
+  solveZfCaptcha
+} from './captcha/index.js';
+export {
   CatalogService,
   ChosenService,
   ListenerService,

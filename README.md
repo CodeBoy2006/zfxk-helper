@@ -64,6 +64,22 @@ await client.bootstrapFromPage({
 If the cookie is expired or the page is not a supported selection entry, `bootstrapFromPage()` throws `CONTEXT_NOT_FOUND`.
 Some ZFXK entry pages leave `xkkz_id` and `kklxdm` blank until the browser runs page scripts; the parser also reads the original `firstXkkzId`, `firstKklxdm`, `firstKklxmc`, `firstXkkzXh`, `firstNjdmId`, and `firstZyhId` hidden fields used by those scripts.
 
+## Captcha Cookie Helper
+
+The SDK includes the `zfCaptcha` slider-captcha solver as an optional helper. It verifies the Zhengfang `zfcaptchaLogin` slider flow and returns the cookies observed during that captcha flow:
+
+```js
+import { formatCookieHeader, solveZfCaptcha } from 'zfxk';
+
+const captcha = await solveZfCaptcha({
+  baseUrl: 'https://example.edu.cn/jwglxt'
+});
+
+const cookie = formatCookieHeader(captcha.cookies);
+```
+
+This helper does not submit username/password credentials. Use the returned cookie as a bootstrap input only after confirming that your school deployment treats the captcha flow as sufficient for the page you are loading, or run any separate login workflow required by that deployment.
+
 ## Implemented Surface
 
 - `loadRuntimeContext()` parses hidden fields into a structured runtime context.
@@ -116,9 +132,9 @@ http://127.0.0.1:4173/
 Fill in:
 
 - `Base URL`: the school system root, for example `https://example.edu.cn/jwglxt`.
-- `Cookie`: the authenticated browser cookie copied from the school system.
+- `Cookie`: the authenticated browser cookie copied from the school system, or filled by the local captcha helper.
 - `Path`: the course-selection entry page used to parse hidden runtime fields.
 
-The browser calls the local Node server under `/api/proxy/*`. The Node proxy then sends requests to the school system with the provided `Cookie` header, avoiding the browser restriction that blocks frontend JavaScript from setting raw cross-origin cookies. Cookies stay in the local browser/server process and are not written to project files.
+The browser calls the local Node server under `/api/proxy/*` and `/api/captcha/solve`. The Node proxy then sends requests to the school system with the provided `Cookie` header, avoiding the browser restriction that blocks frontend JavaScript from setting raw cross-origin cookies. Cookies stay in the local browser/server process and are not written to project files.
 
 After initialization, the Web frontend reads the real selection page and dictionary endpoints to render the course-type switch and advanced filter bar. The course-type switch is populated from the school's own entry-page tabs, so it can switch the current display between entries such as 主修课程, 跨专业个性化课程, 通识选修课, and 体育分项 when those contexts are present. The filter bar supports keyword search plus the school system's filter parameters such as opening college, grade, student college, major, course category, course nature, course ownership, teaching mode, weekday, period, teaching-class name, retake, capacity, and schedule-conflict flags.

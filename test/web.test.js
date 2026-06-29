@@ -12,6 +12,7 @@ test('web frontend files expose the restored course-selection workspace', async 
 
   assert.match(html, /id="sessionForm"/);
   assert.match(html, /id="cookieInput"/);
+  assert.match(html, /id="solveCaptchaBtn"/);
   assert.match(html, /id="filterPanel"/);
   assert.match(html, /id="filterRows"/);
   assert.match(html, /id="courseTypeTabs"/);
@@ -29,6 +30,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /courseIdsForDisplayKey\(state\.courses, courseKey\)/);
   assert.match(app, /bootstrap\(\{ html: state\.entryHtml, raw:/);
   assert.match(app, /ProxyTransport/);
+  assert.match(app, /solveCaptchaCookie/);
+  assert.match(app, /\/api\/captcha\/solve/);
   assert.match(app, /switchCourseType/);
   assert.match(app, /renderCourseTypeTabs/);
   assert.match(app, /\/api\/proxy\/post/);
@@ -78,4 +81,6 @@ test('web script and static server are wired in package.json', async () => {
   assert.match(server, /web\/index\.html/);
   assert.match(server, /\/api\/proxy\/get/);
   assert.match(server, /\/api\/proxy\/post/);
+  assert.match(server, /\/api\/captcha\/solve/);
+  assert.match(server, /solveZfCaptcha/);
 });
