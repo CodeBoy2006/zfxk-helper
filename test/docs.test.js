@@ -21,6 +21,11 @@ test('buildOpenApiDocument exposes SDK schemas and workflow-oriented paths', () 
   assert.equal(document.paths['/sdk/catalog/courses'].post.operationId, 'searchCourses');
   assert.equal(document.paths['/sdk/selection/choose'].post.operationId, 'chooseCourse');
   assert.equal(document.paths['/sdk/selection/drop'].post.responses['200'].description, 'Drop result');
+  assert.equal(document.tags.some((tag) => tag.name === 'AutoSelection'), true);
+  assert.equal(document.paths['/sdk/auto-selection/config/validate'].post.operationId, 'validateAutoSelectionConfig');
+  assert.equal(document.paths['/sdk/auto-selection/config/import'].post.operationId, 'importAutoSelectionConfig');
+  assert.equal(document.components.schemas.AutoSelectionTaskConfig.required.includes('groups'), true);
+  assert.equal(document.components.schemas.AutoSelectionTarget.required.includes('priority'), true);
 });
 
 test('writeOpenApiDocument writes stable JSON output', async () => {
@@ -47,4 +52,16 @@ test('typedoc config targets public declarations and docs/api output', () => {
   assert.equal(typedocConfig.readme, 'README.md');
   assert.equal(typedocConfig.excludePrivate, true);
   assert.equal(typedocConfig.excludeInternal, true);
+});
+
+test('auto selection docs and declarations are exported', async () => {
+  const index = await readFile(new URL('../src/index.js', import.meta.url), 'utf8');
+  const declarations = await readFile(new URL('../src/index.d.ts', import.meta.url), 'utf8');
+  const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
+
+  assert.match(index, /auto-selection\/index\.js/);
+  assert.match(declarations, /AutoSelectionTaskManager/);
+  assert.match(declarations, /AutoSelectionTaskConfig/);
+  assert.match(readme, /自动选课后台任务/);
+  assert.match(readme, /导出文件不包含密码、Cookie/);
 });

@@ -26,6 +26,9 @@
     },
     {
       "name": "Extras"
+    },
+    {
+      "name": "AutoSelection"
     }
   ],
   "paths": {
@@ -390,6 +393,107 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SimpleResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/auto-selection/config/validate": {
+      "post": {
+        "tags": [
+          "AutoSelection"
+        ],
+        "operationId": "validateAutoSelectionConfig",
+        "summary": "Validate an automatic-selection task draft without starting it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoSelectionTaskConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "config": {
+                      "$ref": "#/components/schemas/AutoSelectionTaskConfig"
+                    }
+                  },
+                  "required": [
+                    "valid",
+                    "errors",
+                    "config"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/auto-selection/config/import": {
+      "post": {
+        "tags": [
+          "AutoSelection"
+        ],
+        "operationId": "importAutoSelectionConfig",
+        "summary": "Import a sanitized automatic-selection JSON config as a draft.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Imported draft config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "config": {
+                      "$ref": "#/components/schemas/AutoSelectionTaskConfig"
+                    }
+                  },
+                  "required": [
+                    "valid",
+                    "errors",
+                    "config"
+                  ]
                 }
               }
             }
@@ -1164,6 +1268,197 @@
         "required": [
           "courseId",
           "classId"
+        ]
+      },
+      "AutoSelectionTarget": {
+        "type": "object",
+        "properties": {
+          "targetId": {
+            "type": "string"
+          },
+          "courseId": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string"
+          },
+          "submitClassId": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "number"
+          },
+          "isBackup": {
+            "type": "boolean"
+          },
+          "allowAutoDrop": {
+            "type": "boolean"
+          },
+          "recoverOnUpgradeFailure": {
+            "type": "boolean"
+          },
+          "skipAfterNonCapacityFailure": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "lastObservedRemaining": {
+            "type": "number"
+          },
+          "lastMessage": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "courseId",
+          "classId",
+          "priority"
+        ]
+      },
+      "AutoSelectionGroupConfig": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "pauseScope": {
+            "type": "string"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoSelectionTarget"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "targets"
+        ]
+      },
+      "AutoSelectionTaskConfig": {
+        "type": "object",
+        "properties": {
+          "baseUrl": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "cookie": {
+            "type": "string"
+          },
+          "pagePath": {
+            "type": "string"
+          },
+          "intervalMs": {
+            "type": "integer"
+          },
+          "maxAttempts": {
+            "type": "integer"
+          },
+          "deadlineAt": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoSelectionGroupConfig"
+            }
+          }
+        },
+        "required": [
+          "baseUrl",
+          "pagePath",
+          "groups"
+        ]
+      },
+      "AutoSelectionTaskSnapshot": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "usernameMasked": {
+            "type": "string"
+          },
+          "authStatus": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "intervalMs": {
+            "type": "integer"
+          },
+          "nextRunAt": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoSelectionGroupConfig"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "id",
+                "at",
+                "type",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "usernameMasked",
+          "authStatus",
+          "attempts",
+          "intervalMs",
+          "groups",
+          "events"
         ]
       },
       "WorkflowMessage": {

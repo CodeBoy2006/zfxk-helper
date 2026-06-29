@@ -285,3 +285,85 @@ export declare class ZfxkClient {
   bootstrapFromPage(input: { path: string; raw?: Record<string, string>; request?: Record<string, unknown> }): Promise<RuntimeContext>;
   refreshContext(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
 }
+
+export type AutoSelectionTaskStatus = 'queued' | 'running' | 'auth-refreshing' | 'paused' | 'succeeded' | 'failed' | 'cancelled';
+export type AutoSelectionGroupStatus = 'WATCHING' | 'ATTEMPTING' | 'HOLDING' | 'PRECHECK_UPGRADE' | 'DROP_BACKUP' | 'CHOOSE_TARGET' | 'RECOVER_BACKUP' | 'SUCCEEDED' | 'PAUSED' | 'FAILED';
+export type AutoSelectionTargetStatus = 'watching' | 'selected' | 'skipped' | 'failed';
+
+export interface AutoSelectionTarget {
+  targetId?: string;
+  courseId: string;
+  classId: string;
+  submitClassId?: string;
+  label?: string;
+  priority: number;
+  isBackup?: boolean;
+  allowAutoDrop?: boolean;
+  recoverOnUpgradeFailure?: boolean;
+  skipAfterNonCapacityFailure?: boolean;
+  status?: AutoSelectionTargetStatus;
+  lastObservedRemaining?: number | null;
+  lastMessage?: string;
+  createdOrder?: number;
+}
+
+export interface AutoSelectionGroupConfig {
+  groupId?: string;
+  name: string;
+  state?: AutoSelectionGroupStatus;
+  currentPlacement?: AutoSelectionTarget | null;
+  isTopTargetSelected?: boolean;
+  pauseScope?: 'group' | 'task';
+  targets: AutoSelectionTarget[];
+}
+
+export interface AutoSelectionTaskConfig {
+  baseUrl: string;
+  username?: string;
+  password?: string;
+  cookie?: string;
+  pagePath: string;
+  intervalMs?: number;
+  maxAttempts?: number | null;
+  deadlineAt?: string | null;
+  groups: AutoSelectionGroupConfig[];
+}
+
+export interface AutoSelectionEvent {
+  id: string;
+  at: string;
+  type: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface AutoSelectionTaskSnapshot {
+  id: string;
+  status: AutoSelectionTaskStatus;
+  usernameMasked: string;
+  authStatus: string;
+  attempts: number;
+  intervalMs: number;
+  nextRunAt: string | null;
+  startedAt: string;
+  groups: AutoSelectionGroupConfig[];
+  events: AutoSelectionEvent[];
+}
+
+export declare function normalizeAutoSelectionConfig(input: Partial<AutoSelectionTaskConfig>, options?: Record<string, unknown>): AutoSelectionTaskConfig & { errors: string[] };
+export declare function validateAutoSelectionConfig(input: Partial<AutoSelectionTaskConfig>, options?: Record<string, unknown>): { valid: boolean; errors: string[]; config: AutoSelectionTaskConfig };
+export declare function exportAutoSelectionConfig(input: AutoSelectionTaskConfig): Record<string, unknown>;
+export declare function importAutoSelectionConfig(input: Record<string, unknown>): { valid: boolean; errors: string[]; config: AutoSelectionTaskConfig };
+
+export declare class AutoSelectionTaskManager {
+  constructor(options?: Record<string, unknown>);
+  createTask(input: AutoSelectionTaskConfig): Promise<AutoSelectionTaskSnapshot>;
+  listTasks(): AutoSelectionTaskSnapshot[];
+  getTask(id: string): AutoSelectionTaskSnapshot | null;
+  getTaskEvents(id: string): AutoSelectionEvent[] | null;
+  cancelTask(id: string): AutoSelectionTaskSnapshot | null;
+  resumeTask(id: string): AutoSelectionTaskSnapshot | null;
+  validateConfig(input: AutoSelectionTaskConfig): { valid: boolean; errors: string[]; config: AutoSelectionTaskConfig };
+  importConfig(input: Record<string, unknown>): { valid: boolean; errors: string[]; config: AutoSelectionTaskConfig };
+  exportConfig(input: AutoSelectionTaskConfig): Record<string, unknown>;
+}

@@ -26,3 +26,4 @@ export {
   TextbookService,
   WaitlistService
 } from './services.js';
+export * from './auto-selection/index.js';

@@ -35,7 +35,8 @@ export function buildOpenApiDocument(options = {}) {
       { name: 'Catalog' },
       { name: 'Chosen' },
       { name: 'Selection' },
-      { name: 'Extras' }
+      { name: 'Extras' },
+      { name: 'AutoSelection' }
     ],
     paths: {
       '/sdk/context/bootstrap': {
@@ -166,6 +167,36 @@ export function buildOpenApiDocument(options = {}) {
           requestBody: requestBody(ref('ListenerApplyInput')),
           responses: {
             200: ok('Listener result', ref('SimpleResult'))
+          }
+        }
+      },
+      '/sdk/auto-selection/config/validate': {
+        post: {
+          tags: ['AutoSelection'],
+          operationId: 'validateAutoSelectionConfig',
+          summary: 'Validate an automatic-selection task draft without starting it.',
+          requestBody: requestBody(ref('AutoSelectionTaskConfig')),
+          responses: {
+            200: ok('Validation result', object({
+              valid: boolean(),
+              errors: arrayOf(string()),
+              config: ref('AutoSelectionTaskConfig')
+            }, ['valid', 'errors', 'config']))
+          }
+        }
+      },
+      '/sdk/auto-selection/config/import': {
+        post: {
+          tags: ['AutoSelection'],
+          operationId: 'importAutoSelectionConfig',
+          summary: 'Import a sanitized automatic-selection JSON config as a draft.',
+          requestBody: requestBody(mapOf({})),
+          responses: {
+            200: ok('Imported draft config', object({
+              valid: boolean(),
+              errors: arrayOf(string()),
+              config: ref('AutoSelectionTaskConfig')
+            }, ['valid', 'errors', 'config']))
           }
         }
       }
@@ -391,6 +422,57 @@ const schemas = {
     classId: string(),
     conflictClassIds: arrayOf(string())
   }, ['courseId', 'classId']),
+  AutoSelectionTarget: object({
+    targetId: string(),
+    courseId: string(),
+    classId: string(),
+    submitClassId: string(),
+    label: string(),
+    priority: number(),
+    isBackup: boolean(),
+    allowAutoDrop: boolean(),
+    recoverOnUpgradeFailure: boolean(),
+    skipAfterNonCapacityFailure: boolean(),
+    status: string(),
+    lastObservedRemaining: number(),
+    lastMessage: string()
+  }, ['courseId', 'classId', 'priority']),
+  AutoSelectionGroupConfig: object({
+    groupId: string(),
+    name: string(),
+    state: string(),
+    pauseScope: string(),
+    targets: arrayOf(ref('AutoSelectionTarget'))
+  }, ['name', 'targets']),
+  AutoSelectionTaskConfig: object({
+    baseUrl: string(),
+    username: string(),
+    password: string(),
+    cookie: string(),
+    pagePath: string(),
+    intervalMs: integer(),
+    maxAttempts: integer(),
+    deadlineAt: string(),
+    groups: arrayOf(ref('AutoSelectionGroupConfig'))
+  }, ['baseUrl', 'pagePath', 'groups']),
+  AutoSelectionTaskSnapshot: object({
+    id: string(),
+    status: string(),
+    usernameMasked: string(),
+    authStatus: string(),
+    attempts: integer(),
+    intervalMs: integer(),
+    nextRunAt: string(),
+    startedAt: string(),
+    groups: arrayOf(ref('AutoSelectionGroupConfig')),
+    events: arrayOf(object({
+      id: string(),
+      at: string(),
+      type: string(),
+      message: string(),
+      details: mapOf({})
+    }, ['id', 'at', 'type', 'message']))
+  }, ['id', 'status', 'usernameMasked', 'authStatus', 'attempts', 'intervalMs', 'groups', 'events']),
   WorkflowMessage: object({
     code: string(),
     message: string(),
