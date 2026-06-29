@@ -577,27 +577,13 @@ function renderChosen() {
 
     const actions = document.createElement('div');
     actions.className = 'chosen-actions class-card-action';
-    const moveUpButton = document.createElement('button');
-    moveUpButton.type = 'button';
-    moveUpButton.className = 'secondary reorder-button';
-    moveUpButton.textContent = '上';
-    moveUpButton.title = '上移一位';
-    moveUpButton.disabled = index === 0;
-    moveUpButton.addEventListener('click', () => moveSelectedClassByOffset(classId, -1));
-    const moveDownButton = document.createElement('button');
-    moveDownButton.type = 'button';
-    moveDownButton.className = 'secondary reorder-button';
-    moveDownButton.textContent = '下';
-    moveDownButton.title = '下移一位';
-    moveDownButton.disabled = index === classes.length - 1;
-    moveDownButton.addEventListener('click', () => moveSelectedClassByOffset(classId, 1));
     const dropButton = document.createElement('button');
     dropButton.type = 'button';
     dropButton.className = 'danger';
     dropButton.textContent = '退选';
     dropButton.disabled = !item.canDrop;
     dropButton.addEventListener('click', () => dropClass(item));
-    actions.append(moveUpButton, moveDownButton, dropButton);
+    actions.append(dropButton);
     card.append(actions);
     elements.chosenList.append(card);
   });
@@ -612,19 +598,6 @@ function moveSelectedClass(sourceClassId, targetClassId, placement = 'before') {
   const targetIndex = classes.findIndex((item) => String(item.classId) === String(targetClassId));
   if (targetIndex < 0) return false;
   classes.splice(targetIndex + (placement === 'after' ? 1 : 0), 0, moved);
-  updateSelectedClassOrder(classes);
-  return true;
-}
-
-function moveSelectedClassByOffset(classId, offset) {
-  if (!state.snapshot?.selectedClasses.length || !classId || !offset) return false;
-  const classes = [...state.snapshot.selectedClasses];
-  const sourceIndex = classes.findIndex((item) => String(item.classId) === String(classId));
-  if (sourceIndex < 0) return false;
-  const targetIndex = Math.max(0, Math.min(classes.length - 1, sourceIndex + offset));
-  if (targetIndex === sourceIndex) return false;
-  const [moved] = classes.splice(sourceIndex, 1);
-  classes.splice(targetIndex, 0, moved);
   updateSelectedClassOrder(classes);
   return true;
 }

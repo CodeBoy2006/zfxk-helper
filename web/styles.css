@@ -450,7 +450,7 @@ textarea {
 }
 
 .chosen-card {
-  grid-template-columns: minmax(0, 1fr) 118px;
+  grid-template-columns: minmax(0, 1fr) 96px;
   cursor: grab;
 }
 
@@ -483,21 +483,7 @@ textarea {
 }
 
 .chosen-actions {
-  grid-template-columns: repeat(2, 36px);
-  align-content: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px;
-}
-
-.chosen-actions .reorder-button {
-  min-width: 36px;
-  padding: 0;
-}
-
-.chosen-actions .danger {
-  grid-column: 1 / -1;
-  width: 100%;
+  padding: 12px 14px 12px 4px;
 }
 
 .course-card {

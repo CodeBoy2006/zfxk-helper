@@ -153,3 +153,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and drag or move selected courses, then click 保存排序 to persist the new order.
 - **Context:** The save endpoint is unchanged; this only makes the selected list reorderable before submission.
+
+## [2026-06-29 19:37] Remove Selected-Course Move Buttons
+- **Changes:** Removed the 上/下 selected-course reorder buttons and their helper/styles while keeping drag-and-drop ordering and save-order behavior.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and use drag-and-drop to adjust selected-course order.
+- **Context:** The selected-course action column is back to the single 退选 button.

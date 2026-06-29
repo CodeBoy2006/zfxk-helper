@@ -77,6 +77,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /dragstart/);
   assert.match(app, /moveSelectedClass/);
   assert.match(app, /拖动调整顺序/);
+  assert.doesNotMatch(app, /moveSelectedClassByOffset/);
+  assert.doesNotMatch(app, /上移一位|下移一位/);
+  assert.doesNotMatch(css, /reorder-button/);
   assert.match(css, /chosen-card\.dragging/);
   assert.doesNotMatch(app, /MemoryTransport/);
   assert.doesNotMatch(app, /createDemoClient/);
