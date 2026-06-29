@@ -33,6 +33,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /当前已选课程时间分布/);
   assert.match(html, /id="exportCoursesBtn"/);
   assert.match(html, /id="exportSelectedBtn"/);
+  assert.match(html, /<aside class="catalog-pane"[\s\S]*id="exportCoursesBtn"/);
+  assert.match(html, /<aside id="chosenPanel"[\s\S]*id="exportSelectedBtn"/);
+  assert.doesNotMatch(html.match(/<div class="topbar-actions">([\s\S]*?)<\/div>/)?.[1] ?? '', /exportCoursesBtn|exportSelectedBtn/);
   assert.match(html, /id="activityLog"/);
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(app, /createZfxkClient/);

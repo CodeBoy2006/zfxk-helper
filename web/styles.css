@@ -412,6 +412,13 @@ textarea {
   min-width: 0;
 }
 
+.section-heading-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
 .section-text-button {
   min-height: 28px;
   border: 0;

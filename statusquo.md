@@ -224,6 +224,12 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend, initialize a live session, then use `导出课程` and `导出已选` to inspect the generated JSON files.
 - **Context:** Course export uses the currently loaded/search result set; selected export uses the current chosen snapshot and omits internal `Map` indexes.
+
+## [2026-06-29 20:54] Export Button Placement
+- **Changes:** Moved `导出课程` into the course-list pane header and `导出已选` into the selected-course pane header; updated disabled-state handling, README wording, and Web placement tests.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and confirm both export actions appear in their corresponding columns.
+- **Context:** The topbar now only keeps global actions such as refresh and log clearing.
 - **Context:** The shared pane height now caps at `100vh`; narrow layouts still switch back to auto pane height.
 
 ## [2026-06-29 20:40] Full-Height Workspace Panes
