@@ -243,3 +243,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend with a live session and confirm non-droppable selected courses show `已选` while droppable rows still show `退选`.
 - **Context:** Read-only live inspection showed the screenshot difference is caused by row-level `sfxkbj`: rows with `sfxkbj=0` are hidden behind `已选`; the droppable `嵌入式系统` row had `sfxkbj=1`.
+
+## [2026-06-29 21:21] Auto Selection Design
+- **Changes:** Added `docs/superpowers/specs/2026-06-29-auto-selection-design.md` covering background Node tasks, selection groups, priority upgrades, backup recovery, account-password auth renewal, Web APIs, UI, import/export, errors, and tests.
+- **Status:** Completed
+- **Next Steps:** Review the design document, then turn it into an implementation plan before coding.
+- **Context:** The design keeps passwords and cookies in Node memory only; exported task configs intentionally omit credentials and runtime state.
