@@ -62,6 +62,7 @@ const state = {
   filters: {},
   expandedFilterRows: new Set(),
   filtersCollapsed: false,
+  draggedSelectedClassId: null,
   busy: false
 };
 
@@ -524,8 +525,13 @@ function renderChosen() {
   }
 
   classes.forEach((item, index) => {
+    const classId = String(item.classId);
     const card = document.createElement('article');
     card.className = 'chosen-card';
+    card.draggable = true;
+    card.dataset.classId = classId;
+    card.title = '拖动调整顺序，保存排序后生效';
+    card.setAttribute('aria-label', `${index + 1}. ${item.name}，拖动调整顺序`);
     card.innerHTML = `
       <div class="class-card-content">
         <div class="card-title">
@@ -544,17 +550,94 @@ function renderChosen() {
         </div>
       </div>
     `;
+    card.addEventListener('dragstart', (event) => {
+      state.draggedSelectedClassId = classId;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', classId);
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragover', (event) => {
+      if (!state.draggedSelectedClassId || state.draggedSelectedClassId === classId) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      card.classList.add('drag-over');
+    });
+    card.addEventListener('dragleave', (event) => {
+      if (!card.contains(event.relatedTarget)) card.classList.remove('drag-over');
+    });
+    card.addEventListener('drop', (event) => {
+      event.preventDefault();
+      const sourceClassId = event.dataTransfer.getData('text/plain') || state.draggedSelectedClassId;
+      const rect = card.getBoundingClientRect();
+      const placement = event.clientY > rect.top + rect.height / 2 ? 'after' : 'before';
+      card.classList.remove('drag-over');
+      moveSelectedClass(sourceClassId, classId, placement);
+    });
+    card.addEventListener('dragend', clearSelectedClassDragState);
+
     const actions = document.createElement('div');
     actions.className = 'chosen-actions class-card-action';
+    const moveUpButton = document.createElement('button');
+    moveUpButton.type = 'button';
+    moveUpButton.className = 'secondary reorder-button';
+    moveUpButton.textContent = '上';
+    moveUpButton.title = '上移一位';
+    moveUpButton.disabled = index === 0;
+    moveUpButton.addEventListener('click', () => moveSelectedClassByOffset(classId, -1));
+    const moveDownButton = document.createElement('button');
+    moveDownButton.type = 'button';
+    moveDownButton.className = 'secondary reorder-button';
+    moveDownButton.textContent = '下';
+    moveDownButton.title = '下移一位';
+    moveDownButton.disabled = index === classes.length - 1;
+    moveDownButton.addEventListener('click', () => moveSelectedClassByOffset(classId, 1));
     const dropButton = document.createElement('button');
     dropButton.type = 'button';
     dropButton.className = 'danger';
     dropButton.textContent = '退选';
     dropButton.disabled = !item.canDrop;
     dropButton.addEventListener('click', () => dropClass(item));
-    actions.append(dropButton);
+    actions.append(moveUpButton, moveDownButton, dropButton);
     card.append(actions);
     elements.chosenList.append(card);
+  });
+}
+
+function moveSelectedClass(sourceClassId, targetClassId, placement = 'before') {
+  if (!state.snapshot?.selectedClasses.length || !sourceClassId || !targetClassId || sourceClassId === targetClassId) return false;
+  const classes = [...state.snapshot.selectedClasses];
+  const sourceIndex = classes.findIndex((item) => String(item.classId) === String(sourceClassId));
+  if (sourceIndex < 0) return false;
+  const [moved] = classes.splice(sourceIndex, 1);
+  const targetIndex = classes.findIndex((item) => String(item.classId) === String(targetClassId));
+  if (targetIndex < 0) return false;
+  classes.splice(targetIndex + (placement === 'after' ? 1 : 0), 0, moved);
+  updateSelectedClassOrder(classes);
+  return true;
+}
+
+function moveSelectedClassByOffset(classId, offset) {
+  if (!state.snapshot?.selectedClasses.length || !classId || !offset) return false;
+  const classes = [...state.snapshot.selectedClasses];
+  const sourceIndex = classes.findIndex((item) => String(item.classId) === String(classId));
+  if (sourceIndex < 0) return false;
+  const targetIndex = Math.max(0, Math.min(classes.length - 1, sourceIndex + offset));
+  if (targetIndex === sourceIndex) return false;
+  const [moved] = classes.splice(sourceIndex, 1);
+  classes.splice(targetIndex, 0, moved);
+  updateSelectedClassOrder(classes);
+  return true;
+}
+
+function updateSelectedClassOrder(selectedClasses) {
+  state.snapshot = { ...state.snapshot, selectedClasses };
+  renderChosen();
+}
+
+function clearSelectedClassDragState() {
+  state.draggedSelectedClassId = null;
+  elements.chosenList.querySelectorAll('.dragging, .drag-over').forEach((card) => {
+    card.classList.remove('dragging', 'drag-over');
   });
 }
 

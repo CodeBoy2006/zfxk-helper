@@ -147,3 +147,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the live Web frontend and confirm the teaching-class card matches the latest reference crop.
 - **Context:** This also avoids showing fallback internal course IDs such as long backend UUID-like identifiers in the teaching-class card header.
+
+## [2026-06-29 19:34] Selected-Course Reordering
+- **Changes:** Added drag-and-drop plus up/down controls for Web selected-course cards, updating the in-memory selected-class order before the existing save-order request.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and drag or move selected courses, then click 保存排序 to persist the new order.
+- **Context:** The save endpoint is unchanged; this only makes the selected list reorderable before submission.

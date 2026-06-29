@@ -449,6 +449,20 @@ textarea {
   box-shadow: none;
 }
 
+.chosen-card {
+  grid-template-columns: minmax(0, 1fr) 118px;
+  cursor: grab;
+}
+
+.chosen-card.dragging {
+  opacity: 0.56;
+}
+
+.chosen-card.drag-over {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent), 0 4px 12px rgba(31, 115, 208, 0.12);
+}
+
 .class-card-content {
   display: grid;
   min-width: 0;
@@ -466,6 +480,24 @@ textarea {
   place-items: center;
   border-left: 0;
   padding: 12px 14px 12px 4px;
+}
+
+.chosen-actions {
+  grid-template-columns: repeat(2, 36px);
+  align-content: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+}
+
+.chosen-actions .reorder-button {
+  min-width: 36px;
+  padding: 0;
+}
+
+.chosen-actions .danger {
+  grid-column: 1 / -1;
+  width: 100%;
 }
 
 .course-card {
