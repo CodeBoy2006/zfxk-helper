@@ -216,7 +216,7 @@ test('searchCourses and getTeachingClasses post context-rich requests', async ()
       sfxsjc: '0'
     },
     [endpoints.teachingClasses]: [
-      { jxb_id: 'JXB1', do_jxb_id: 'DO1', kch_id: 'KC1', jxbmc: '数据库-01', jxbzls: '1', xf: '3', yxzrs: '5', jxbrl: '10' }
+      { jxb_id: 'JXB1', do_jxb_id: 'DO1', jxbzls: '1', xf: '3', yxzrs: '5', jxbrl: '10' }
     ]
   });
 
@@ -225,6 +225,8 @@ test('searchCourses and getTeachingClasses post context-rich requests', async ()
 
   assert.equal(courses[0].courseId, 'KC1');
   assert.equal(classes[0].submitClassId, 'DO1');
+  assert.equal(classes[0].courseId, 'KC1');
+  assert.equal(classes[0].name, '');
   assert.equal(transport.calls[0].path, endpoints.coursePage);
   assert.equal(transport.calls[0].data.xkkz_id, 'KZ1');
   assert.equal(transport.calls[0].data.kklxdm, '10');

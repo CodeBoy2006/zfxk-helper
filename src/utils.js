@@ -23,7 +23,8 @@ export function joinCsv(value) {
 }
 
 export function firstDefined(...values) {
-  return values.find((value) => value !== undefined && value !== null && value !== '');
+  const found = values.find((value) => value !== undefined && value !== null && value !== '');
+  return found === undefined && values.length ? values.at(-1) : found;
 }
 
 export function asArray(value) {

@@ -2,7 +2,7 @@ import { buildContextRequest } from './context.js';
 import { endpoints } from './endpoints.js';
 import { mapCourse, mapSelectionSnapshot, mapTeachingClass } from './mappers.js';
 import { normalizeConflictCheck, normalizeDropSelection, normalizeSaveSelection, normalizeTitleCheck } from './normalizers.js';
-import { asArray, bool, compact, joinCsv, number } from './utils.js';
+import { asArray, bool, compact, firstDefined, joinCsv, number } from './utils.js';
 
 export class CatalogService {
   constructor(client) {
@@ -45,7 +45,7 @@ export class CatalogService {
       })
     );
     if (response === '0' || response === 0) throw new Error('Illegal access while loading teaching classes.');
-    return asArray(response).map(mapTeachingClass);
+    return asArray(response).map((row) => mapTeachingClass({ ...row, kch_id: firstDefined(row.kch_id, courseId) }));
   }
 }
 

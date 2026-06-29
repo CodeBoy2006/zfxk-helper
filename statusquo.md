@@ -33,3 +33,9 @@
 - **Status:** Completed
 - **Next Steps:** Retry the Web initialization with the same Cookie/Base URL/Path.
 - **Context:** The original ZFXK page scripts copy these `first*` values into `xkkz_id` and `kklxdm` after load; the SDK parses static HTML and must mirror that setup.
+
+## [2026-06-29 16:33] Read-Only Live Interface Check
+- **Changes:** Verified authenticated read-only bootstrap, course search, teaching-class lookup, chosen snapshot, and local proxy GET against the live school system; fixed SDK teaching-class mapping when the upstream row omits `kch_id`/`jxbmc`.
+- **Status:** Completed
+- **Next Steps:** Use the Web frontend for manual read-only browsing first, then only test mutating operations with explicit confirmation.
+- **Context:** No choose/drop/reorder/save endpoint was called during the live check; the local fix prevents literal `"undefined"` values in mapped teaching-class fields.
