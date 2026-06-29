@@ -13,6 +13,7 @@ import {
   planGroupAction,
   reconcileGroups,
   snapshotHasTarget,
+  upgradeTarget,
   validateAutoSelectionConfig
 } from '../src/auto-selection/index.js';
 
@@ -234,4 +235,126 @@ test('auto-selection choose does a second snapshot before treating selected as c
   assert.equal(snapshotCalls, 2);
   assert.equal(group.state, 'SUCCEEDED');
   assert.equal(group.currentPlacement.targetId, target.targetId);
+});
+
+test('auto-selection upgrade recovers backup when higher target is capacity full', async () => {
+  const low = {
+    targetId: 'KC1:LOW:1',
+    courseId: 'KC1',
+    classId: 'LOW',
+    submitClassId: 'DO_LOW',
+    priority: 10,
+    allowAutoDrop: true,
+    recoverOnUpgradeFailure: true,
+    status: 'selected'
+  };
+  const high = {
+    targetId: 'KC1:HIGH:0',
+    courseId: 'KC1',
+    classId: 'HIGH',
+    submitClassId: 'DO_HIGH',
+    priority: 100,
+    allowAutoDrop: false,
+    recoverOnUpgradeFailure: true,
+    status: 'watching'
+  };
+  const group = {
+    name: '体育课',
+    state: 'HOLDING',
+    targets: [high, low],
+    currentPlacement: low,
+    isTopTargetSelected: false
+  };
+  const calls = [];
+  const task = {
+    events: createAutoSelectionEventLog(),
+    client: {
+      selection: {
+        drop: async (input) => {
+          calls.push(['drop', input.classId]);
+          return { status: 'dropped' };
+        },
+        choose: async (input) => {
+          calls.push(['choose', input.classId]);
+          return input.classId === 'HIGH'
+            ? { status: 'capacity-full' }
+            : { status: 'selected' };
+        }
+      },
+      chosen: {
+        snapshot: async () => makeSnapshot([{ courseId: 'KC1', classId: 'LOW', submitClassId: 'DO_LOW', selectedBySystem: true }])
+      }
+    }
+  };
+
+  const outcome = await upgradeTarget(task, group, low, high);
+  assert.equal(outcome.type, 'capacity-full');
+  assert.deepEqual(calls, [['drop', 'LOW'], ['choose', 'HIGH'], ['choose', 'LOW']]);
+  assert.equal(group.currentPlacement.targetId, low.targetId);
+  assert.equal(group.state, 'HOLDING');
+});
+
+test('auto-selection upgrade handles session expired after drop by reauthing and recovering backup', async () => {
+  const low = {
+    targetId: 'KC1:LOW:1',
+    courseId: 'KC1',
+    classId: 'LOW',
+    submitClassId: 'DO_LOW',
+    priority: 10,
+    allowAutoDrop: true,
+    recoverOnUpgradeFailure: true,
+    status: 'selected'
+  };
+  const high = {
+    targetId: 'KC1:HIGH:0',
+    courseId: 'KC1',
+    classId: 'HIGH',
+    submitClassId: 'DO_HIGH',
+    priority: 100,
+    allowAutoDrop: false,
+    recoverOnUpgradeFailure: true,
+    status: 'watching'
+  };
+  const group = {
+    name: '体育课',
+    state: 'HOLDING',
+    targets: [high, low],
+    currentPlacement: low,
+    isTopTargetSelected: false
+  };
+  const calls = [];
+  let snapshotCalls = 0;
+  const task = {
+    events: createAutoSelectionEventLog(),
+    refreshAuth: async () => {
+      calls.push(['auth']);
+    },
+    client: {
+      selection: {
+        drop: async () => {
+          calls.push(['drop']);
+          return { status: 'dropped' };
+        },
+        choose: async (input) => {
+          calls.push(['choose', input.classId]);
+          return input.classId === 'HIGH'
+            ? { status: 'rejected', reason: 'SESSION_EXPIRED' }
+            : { status: 'selected' };
+        }
+      },
+      chosen: {
+        snapshot: async () => {
+          snapshotCalls += 1;
+          return snapshotCalls === 1
+            ? makeSnapshot([])
+            : makeSnapshot([{ courseId: 'KC1', classId: 'LOW', submitClassId: 'DO_LOW', selectedBySystem: true }]);
+        }
+      }
+    }
+  };
+
+  const outcome = await upgradeTarget(task, group, low, high);
+  assert.equal(outcome.type, 'session-expired');
+  assert.deepEqual(calls, [['drop'], ['choose', 'HIGH'], ['auth'], ['choose', 'LOW']]);
+  assert.equal(group.currentPlacement.targetId, low.targetId);
 });
