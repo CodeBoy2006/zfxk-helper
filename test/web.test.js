@@ -54,6 +54,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /renderCourseTypeTabs/);
   assert.match(app, /\/api\/proxy\/post/);
   assert.match(app, /loadFilterGroups/);
+  assert.match(app, /enrichCourseOwnerships/);
+  assert.match(app, /inheritCourseOwnership/);
+  assert.match(app, /课程归属：/);
   assert.match(app, /renderMeetingList/);
   assert.match(app, /raw\?\.jxbmc/);
   assert.match(app, /class-name-value/);
@@ -69,6 +72,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /parsePeriodNumbers/);
   assert.match(app, /splitHtmlLines/);
   assert.match(app, /kkbm_id_list/);
+  assert.match(app, /kcgs_list/);
   assert.match(app, /skjc_list/);
   assert.match(app, /cxbj_list/);
   assert.match(app, /yl_list/);
@@ -93,6 +97,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /class-card-main/);
   assert.match(css, /class-card-action/);
   assert.match(css, /schedule-grid/);
+  assert.match(css, /course-ownership-value/);
   assert.match(css, /schedule-course/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);

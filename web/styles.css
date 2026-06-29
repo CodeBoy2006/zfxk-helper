@@ -625,6 +625,10 @@ textarea {
   color: #68758d;
 }
 
+.course-ownership-value {
+  color: #495a75;
+}
+
 .meeting-list {
   display: grid;
   gap: 5px;

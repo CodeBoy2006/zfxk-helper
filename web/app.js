@@ -277,11 +277,13 @@ async function searchCourses() {
 }
 
 async function searchCoursesCore() {
-  state.courses = await state.client.catalog.searchCourses({
+  const query = {
     keyword: elements.keywordInput.value.trim(),
     extra: selectedFilterPayload(),
     page: { start: 1, size: 20 }
-  });
+  };
+  state.courses = await state.client.catalog.searchCourses(query);
+  await enrichCourseOwnerships(query);
   state.selectedCourseId = groupCoursesForDisplay(state.courses)[0]?.key ?? null;
   renderCourses();
   if (state.selectedCourseId) {
@@ -304,9 +306,60 @@ async function loadClassesCore(courseKey) {
   const courseIds = courseIdsForDisplayKey(state.courses, courseKey);
   const classGroups = await Promise.all(courseIds.map((courseId) => state.client.catalog.getTeachingClasses(courseId)));
   const classNames = teachingClassNamesById(state.courses, courseIds);
-  state.classes = classGroups.flat().map((item) => mergeTeachingClassName(item, classNames));
+  state.classes = classGroups.flat().map((item) => inheritCourseOwnership(mergeTeachingClassName(item, classNames)));
   renderClasses();
   log(`课程 ${courseKey} 加载 ${state.classes.length} 个教学班。`);
+}
+
+async function enrichCourseOwnerships(query) {
+  const ownershipGroup = state.filterGroups.find((group) => group.key === 'kcgs_list');
+  if (!ownershipGroup?.options?.length || !state.courses.some(needsCourseOwnership)) return;
+
+  const selectedOwnership = state.filters.kcgs_list;
+  if (selectedOwnership) {
+    const option = ownershipGroup.options.find((item) => item.value === selectedOwnership);
+    if (option) state.courses.forEach((course) => applyOwnershipOptions(course, [option]));
+    return;
+  }
+
+  if (!isGeneralElectiveContext()) return;
+
+  const targets = new Map();
+  for (const course of state.courses) {
+    for (const key of courseMatchKeys(course)) {
+      const courses = targets.get(key) ?? [];
+      courses.push(course);
+      targets.set(key, courses);
+    }
+  }
+
+  const ownershipByCourse = new Map(state.courses.map((course) => [course, []]));
+  const extra = { ...(query.extra ?? {}) };
+  delete extra.kcgs_list;
+
+  await Promise.all(ownershipGroup.options.map(async (option) => {
+    try {
+      const matches = await state.client.catalog.searchCourses({
+        keyword: query.keyword,
+        extra: { ...extra, kcgs_list: option.value },
+        page: { start: 1, size: ownershipLookupPageSize(ownershipGroup.options.length) }
+      });
+      for (const match of matches) {
+        for (const key of courseMatchKeys(match)) {
+          for (const course of targets.get(key) ?? []) {
+            const options = ownershipByCourse.get(course);
+            if (options && !options.some((item) => item.value === option.value)) options.push(option);
+          }
+        }
+      }
+    } catch {
+      // The base course result is still valid if an ownership lookup is rejected or unavailable.
+    }
+  }));
+
+  for (const [course, options] of ownershipByCourse) {
+    applyOwnershipOptions(course, options);
+  }
 }
 
 async function chooseClass(teachingClass) {
@@ -792,6 +845,54 @@ function mergeTeachingClassName(item, classNames) {
   };
 }
 
+function inheritCourseOwnership(item) {
+  if (item.ownershipName || item.ownershipCode) return item;
+  const course = state.courses.find((candidate) => String(candidate.courseId) === String(item.courseId));
+  if (!course?.ownershipName && !course?.ownershipCode) return item;
+  return {
+    ...item,
+    ownershipName: course.ownershipName,
+    ownershipCode: course.ownershipCode
+  };
+}
+
+function needsCourseOwnership(course) {
+  return !course.ownershipName && !course.ownershipCode;
+}
+
+function isGeneralElectiveContext() {
+  const context = state.client?.context;
+  const label = context?.current?.kklxmc || '';
+  return context?.current?.kklxdm === '10' || label.includes('通识选修');
+}
+
+function courseMatchKeys(course = {}) {
+  return [
+    course.courseId ? `id:${course.courseId}` : '',
+    course.courseCode ? `code:${course.courseCode}` : ''
+  ].filter(Boolean);
+}
+
+function ownershipLookupPageSize(optionCount) {
+  return Math.max(120, Math.min(500, state.courses.length * Math.max(optionCount, 1) * 2));
+}
+
+function applyOwnershipOptions(course, options) {
+  const names = [];
+  const codes = [];
+  for (const option of options) {
+    addUnique(names, option.text);
+    addUnique(codes, option.value);
+  }
+  if (names.length) course.ownershipName = names.join('、');
+  if (codes.length) course.ownershipCode = codes.join(',');
+}
+
+function addUnique(values, value) {
+  const normalized = String(value || '').trim();
+  if (normalized && !values.includes(normalized)) values.push(normalized);
+}
+
 function renderTeacherLine(item) {
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
@@ -804,9 +905,11 @@ function renderTeacherLine(item) {
 function renderClassSummaryLine(item) {
   const className = String(item.raw?.jxbmc ?? '').trim();
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
+  const ownership = item.ownershipName || item.ownershipCode;
   return `
     <div class="class-detail-line class-summary-line">
       <span class="class-name-value">${escapeHtml(className)}</span>
+      ${ownership ? `<span class="detail-value course-ownership-value">课程归属：${escapeHtml(ownership)}</span>` : ''}
       <span class="detail-value teacher-value">${escapeHtml(teachers)}</span>
     </div>
   `;

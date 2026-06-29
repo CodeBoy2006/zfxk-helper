@@ -183,3 +183,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and reopen a course to rebuild the class cards.
 - **Context:** Selected-course teacher rows reuse the same label-free teacher rendering.
+
+## [2026-06-29 20:05] General Elective Ownership Inference
+- **Changes:** Updated the Web frontend to infer 通识选修课 course ownership from the live `kcgs_list` dictionary and read-only filtered searches when result rows do not include direct ownership fields; inherited that ownership onto teaching-class cards and documented the behavior.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and search 通识选修课 to confirm labels such as 艺术修养 and 国际视野 appear on course/class cards.
+- **Context:** Live inspection showed the course and teaching-class row payloads omit `kcgsmc`, while `/xkgl/common_queryKcgsPaged.html` returns the category dictionary and `kcgs_list` filtering identifies each course's category.
