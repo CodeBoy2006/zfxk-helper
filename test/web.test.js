@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from '../web/course-groups.js';
+import { loadAllCoursePages } from '../web/course-pages.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from '../web/schedule-layout.js';
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -162,6 +163,39 @@ test('web teaching-class names are restored from course-list jxbmc rows', () => 
   assert.equal(names.get('JXB1'), '数据库-0001');
   assert.equal(names.get('DO2'), '数据库-0002');
   assert.equal(names.has('JXB3'), false);
+});
+
+test('web course search loads broad source row ranges until exhausted', async () => {
+  const calls = [];
+  const catalog = {
+    async searchCourses(query) {
+      calls.push(query.page);
+      if (calls.length === 1) {
+        return [
+          { courseId: 'KC1', raw: { kcrow: '1' } },
+          { courseId: 'KC1000', raw: { kcrow: '1000' } }
+        ];
+      }
+      if (calls.length === 2) {
+        return [
+          { courseId: 'KC1001', raw: { kcrow: '1001' } },
+          { courseId: 'KC1200', raw: { kcrow: '1200' } }
+        ];
+      }
+      throw new Error('unexpected extra course page');
+    }
+  };
+
+  const courses = await loadAllCoursePages(catalog, {
+    keyword: '数据库',
+    extra: { yl_list: '1' }
+  });
+
+  assert.deepEqual(calls, [
+    { start: 1, size: 1000 },
+    { start: 1001, size: 2000 }
+  ]);
+  assert.deepEqual(courses.map((course) => course.courseId), ['KC1', 'KC1000', 'KC1001', 'KC1200']);
 });
 
 test('web script and static server are wired in package.json', async () => {

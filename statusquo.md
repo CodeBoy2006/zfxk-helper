@@ -189,3 +189,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and search 通识选修课 to confirm labels such as 艺术修养 and 国际视野 appear on course/class cards.
 - **Context:** Live inspection showed the course and teaching-class row payloads omit `kcgsmc`, while `/xkgl/common_queryKcgsPaged.html` returns the category dictionary and `kcgs_list` filtering identifies each course's category.
+
+## [2026-06-29 20:19] Broad Course Page Loading
+- **Changes:** Added a reusable Web course-page loader that fetches 1000 source rows at a time until the upstream `kcrow` range is exhausted, then wired course search to use it.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and search courses; the list should load all available rows without manual pagination.
+- **Context:** Read-only live verification against the provided session loaded 1421 主修课程 rows in one broad request.

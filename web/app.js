@@ -1,6 +1,7 @@
 import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from './course-groups.js';
+import { loadAllCoursePages } from './course-pages.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from './schedule-layout.js';
 
 const elements = {
@@ -279,10 +280,9 @@ async function searchCourses() {
 async function searchCoursesCore() {
   const query = {
     keyword: elements.keywordInput.value.trim(),
-    extra: selectedFilterPayload(),
-    page: { start: 1, size: 20 }
+    extra: selectedFilterPayload()
   };
-  state.courses = await state.client.catalog.searchCourses(query);
+  state.courses = await loadAllCoursePages(state.client.catalog, query);
   await enrichCourseOwnerships(query);
   state.selectedCourseId = groupCoursesForDisplay(state.courses)[0]?.key ?? null;
   renderCourses();
