@@ -1,6 +1,6 @@
 import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
-import { courseIdsForDisplayKey, groupCoursesForDisplay } from './course-groups.js';
+import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from './course-groups.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from './schedule-layout.js';
 
 const elements = {
@@ -303,7 +303,8 @@ async function loadClassesCore(courseKey) {
   renderCourses();
   const courseIds = courseIdsForDisplayKey(state.courses, courseKey);
   const classGroups = await Promise.all(courseIds.map((courseId) => state.client.catalog.getTeachingClasses(courseId)));
-  state.classes = classGroups.flat();
+  const classNames = teachingClassNamesById(state.courses, courseIds);
+  state.classes = classGroups.flat().map((item) => mergeTeachingClassName(item, classNames));
   renderClasses();
   log(`课程 ${courseKey} 加载 ${state.classes.length} 个教学班。`);
 }
@@ -777,6 +778,18 @@ function renderCourseTypeTabs() {
     button.title = `${option.kklxdm} · ${option.xkkzId}`;
     elements.courseTypeTabs.append(button);
   }
+}
+
+function mergeTeachingClassName(item, classNames) {
+  const className = classNames.get(String(item.classId)) ?? classNames.get(String(item.submitClassId));
+  if (!className) return item;
+  return {
+    ...item,
+    raw: {
+      ...item.raw,
+      jxbmc: className
+    }
+  };
 }
 
 function renderTeacherLine(item) {

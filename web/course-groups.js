@@ -37,6 +37,20 @@ export function courseIdsForDisplayKey(courses = [], key) {
   return group?.courseIds ?? (key ? [key] : []);
 }
 
+export function teachingClassNamesById(courses = [], courseIds = []) {
+  const allowedCourseIds = new Set(courseIds.map(String));
+  const names = new Map();
+  for (const course of courses) {
+    if (allowedCourseIds.size && !allowedCourseIds.has(String(course.courseId))) continue;
+    const className = String(course.raw?.jxbmc ?? '').trim();
+    if (!className) continue;
+    for (const classId of [course.raw?.jxb_id, course.raw?.do_jxb_id]) {
+      if (classId) names.set(String(classId), className);
+    }
+  }
+  return names;
+}
+
 function courseDisplayKey(course = {}) {
   return String(course.courseCode || course.courseId || '');
 }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-import { courseIdsForDisplayKey, groupCoursesForDisplay } from '../web/course-groups.js';
+import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from '../web/course-groups.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from '../web/schedule-layout.js';
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -37,6 +37,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(app, /node:/);
   assert.match(app, /groupCoursesForDisplay/);
   assert.match(app, /courseIdsForDisplayKey/);
+  assert.match(app, /teachingClassNamesById/);
   assert.match(app, /groupCoursesForDisplay\(state\.courses\)/);
   assert.match(app, /courseIdsForDisplayKey\(state\.courses, courseKey\)/);
   assert.match(app, /bootstrap\(\{ html: state\.entryHtml, raw:/);
@@ -142,6 +143,18 @@ test('web course list groups rows with the same course code', () => {
   ]);
   assert.equal(groups[0].ownershipName, '人文社科、自然科学');
   assert.deepEqual(courseIdsForDisplayKey(groups.flatMap((group) => group.courses), 'CS101'), ['KC1-A', 'KC1-B']);
+});
+
+test('web teaching-class names are restored from course-list jxbmc rows', () => {
+  const names = teachingClassNamesById([
+    { courseId: 'KC1', raw: { jxb_id: 'JXB1', jxbmc: '数据库-0001' } },
+    { courseId: 'KC1', raw: { do_jxb_id: 'DO2', jxbmc: '数据库-0002' } },
+    { courseId: 'KC2', raw: { jxb_id: 'JXB3', jxbmc: '算法-0001' } }
+  ], ['KC1']);
+
+  assert.equal(names.get('JXB1'), '数据库-0001');
+  assert.equal(names.get('DO2'), '数据库-0002');
+  assert.equal(names.has('JXB3'), false);
 });
 
 test('web script and static server are wired in package.json', async () => {

@@ -171,3 +171,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and reload teaching classes so the updated script displays backend `jxbmc` values.
 - **Context:** The previous `item.name` fallback could show `教学班待定` even when the backend field to display is `jxbmc`.
+
+## [2026-06-29 19:51] Restore jxbmc From Course Rows
+- **Changes:** Added a Web helper that maps course-list `raw.jxbmc` values by `jxb_id`/`do_jxb_id`, then merges the name into teaching-class detail rows before rendering.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend, rerun course search, and open a course so class cards rebuild from fresh rows.
+- **Context:** Live read-only inspection showed `/xsxk/zzxkyzbjk_cxJxbWithKchZzxkYzb.html` does not return `jxbmc`; the field is present on the course-list rows from the course page endpoint.
