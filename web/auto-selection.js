@@ -302,6 +302,7 @@ function renderAutoSelectionDraft() {
   `;
   const tbody = table.querySelector('tbody');
   group.targets.forEach((target, index) => {
+    const targetIds = [target.courseId, target.submitClassId || target.classId].filter(Boolean).join(' · ');
     const row = document.createElement('tr');
     row.draggable = true;
     row.dataset.autoTargetRow = String(index);
@@ -310,7 +311,7 @@ function renderAutoSelectionDraft() {
       <td><input data-auto-target-index="${index}" data-auto-target-field="priority" type="number" value="${Number(target.priority) || 0}"></td>
       <td>
         <strong>${escapeHtml(target.label || target.classId)}</strong>
-        <span>${escapeHtml(target.courseId)} · ${escapeHtml(target.submitClassId || target.classId)}</span>
+        <span class="auto-target-id-line" title="${escapeHtml(targetIds)}">${escapeHtml(targetIds)}</span>
       </td>
       <td>${renderTargetMeeting(target)}</td>
       <td><input data-auto-target-index="${index}" data-auto-target-field="isBackup" type="checkbox" ${target.isBackup ? 'checked' : ''}></td>
@@ -318,9 +319,7 @@ function renderAutoSelectionDraft() {
       <td><span class="tag ${target.status === 'selected' ? 'ok' : ''}">${escapeHtml(targetStatusText(target.status))}</span></td>
       <td>
         <div class="auto-row-actions">
-          <button type="button" class="section-text-button" data-auto-move-target="${index}" data-direction="-1" title="上移">上</button>
-          <button type="button" class="section-text-button" data-auto-move-target="${index}" data-direction="1" title="下移">下</button>
-          <button type="button" class="section-text-button danger-text" data-auto-remove-target="${index}" title="移除">删</button>
+          <button type="button" class="section-text-button danger-text" data-auto-remove-target="${index}" title="删除">删除</button>
         </div>
       </td>
     `;
@@ -342,11 +341,6 @@ function renderGroupTabs() {
 }
 
 function handleAutoTargetAction(event) {
-  const moveButton = event.target.closest('[data-auto-move-target]');
-  if (moveButton) {
-    reorderTarget(Number(moveButton.dataset.autoMoveTarget), Number(moveButton.dataset.direction));
-    return;
-  }
   const removeButton = event.target.closest('[data-auto-remove-target]');
   if (!removeButton) return;
   activeGroup().targets.splice(Number(removeButton.dataset.autoRemoveTarget), 1);

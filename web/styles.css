@@ -528,8 +528,44 @@ textarea {
 .auto-target-table {
   width: 100%;
   min-width: 640px;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 14px;
+}
+
+.auto-target-table th:nth-child(1),
+.auto-target-table td:nth-child(1) {
+  width: 34px;
+}
+
+.auto-target-table th:nth-child(2),
+.auto-target-table td:nth-child(2) {
+  width: 72px;
+}
+
+.auto-target-table th:nth-child(4),
+.auto-target-table td:nth-child(4) {
+  width: 24%;
+}
+
+.auto-target-table th:nth-child(5),
+.auto-target-table td:nth-child(5) {
+  width: 54px;
+}
+
+.auto-target-table th:nth-child(6),
+.auto-target-table td:nth-child(6) {
+  width: 70px;
+}
+
+.auto-target-table th:nth-child(7),
+.auto-target-table td:nth-child(7) {
+  width: 72px;
+}
+
+.auto-target-table th:nth-child(8),
+.auto-target-table td:nth-child(8) {
+  width: 56px;
 }
 
 .auto-target-table th,
@@ -556,6 +592,14 @@ textarea {
   color: var(--muted);
   font-size: 12px;
   font-weight: 750;
+}
+
+.auto-target-table .auto-target-id-line {
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .auto-target-table input[type="number"] {
@@ -1072,7 +1116,6 @@ body[data-page="setup"] {
 
 .auto-row-actions {
   display: flex;
-  flex-wrap: wrap;
   gap: 4px;
 }
 

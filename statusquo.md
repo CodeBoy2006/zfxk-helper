@@ -369,3 +369,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; deleting the only group resets the draft to a fresh `默认` group so the editor always has one active group.
+
+## [2026-06-30 00:42] Auto Target Table Cleanup
+- **Changes:** Truncated long course/class ID text in the auto-selection target table with a native tooltip for the full value, fixed table column sizing, and reduced each target row action to a single delete button.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; drag sorting remains available through the left drag handle.

@@ -279,6 +279,9 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /resolvedClassLabel/);
   assert.doesNotMatch(app, /autoSubmitClassIdInput/);
   assert.doesNotMatch(app, /autoTargetLabelInput/);
+  assert.match(app, /auto-target-id-line/);
+  assert.match(app, /title="\$\{escapeHtml\(targetIds\)\}"/);
+  assert.doesNotMatch(app, /data-auto-move-target/);
   assert.match(app, /reorderTarget/);
   assert.match(app, /normalizeDraftGroupStrategy/);
   assert.match(app, /strategy: normalizeDraftGroupStrategy/);
@@ -303,6 +306,9 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(css, /auto-id-target-form/);
   assert.doesNotMatch(css, /auto-teaching-table/);
   assert.match(css, /auto-state-grid/);
+  assert.match(css, /table-layout:\s*fixed/);
+  assert.match(css, /auto-target-id-line/);
+  assert.match(css, /text-overflow:\s*ellipsis/);
   assert.match(css, /grid-template-columns:\s*minmax\(300px,\s*0\.82fr\)\s*minmax\(560px,\s*1\.5fr\)\s*minmax\(360px,\s*0\.96fr\)/);
   assert.match(server, /action === 'pause'/);
 });
