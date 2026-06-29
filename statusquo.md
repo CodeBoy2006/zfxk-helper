@@ -195,3 +195,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and search courses; the list should load all available rows without manual pagination.
 - **Context:** Read-only live verification against the provided session loaded 1421 主修课程 rows in one broad request.
+
+## [2026-06-29 20:22] Course List Scroll Constraint
+- **Changes:** Capped the Web course list height and kept overflow inside the course-list pane; added regression coverage for the scroll constraint.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and search a large course set to confirm the left list scrolls internally.
+- **Context:** The cap uses a viewport-relative clamp so the list stays usable on both compact and large screens.

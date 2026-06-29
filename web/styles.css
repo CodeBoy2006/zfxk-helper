@@ -430,6 +430,11 @@ textarea {
   padding-right: 2px;
 }
 
+.course-list {
+  max-height: clamp(360px, 58vh, 720px);
+  overflow-y: auto;
+}
+
 .course-card,
 .class-card,
 .chosen-card {
