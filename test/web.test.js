@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from '../web/course-groups.js';
+import { buildCourseExport, buildSelectedCoursesExport } from '../web/export-data.js';
 import { loadAllCoursePages } from '../web/course-pages.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from '../web/schedule-layout.js';
 import packageJson from '../package.json' with { type: 'json' };
@@ -30,9 +31,14 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /id="chosenPanel"/);
   assert.match(html, /id="selectedScheduleBody"/);
   assert.match(html, /当前已选课程时间分布/);
+  assert.match(html, /id="exportCoursesBtn"/);
+  assert.match(html, /id="exportSelectedBtn"/);
   assert.match(html, /id="activityLog"/);
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(app, /createZfxkClient/);
+  assert.match(app, /buildCourseExport/);
+  assert.match(app, /buildSelectedCoursesExport/);
+  assert.match(app, /downloadJson/);
   assert.match(app, /parseCourseTypeOptions/);
   assert.doesNotMatch(app, /from '..\/src\/index\.js'/);
   assert.doesNotMatch(app, /node:/);
@@ -111,6 +117,107 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /\.course-list,\s*\.class-list,\s*\.chosen-list\s*\{[^}]*overflow-y:\s*auto/s);
   assert.match(css, /\.course-card,\s*\.class-card,\s*\.chosen-card\s*\{[^}]*flex:\s*0 0 auto/s);
   assert.doesNotMatch(css, /class-title-row/);
+});
+
+test('course export uses readable mapped fields and preserves unmapped raw details', () => {
+  const exportData = buildCourseExport([
+    {
+      courseId: 'KC1',
+      courseCode: 'CS101',
+      name: '数据库',
+      credit: 3,
+      typeCode: '01',
+      typeName: '主修课程',
+      ownershipCode: 'A',
+      ownershipName: '自然科学',
+      retake: false,
+      hasPrerequisiteHint: true,
+      recommended: true,
+      raw: {
+        kch_id: 'KC1',
+        kch: 'CS101',
+        kcmc: '数据库',
+        jxbmc: '数据库-0001',
+        kcrow: '1',
+        custom_raw_flag: 'keep'
+      }
+    }
+  ], {
+    metadata: { term: '2026-2027-1', courseTypeName: '主修课程', keyword: '数据' },
+    now: () => new Date('2026-06-29T12:00:00.000Z')
+  });
+
+  assert.equal(exportData.导出类型, '课程完整信息');
+  assert.equal(exportData.导出时间, '2026-06-29T12:00:00.000Z');
+  assert.equal(exportData.课程数量, 1);
+  assert.equal(exportData.元信息.学年学期, '2026-2027-1');
+  assert.equal(exportData.课程[0].课程ID, 'KC1');
+  assert.equal(exportData.课程[0].课程号, 'CS101');
+  assert.equal(exportData.课程[0].课程名称, '数据库');
+  assert.equal(exportData.课程[0].教学班名称, '数据库-0001');
+  assert.equal(exportData.课程[0].源序号, '1');
+  assert.equal(exportData.课程[0].额外原始字段.custom_raw_flag, 'keep');
+  assert.doesNotMatch(JSON.stringify(exportData.课程[0]), /"kch_id"|"kch"|"kcmc"|"jxbmc"/);
+});
+
+test('selected-course export separates current selection details without Map fields', () => {
+  const selectedClass = {
+    classId: 'JXB1',
+    submitClassId: 'DO1',
+    courseId: 'KC1',
+    name: '数据库-0001',
+    order: 1,
+    weight: 2,
+    selectedBySystem: true,
+    selfSelected: false,
+    canDrop: true,
+    credit: 3,
+    teachers: [{ id: 'T1', name: '李老师', title: '教授', raw: 'T1/李老师/教授' }],
+    scheduleText: '星期一第1-2节{1-16周}',
+    locationText: 'A101',
+    ownershipName: '自然科学',
+    raw: {
+      jxb_id: 'JXB1',
+      do_jxb_id: 'DO1',
+      t_kch_id: 'KC1',
+      zypx: '1',
+      qz: '2',
+      jsxx: 'T1/李老师/教授',
+      extra_selected_field: 'keep'
+    }
+  };
+  const exportData = buildSelectedCoursesExport({
+    selectedCourses: [{
+      courseId: 'KC1',
+      courseCode: 'CS101',
+      name: '数据库',
+      credit: 3,
+      typeCode: '01',
+      ownershipName: '自然科学',
+      retake: false,
+      classes: [selectedClass],
+      raw: { t_kch_id: 'KC1', kch: 'CS101', kcmc: '数据库' }
+    }],
+    selectedClasses: [selectedClass],
+    totals: { courseCount: 1, credit: 3, teachingClassCredit: 3 },
+    byCourseId: new Map(),
+    byClassId: new Map(),
+    version: 'snapshot-1',
+    fetchedAt: new Date('2026-06-29T11:00:00.000Z')
+  }, {
+    metadata: { courseTypeName: '主修课程' },
+    now: () => new Date('2026-06-29T12:00:00.000Z')
+  });
+
+  assert.equal(exportData.导出类型, '当前选课详细信息');
+  assert.deepEqual(exportData.汇总, { 课程数: 1, 总学分: 3, 教学班学分: 3 });
+  assert.equal(exportData.快照时间, '2026-06-29T11:00:00.000Z');
+  assert.equal(exportData.已选课程[0].课程名称, '数据库');
+  assert.equal(exportData.已选课程[0].教学班[0].志愿顺序, 1);
+  assert.equal(exportData.已选教学班[0].教师[0].姓名, '李老师');
+  assert.equal(exportData.已选教学班[0].标志.是否可退, true);
+  assert.equal(exportData.已选教学班[0].额外原始字段.extra_selected_field, 'keep');
+  assert.doesNotMatch(JSON.stringify(exportData), /"byClassId"|"byCourseId"|"jxb_id"|"do_jxb_id"|"t_kch_id"|"jsxx"/);
 });
 
 test('selected schedule layout merges continuous periods and avoids adjacent duplicate colors', () => {

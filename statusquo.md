@@ -218,6 +218,12 @@
 - **Changes:** Applied the viewport-height pane constraint to catalog, teaching-class, and chosen-course columns, and made class/chosen lists flex-fill their panes with internal scrolling.
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and confirm all three columns scroll inside their panes without exceeding one screen height.
+
+## [2026-06-29 20:48] Web JSON Export
+- **Changes:** Added separate Web exports for loaded course-list details and current selected-course snapshots, with mapped Chinese field names, preserved unmapped raw fields, topbar buttons, README notes, and regression tests.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend, initialize a live session, then use `导出课程` and `导出已选` to inspect the generated JSON files.
+- **Context:** Course export uses the currently loaded/search result set; selected export uses the current chosen snapshot and omits internal `Map` indexes.
 - **Context:** The shared pane height now caps at `100vh`; narrow layouts still switch back to auto pane height.
 
 ## [2026-06-29 20:40] Full-Height Workspace Panes

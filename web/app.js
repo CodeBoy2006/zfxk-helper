@@ -2,6 +2,7 @@ import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from './course-groups.js';
 import { loadAllCoursePages } from './course-pages.js';
+import { buildCourseExport, buildSelectedCoursesExport, downloadJson } from './export-data.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from './schedule-layout.js';
 
 const elements = {
@@ -33,6 +34,8 @@ const elements = {
   selectedScheduleBody: document.querySelector('#selectedScheduleBody'),
   saveOrderBtn: document.querySelector('#saveOrderBtn'),
   refreshSnapshotBtn: document.querySelector('#refreshSnapshotBtn'),
+  exportCoursesBtn: document.querySelector('#exportCoursesBtn'),
+  exportSelectedBtn: document.querySelector('#exportSelectedBtn'),
   clearLogBtn: document.querySelector('#clearLogBtn'),
   activityLog: document.querySelector('#activityLog'),
   statusBadge: document.querySelector('#statusBadge')
@@ -138,6 +141,8 @@ elements.courseTypeTabs.addEventListener('click', async (event) => {
 });
 
 elements.refreshSnapshotBtn.addEventListener('click', () => refreshSnapshot());
+elements.exportCoursesBtn.addEventListener('click', () => exportCourses());
+elements.exportSelectedBtn.addEventListener('click', () => exportSelectedCourses());
 elements.saveOrderBtn.addEventListener('click', () => saveOrder());
 elements.catalogSearchBtn.addEventListener('click', () => {
   elements.keywordInput.focus();
@@ -422,6 +427,26 @@ async function refreshSnapshotCore() {
   renderChosen();
   renderClasses();
   updateSessionSummary();
+}
+
+function exportCourses() {
+  if (!state.courses.length) {
+    log('暂无可导出的课程信息，请先初始化并查询课程。');
+    return;
+  }
+  const payload = buildCourseExport(state.courses, { metadata: currentExportMetadata() });
+  downloadJson(`zfxk-courses-${filenameTimestamp()}.json`, payload);
+  log(`已导出 ${state.courses.length} 条课程完整信息。`);
+}
+
+function exportSelectedCourses() {
+  if (!state.snapshot) {
+    log('暂无可导出的已选课程，请先刷新已选。');
+    return;
+  }
+  const payload = buildSelectedCoursesExport(state.snapshot, { metadata: currentExportMetadata() });
+  downloadJson(`zfxk-selected-${filenameTimestamp()}.json`, payload);
+  log(`已导出 ${state.snapshot.selectedClasses.length} 个已选教学班。`);
 }
 
 function renderFilterPanel() {
@@ -1027,6 +1052,33 @@ function updateSessionSummary() {
   }
   const typeName = context.current.kklxmc || state.courseTypes.find((option) => courseTypeKey(option) === state.activeCourseTypeKey)?.label || context.current.kklxdm;
   elements.sessionSummary.textContent = `代理会话 · ${context.term.xkxnm}-${context.term.xkxqm} · ${typeName} · ${context.current.kklxdm} · ${context.current.xkkzId}`;
+}
+
+function currentExportMetadata() {
+  const context = state.client?.context;
+  const courseType = state.courseTypes.find((option) => courseTypeKey(option) === state.activeCourseTypeKey);
+  return {
+    term: context ? `${context.term.xkxnm}-${context.term.xkxqm}` : undefined,
+    courseTypeName: courseType?.label ?? context?.current?.kklxmc,
+    courseTypeCode: context?.current?.kklxdm,
+    controlId: context?.current?.xkkzId,
+    keyword: elements.keywordInput.value.trim(),
+    filters: readableSelectedFilters()
+  };
+}
+
+function readableSelectedFilters() {
+  const filters = {};
+  for (const [key, value] of Object.entries(selectedFilterPayload())) {
+    const group = state.filterGroups.find((item) => item.key === key);
+    const option = group?.options?.find((item) => item.value === value);
+    filters[group?.label ?? key] = option ? `${option.text}（${value}）` : value;
+  }
+  return filters;
+}
+
+function filenameTimestamp(date = new Date()) {
+  return date.toISOString().replaceAll(':', '-').replaceAll('.', '-');
 }
 
 async function runTask(label, task) {
