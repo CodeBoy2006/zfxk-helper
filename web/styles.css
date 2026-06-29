@@ -364,15 +364,13 @@ textarea {
 .chosen-pane {
   display: flex;
   flex-direction: column;
+  height: clamp(620px, calc(100vh - 320px), 100vh);
+  max-height: 100vh;
   min-height: 620px;
   padding: 12px;
   border-color: #e4ebf5;
   border-radius: 10px;
   box-shadow: 0 3px 14px rgba(39, 57, 96, 0.04);
-}
-
-.catalog-pane {
-  height: clamp(620px, calc(100vh - 320px), 900px);
 }
 
 .search-bar {
@@ -439,6 +437,13 @@ textarea {
   flex-direction: column;
   flex: 1 1 auto;
   max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.class-list,
+.chosen-list {
+  flex: 1 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
 }

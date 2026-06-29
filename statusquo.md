@@ -213,3 +213,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and confirm the left course list fills the blank area before scrolling.
 - **Context:** Narrow layouts keep a separate viewport-relative list cap to avoid excessive page height.
+
+## [2026-06-29 20:34] Three-Pane Internal Scrolling
+- **Changes:** Applied the viewport-height pane constraint to catalog, teaching-class, and chosen-course columns, and made class/chosen lists flex-fill their panes with internal scrolling.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and confirm all three columns scroll inside their panes without exceeding one screen height.
+- **Context:** The shared pane height now caps at `100vh`; narrow layouts still switch back to auto pane height.
