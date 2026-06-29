@@ -69,3 +69,9 @@
 - **Status:** Completed
 - **Next Steps:** Validate against live first-round and second-round sessions to confirm `sfxkbj` and save response flags match the school workflow.
 - **Context:** Fullness comes from `yxzrs >= jxbrl`; eligibility comes from `sfxkbj` and the server-side save result. Capacity overflow remains represented by save flag `-1`.
+
+## [2026-06-29 17:39] Split Teaching-Class Card Layout
+- **Changes:** Reworked Web teaching-class cards to match the split reference design, with left-side teacher/status/meeting content and a right-side action column separated by a vertical divider.
+- **Status:** Completed
+- **Next Steps:** Compare against live data with multiple meeting rows and long classroom names.
+- **Context:** This is a frontend layout/style change only; SDK requests and selection logic are unchanged.

@@ -45,6 +45,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(app, /createDemoClient/);
   assert.match(css, /grid-template-columns/);
   assert.match(css, /course-type-tabs/);
+  assert.match(css, /class-card-main/);
+  assert.match(css, /class-card-action/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
 });

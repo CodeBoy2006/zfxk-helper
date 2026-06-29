@@ -389,19 +389,21 @@ function renderClasses() {
     const card = document.createElement('article');
     card.className = 'class-card';
     card.innerHTML = `
-      <div class="card-title">
-        <strong>${escapeHtml(item.name)}</strong>
-        <span>${item.selectedCount}/${item.capacity || '--'}</span>
-      </div>
-      ${renderClassDetails(item)}
-      <div class="flags">
-        <span class="tag ${item.flags.full ? 'danger' : 'ok'}">${item.flags.full ? '已满' : '可选'}</span>
-        ${selected ? '<span class="tag ok">已在志愿</span>' : ''}
-        ${item.childClassCount > 1 ? `<span class="tag warn">${item.childClassCount} 个子班</span>` : ''}
+      <div class="class-card-main">
+        <div class="class-card-top">
+          ${renderTeacherLine(item)}
+          <div class="class-card-badges">
+            <span class="tag ${item.flags.full ? 'danger' : 'ok'}">${item.flags.full ? '已满' : '可选'}</span>
+            ${selected ? '<span class="tag ok">已在志愿</span>' : ''}
+            ${item.childClassCount > 1 ? `<span class="tag warn">${item.childClassCount} 个子班</span>` : ''}
+            <span class="capacity-pill">${item.selectedCount}/${item.capacity || '--'}</span>
+          </div>
+        </div>
+        ${renderMeetingList(item.scheduleText, item.locationText)}
       </div>
     `;
     const actions = document.createElement('div');
-    actions.className = 'class-actions';
+    actions.className = 'class-actions class-card-action';
     const chooseButton = document.createElement('button');
     chooseButton.type = 'button';
     chooseButton.textContent = selected ? '已选' : '选课';
@@ -428,18 +430,23 @@ function renderChosen() {
     const card = document.createElement('article');
     card.className = 'chosen-card';
     card.innerHTML = `
-      <div class="card-title">
-        <strong>${index + 1}. ${escapeHtml(item.name)}</strong>
-        <span>${item.weight ? `权重 ${item.weight}` : '志愿'}</span>
-      </div>
-      ${renderClassDetails(item)}
-      <div class="flags">
-        <span class="tag ${item.selectedBySystem ? 'ok' : 'warn'}">${item.selectedBySystem ? '已选上' : '待筛选'}</span>
-        <span class="tag">${item.selfSelected ? '自选' : '系统调整'}</span>
+      <div class="class-card-main">
+        <div class="card-title">
+          <strong>${index + 1}. ${escapeHtml(item.name)}</strong>
+          <span>${item.weight ? `权重 ${item.weight}` : '志愿'}</span>
+        </div>
+        <div class="class-card-top">
+          ${renderTeacherLine(item)}
+          <div class="class-card-badges">
+            <span class="tag ${item.selectedBySystem ? 'ok' : 'warn'}">${item.selectedBySystem ? '已选上' : '待筛选'}</span>
+            <span class="tag">${item.selfSelected ? '自选' : '系统调整'}</span>
+          </div>
+        </div>
+        ${renderMeetingList(item.scheduleText, item.locationText)}
       </div>
     `;
     const actions = document.createElement('div');
-    actions.className = 'chosen-actions';
+    actions.className = 'chosen-actions class-card-action';
     const dropButton = document.createElement('button');
     dropButton.type = 'button';
     dropButton.className = 'danger';
@@ -474,14 +481,13 @@ function renderCourseTypeTabs() {
   }
 }
 
-function renderClassDetails(item) {
+function renderTeacherLine(item) {
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
     <div class="class-detail-line">
       <span class="detail-label">教师</span>
       <span>${escapeHtml(teachers)}</span>
     </div>
-    ${renderMeetingList(item.scheduleText, item.locationText)}
   `;
 }
 

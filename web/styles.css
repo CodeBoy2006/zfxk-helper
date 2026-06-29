@@ -402,20 +402,26 @@ textarea {
 .class-card,
 .chosen-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  padding: 10px;
+  grid-template-columns: minmax(0, 1fr) 124px;
+  gap: 0;
+  padding: 0;
   border-color: #d6e2f0;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(16, 24, 40, 0.05);
 }
 
-.class-card > .card-title,
-.class-card > .class-detail-line,
-.class-card > .meeting-list,
-.chosen-card > .card-title,
-.chosen-card > .class-detail-line,
-.chosen-card > .meeting-list {
-  grid-column: 1 / -1;
+.class-card-main {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+}
+
+.class-card-action {
+  display: grid;
+  place-items: center;
+  border-left: 1px solid #dbe7f4;
+  padding: 18px;
 }
 
 .course-card {
@@ -445,6 +451,7 @@ textarea {
 
 .class-card .card-title,
 .chosen-card .card-title {
+  align-items: center;
   margin-bottom: 0;
 }
 
@@ -465,6 +472,22 @@ textarea {
   font-weight: 700;
 }
 
+.class-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.class-card-badges {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .meta,
 .flags {
   display: flex;
@@ -476,23 +499,25 @@ textarea {
 
 .class-detail-line {
   display: flex;
-  align-items: flex-start;
-  gap: 6px;
+  align-items: center;
+  gap: 10px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.35;
   margin-bottom: 0;
+  min-width: 0;
 }
 
 .detail-label {
   flex: 0 0 auto;
   color: var(--text);
+  font-size: 16px;
   font-weight: 700;
 }
 
 .meeting-list {
   display: grid;
-  gap: 5px;
+  gap: 8px;
   margin-bottom: 0;
 }
 
@@ -500,19 +525,19 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 5px 7px;
+  gap: 12px;
+  min-height: 54px;
+  padding: 10px 14px;
   border: 1px solid #cfe3f7;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #f7fbff;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .meeting-time {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 8px;
   min-width: 0;
   align-items: center;
 }
@@ -528,7 +553,7 @@ textarea {
 
 .meeting-period {
   color: var(--text);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .meeting-weeks {
@@ -536,22 +561,35 @@ textarea {
 }
 
 .meeting-location {
-  max-width: 150px;
+  max-width: 180px;
   overflow-wrap: anywhere;
   border: 1px solid rgba(13, 138, 114, 0.2);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 5px 14px;
   background: #edfdf5;
   color: #047857;
   font-weight: 700;
   text-align: center;
 }
 
+.capacity-pill {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 14px;
+  background: #f1f3f8;
+  color: #172033;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
 .tag {
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 2px 7px;
+  padding: 4px 10px;
   background: #f8fafc;
+  font-size: 15px;
+  font-weight: 700;
   line-height: 1.25;
 }
 
@@ -572,12 +610,11 @@ textarea {
 
 .class-actions,
 .chosen-actions {
-  display: flex;
-  gap: 8px;
+  display: grid;
   margin-top: 0;
-  flex-wrap: wrap;
-  justify-self: end;
-  align-self: center;
+  place-items: center;
+  border-left: 1px solid #dbe7f4;
+  padding: 18px;
 }
 
 .class-card .flags,
@@ -588,10 +625,21 @@ textarea {
 
 .class-card .class-actions button,
 .chosen-card .chosen-actions button {
-  min-height: 32px;
-  padding: 0 12px;
-  border-radius: 6px;
-  font-weight: 700;
+  min-width: 88px;
+  min-height: 54px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: #176db6;
+  border-color: #176db6;
+  box-shadow: 0 8px 16px rgba(23, 105, 170, 0.18);
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.chosen-card .chosen-actions button {
+  background: var(--danger);
+  border-color: var(--danger);
+  box-shadow: 0 8px 16px rgba(180, 35, 24, 0.16);
 }
 
 .activity-panel {
@@ -645,7 +693,18 @@ textarea {
 
   .class-actions,
   .chosen-actions {
-    justify-self: start;
+    border-left: 0;
+    border-top: 1px solid #dbe7f4;
+    justify-items: start;
+  }
+
+  .class-card-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .class-card-badges {
+    justify-content: flex-start;
   }
 }
 
