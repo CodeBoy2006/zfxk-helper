@@ -57,3 +57,9 @@
 - **Status:** Completed
 - **Next Steps:** Use the Web frontend against a live session to confirm every discovered type has an active `xkkz_id`.
 - **Context:** Switching updates `kklxdm`, `kklxmc`, `xkkz_id`, `njdm_id`, `zyh_id`, and `xkkz_xh`, then reloads filters, course results, teaching classes, and selected-course snapshot.
+
+## [2026-06-29 17:20] Compact Teaching-Class Cards
+- **Changes:** Tightened Web frontend teaching-class and selected-class card spacing, restyled capacity badges, compressed meeting rows, and aligned status tags with action buttons.
+- **Status:** Completed
+- **Next Steps:** Re-check live data with unusually long teacher names or classroom names.
+- **Context:** This is a CSS-only visual refinement; SDK behavior and proxy requests are unchanged.

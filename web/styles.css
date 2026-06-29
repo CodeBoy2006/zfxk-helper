@@ -387,7 +387,7 @@ textarea {
 .class-list,
 .chosen-list {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .course-card,
@@ -397,6 +397,25 @@ textarea {
   border-radius: 8px;
   background: #fff;
   padding: 12px;
+}
+
+.class-card,
+.chosen-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 10px;
+  border-color: #d6e2f0;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.class-card > .card-title,
+.class-card > .class-detail-line,
+.class-card > .meeting-list,
+.chosen-card > .card-title,
+.chosen-card > .class-detail-line,
+.chosen-card > .meeting-list {
+  grid-column: 1 / -1;
 }
 
 .course-card {
@@ -414,12 +433,36 @@ textarea {
 .card-title {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .card-title strong {
+  min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.class-card .card-title,
+.chosen-card .card-title {
+  margin-bottom: 0;
+}
+
+.class-card .card-title strong,
+.chosen-card .card-title strong {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.class-card .card-title span,
+.chosen-card .card-title span {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: #f3f6fb;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .meta,
@@ -434,10 +477,11 @@ textarea {
 .class-detail-line {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
   color: var(--muted);
   font-size: 13px;
-  margin-bottom: 8px;
+  line-height: 1.35;
+  margin-bottom: 0;
 }
 
 .detail-label {
@@ -448,27 +492,29 @@ textarea {
 
 .meeting-list {
   display: grid;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 5px;
+  margin-bottom: 0;
 }
 
 .meeting-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  padding: 7px 8px;
-  border: 1px solid #d8e8f7;
+  gap: 6px;
+  min-height: 34px;
+  padding: 5px 7px;
+  border: 1px solid #cfe3f7;
   border-radius: 6px;
-  background: #f8fbff;
+  background: #f7fbff;
   font-size: 13px;
 }
 
 .meeting-time {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
+  align-items: center;
 }
 
 .meeting-time span {
@@ -490,13 +536,14 @@ textarea {
 }
 
 .meeting-location {
-  max-width: 160px;
+  max-width: 150px;
   overflow-wrap: anywhere;
   border: 1px solid rgba(13, 138, 114, 0.2);
   border-radius: 999px;
-  padding: 2px 7px;
-  background: #ecfdf3;
-  color: var(--accent-2);
+  padding: 2px 8px;
+  background: #edfdf5;
+  color: #047857;
+  font-weight: 700;
   text-align: center;
 }
 
@@ -505,6 +552,7 @@ textarea {
   border-radius: 999px;
   padding: 2px 7px;
   background: #f8fafc;
+  line-height: 1.25;
 }
 
 .tag.ok {
@@ -526,8 +574,24 @@ textarea {
 .chosen-actions {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 0;
   flex-wrap: wrap;
+  justify-self: end;
+  align-self: center;
+}
+
+.class-card .flags,
+.chosen-card .flags {
+  align-items: center;
+  align-self: center;
+}
+
+.class-card .class-actions button,
+.chosen-card .chosen-actions button {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-weight: 700;
 }
 
 .activity-panel {
@@ -572,6 +636,16 @@ textarea {
   .meeting-location {
     width: fit-content;
     max-width: 100%;
+  }
+
+  .class-card,
+  .chosen-card {
+    grid-template-columns: 1fr;
+  }
+
+  .class-actions,
+  .chosen-actions {
+    justify-self: start;
   }
 }
 
