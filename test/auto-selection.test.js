@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  AutoSelectionTaskManager,
+  AutoSelectionTaskRunner,
   classRemaining,
   chooseTarget,
   createAutoSelectionEventLog,
@@ -357,4 +359,59 @@ test('auto-selection upgrade handles session expired after drop by reauthing and
   assert.equal(outcome.type, 'session-expired');
   assert.deepEqual(calls, [['drop'], ['choose', 'HIGH'], ['auth'], ['choose', 'LOW']]);
   assert.equal(group.currentPlacement.targetId, low.targetId);
+});
+
+test('auto-selection task runner serializes tick and write operations', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    username: '2023123456',
+    password: 'secret',
+    pagePath: '/xsxk/index.html',
+    groups: [{ name: '体育课', targets: [{ courseId: 'KC1', classId: 'A', priority: 1 }] }]
+  });
+  const calls = [];
+  const runner = new AutoSelectionTaskRunner({
+    id: 'task_test',
+    config,
+    autoStart: false,
+    login: async () => ({ cookieHeader: 'JSESSIONID=test' }),
+    createClient: () => ({
+      bootstrapFromPage: async () => {
+        calls.push('bootstrap');
+      },
+      chosen: { snapshot: async () => makeSnapshot([]) },
+      catalog: { getTeachingClasses: async () => [] }
+    })
+  });
+
+  await Promise.all([runner.tick(), runner.tick()]);
+  assert.deepEqual(calls, ['bootstrap']);
+  assert.equal(runner.attempts, 1);
+  assert.equal(runner.status, 'running');
+});
+
+test('auto-selection task manager creates sanitized task snapshots and cancels timers', async () => {
+  const manager = new AutoSelectionTaskManager({
+    autoStartTasks: false,
+    login: async () => ({ cookieHeader: 'JSESSIONID=test' }),
+    createClient: () => ({
+      bootstrapFromPage: async () => {},
+      chosen: { snapshot: async () => makeSnapshot([]) },
+      catalog: { getTeachingClasses: async () => [] }
+    })
+  });
+
+  const created = await manager.createTask({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    username: '2023123456',
+    password: 'secret',
+    pagePath: '/xsxk/index.html',
+    groups: [{ name: '体育课', targets: [{ courseId: 'KC1', classId: 'A', priority: 1 }] }]
+  });
+
+  assert.equal(created.usernameMasked, '******3456');
+  assert.doesNotMatch(JSON.stringify(created), /secret|JSESSIONID=test/);
+  assert.equal(manager.listTasks().length, 1);
+  const cancelled = manager.cancelTask(created.id);
+  assert.equal(cancelled.status, 'cancelled');
 });
