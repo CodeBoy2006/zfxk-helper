@@ -40,24 +40,7 @@ const elements = {
   exportSelectedBtn: document.querySelector('#exportSelectedBtn'),
   clearLogBtn: document.querySelector('#clearLogBtn'),
   activityLog: document.querySelector('#activityLog'),
-  statusBadge: document.querySelector('#statusBadge'),
-  autoSelectionPanel: document.querySelector('#autoSelectionPanel'),
-  autoSelectionToggleBtn: document.querySelector('#autoSelectionToggleBtn'),
-  autoIntervalInput: document.querySelector('#autoIntervalInput'),
-  autoMaxAttemptsInput: document.querySelector('#autoMaxAttemptsInput'),
-  autoDeadlineInput: document.querySelector('#autoDeadlineInput'),
-  autoFailureStrategySelect: document.querySelector('#autoFailureStrategySelect'),
-  autoStartBtn: document.querySelector('#autoStartBtn'),
-  autoRefreshTasksBtn: document.querySelector('#autoRefreshTasksBtn'),
-  autoCancelBtn: document.querySelector('#autoCancelBtn'),
-  autoExportConfigBtn: document.querySelector('#autoExportConfigBtn'),
-  autoImportConfigInput: document.querySelector('#autoImportConfigInput'),
-  autoAddGroupBtn: document.querySelector('#autoAddGroupBtn'),
-  autoGroupTabs: document.querySelector('#autoGroupTabs'),
-  autoTargetList: document.querySelector('#autoTargetList'),
-  autoTaskSummary: document.querySelector('#autoTaskSummary'),
-  autoGroupStatusList: document.querySelector('#autoGroupStatusList'),
-  autoEventLog: document.querySelector('#autoEventLog')
+  statusBadge: document.querySelector('#statusBadge')
 };
 
 const WEEKDAYS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
@@ -89,13 +72,6 @@ const state = {
   expandedFilterRows: new Set(),
   filtersCollapsed: false,
   draggedSelectedClassId: null,
-  autoSelectionDraft: {
-    groups: [{ name: '体育课', targets: [] }],
-    activeGroupIndex: 0
-  },
-  autoTasks: [],
-  autoPollingTimer: null,
-  autoPanelVisible: true,
   busy: false
 };
 
@@ -190,25 +166,12 @@ elements.clearLogBtn.addEventListener('click', () => {
   elements.activityLog.replaceChildren();
   setStatus('idle');
 });
-elements.autoSelectionToggleBtn.addEventListener('click', () => toggleAutoSelectionPanel());
-elements.autoAddGroupBtn.addEventListener('click', () => addAutoSelectionGroup());
-elements.autoStartBtn.addEventListener('click', () => startAutoSelectionTask());
-elements.autoRefreshTasksBtn.addEventListener('click', () => pollAutoSelectionTasks({ schedule: false }));
-elements.autoCancelBtn.addEventListener('click', () => cancelCurrentAutoTask());
-elements.autoExportConfigBtn.addEventListener('click', () => exportAutoSelectionDraft());
-elements.autoImportConfigInput.addEventListener('change', () => importAutoSelectionDraft());
-elements.autoGroupTabs.addEventListener('click', (event) => selectAutoGroup(event));
-elements.autoTargetList.addEventListener('click', (event) => handleAutoTargetAction(event));
-elements.autoTargetList.addEventListener('input', (event) => updateAutoTargetField(event));
 
 renderCourses();
 renderClasses();
 renderChosen();
 renderCourseTypeTabs();
 renderFilterPanel();
-renderAutoSelectionDraft();
-renderAutoTaskStatus();
-pollAutoSelectionTasks();
 
 async function initialize() {
   await runTask('初始化会话', async () => {
@@ -535,305 +498,6 @@ async function exportSelectedCourses() {
   });
 }
 
-function toggleAutoSelectionPanel() {
-  state.autoPanelVisible = !state.autoPanelVisible;
-  elements.autoSelectionPanel.hidden = !state.autoPanelVisible;
-  elements.autoSelectionToggleBtn.textContent = state.autoPanelVisible ? '自动选课' : '显示自动选课';
-}
-
-function addAutoSelectionGroup() {
-  const index = state.autoSelectionDraft.groups.length + 1;
-  state.autoSelectionDraft.groups.push({ name: `选课组 ${index}`, targets: [] });
-  state.autoSelectionDraft.activeGroupIndex = index - 1;
-  renderAutoSelectionDraft();
-}
-
-function addClassToAutoSelection(teachingClass) {
-  const group = activeAutoDraftGroup();
-  const target = {
-    courseId: teachingClass.courseId,
-    classId: teachingClass.classId,
-    submitClassId: teachingClass.submitClassId,
-    label: teachingClass.name || teachingClass.raw?.jxbmc || teachingClass.classId,
-    priority: nextAutoPriority(group),
-    isBackup: group.targets.length > 0,
-    allowAutoDrop: group.targets.length > 0,
-    recoverOnUpgradeFailure: true,
-    skipAfterNonCapacityFailure: true
-  };
-  const exists = group.targets.some((item) => item.courseId === target.courseId && (item.classId === target.classId || item.submitClassId === target.submitClassId));
-  if (!exists) group.targets.push(target);
-  group.targets.sort((a, b) => Number(b.priority) - Number(a.priority));
-  renderAutoSelectionDraft();
-  log(`已加入自动选课：${target.label}`);
-}
-
-function nextAutoPriority(group) {
-  const priorities = group.targets.map((target) => Number(target.priority)).filter(Number.isFinite);
-  return priorities.length ? Math.max(1, Math.min(...priorities) - 10) : 100;
-}
-
-async function startAutoSelectionTask() {
-  await runTask('启动自动选课', async () => {
-    const payload = buildAutoSelectionPayload(true);
-    const response = await fetch('/api/auto-selection/tasks', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json; charset=UTF-8' },
-      body: JSON.stringify(payload)
-    });
-    const task = await readResponse(response, '/api/auto-selection/tasks');
-    state.autoTasks = [task];
-    renderAutoTaskStatus();
-    pollAutoSelectionTasks();
-    log(`自动选课任务已启动：${task.id}`);
-  });
-}
-
-async function cancelCurrentAutoTask() {
-  const task = state.autoTasks[0];
-  if (!task) {
-    log('暂无可取消的自动选课任务。');
-    return;
-  }
-  await runTask('取消自动选课', async () => {
-    const response = await fetch(`/api/auto-selection/tasks/${encodeURIComponent(task.id)}/cancel`, { method: 'POST' });
-    const result = await readResponse(response, `/api/auto-selection/tasks/${task.id}/cancel`);
-    state.autoTasks = [result];
-    renderAutoTaskStatus();
-    log(`自动选课任务已取消：${task.id}`);
-  });
-}
-
-function buildAutoSelectionPayload(includeSecrets = false) {
-  return {
-    baseUrl: elements.baseUrlInput.value.trim(),
-    username: elements.usernameInput.value.trim(),
-    password: includeSecrets ? elements.passwordInput.value : undefined,
-    cookie: includeSecrets ? elements.cookieInput.value.trim() : undefined,
-    pagePath: elements.pagePathInput.value.trim(),
-    intervalMs: Number(elements.autoIntervalInput.value) || 1500,
-    maxAttempts: elements.autoMaxAttemptsInput.value ? Number(elements.autoMaxAttemptsInput.value) : null,
-    deadlineAt: elements.autoDeadlineInput.value || null,
-    groups: sanitizeAutoGroups(state.autoSelectionDraft.groups)
-  };
-}
-
-async function pollAutoSelectionTasks(options = {}) {
-  clearTimeout(state.autoPollingTimer);
-  try {
-    const response = await fetch('/api/auto-selection/tasks');
-    const result = await readResponse(response, '/api/auto-selection/tasks');
-    state.autoTasks = result.tasks ?? [];
-    renderAutoTaskStatus();
-  } catch (error) {
-    if (options.logErrors) log(`自动选课状态刷新失败：${error.message}`);
-  } finally {
-    if (options.schedule !== false) {
-      state.autoPollingTimer = setTimeout(() => pollAutoSelectionTasks(), 1500);
-    }
-  }
-}
-
-function exportAutoSelectionDraft() {
-  const payload = {
-    version: 1,
-    kind: 'zfxk.autoSelectionTask',
-    ...buildAutoSelectionPayload(false)
-  };
-  downloadJson(`zfxk-auto-selection-${filenameTimestamp()}.json`, payload);
-  log('已导出自动选课配置。');
-}
-
-async function importAutoSelectionDraft() {
-  const file = elements.autoImportConfigInput.files?.[0];
-  if (!file) return;
-  await runTask('加载自动选课配置', async () => {
-    const parsed = JSON.parse(await file.text());
-    const response = await fetch('/api/auto-selection/config/import', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json; charset=UTF-8' },
-      body: JSON.stringify(parsed)
-    });
-    const result = await readResponse(response, '/api/auto-selection/config/import');
-    if (!result.valid) throw new Error(result.errors?.join('；') || '配置无效');
-    applyAutoSelectionConfig(result.config);
-    log('自动选课配置已加载为草稿。');
-  });
-  elements.autoImportConfigInput.value = '';
-}
-
-function applyAutoSelectionConfig(config) {
-  elements.baseUrlInput.value = config.baseUrl || elements.baseUrlInput.value;
-  elements.pagePathInput.value = config.pagePath || elements.pagePathInput.value;
-  elements.usernameInput.value = config.username || elements.usernameInput.value;
-  elements.autoIntervalInput.value = config.intervalMs || 1500;
-  elements.autoMaxAttemptsInput.value = config.maxAttempts ?? '';
-  elements.autoDeadlineInput.value = config.deadlineAt || '';
-  state.autoSelectionDraft = {
-    groups: config.groups?.length ? config.groups.map((group) => ({
-      name: group.name,
-      targets: group.targets ?? []
-    })) : [{ name: '体育课', targets: [] }],
-    activeGroupIndex: 0
-  };
-  persistSessionCache();
-  renderAutoSelectionDraft();
-}
-
-function renderAutoSelectionDraft() {
-  elements.autoGroupTabs.replaceChildren();
-  state.autoSelectionDraft.groups.forEach((group, index) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `auto-group-tab ${index === state.autoSelectionDraft.activeGroupIndex ? 'active' : ''}`;
-    button.dataset.autoGroupIndex = String(index);
-    button.textContent = `${group.name} ${group.targets.length}`;
-    elements.autoGroupTabs.append(button);
-  });
-
-  const group = activeAutoDraftGroup();
-  if (!group.targets.length) {
-    elements.autoTargetList.replaceChildren(empty('从教学班列表加入目标'));
-    return;
-  }
-
-  const table = document.createElement('table');
-  table.className = 'auto-target-table';
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>优先级</th>
-        <th>教学班</th>
-        <th>保底</th>
-        <th>可退升级</th>
-        <th>失败恢复</th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  `;
-  const tbody = table.querySelector('tbody');
-  group.targets.forEach((target, index) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td><input data-auto-target-index="${index}" data-auto-target-field="priority" type="number" value="${Number(target.priority) || 0}"></td>
-      <td>
-        <strong>${escapeHtml(target.label || target.classId)}</strong>
-        <span>${escapeHtml(target.courseId)} · ${escapeHtml(target.submitClassId || target.classId)}</span>
-      </td>
-      <td><input data-auto-target-index="${index}" data-auto-target-field="isBackup" type="checkbox" ${target.isBackup ? 'checked' : ''}></td>
-      <td><input data-auto-target-index="${index}" data-auto-target-field="allowAutoDrop" type="checkbox" ${target.allowAutoDrop ? 'checked' : ''}></td>
-      <td><input data-auto-target-index="${index}" data-auto-target-field="recoverOnUpgradeFailure" type="checkbox" ${target.recoverOnUpgradeFailure !== false ? 'checked' : ''}></td>
-      <td><button type="button" class="section-text-button" data-auto-remove-target="${index}">移除</button></td>
-    `;
-    tbody.append(row);
-  });
-  elements.autoTargetList.replaceChildren(table);
-}
-
-function renderAutoTaskStatus() {
-  const task = state.autoTasks[0];
-  if (!task) {
-    elements.autoTaskSummary.textContent = '暂无运行任务';
-    elements.autoGroupStatusList.replaceChildren();
-    elements.autoEventLog.replaceChildren();
-    return;
-  }
-
-  elements.autoTaskSummary.innerHTML = `
-    <div><strong>${escapeHtml(task.status)}</strong><span class="tag ok">${escapeHtml(task.authStatus || 'unknown')}</span></div>
-    <div>任务 ID：${escapeHtml(task.id)}</div>
-    <div>尝试次数：${Number(task.attempts) || 0} 次</div>
-    <div>下次刷新：${escapeHtml(formatAutoDate(task.nextRunAt))}</div>
-  `;
-
-  elements.autoGroupStatusList.replaceChildren(...(task.groups || []).map((group) => {
-    const card = document.createElement('article');
-    card.className = 'auto-group-status-card';
-    card.innerHTML = `
-      <div class="card-title">
-        <strong>${escapeHtml(group.name)}</strong>
-        <span class="tag ${autoStateTagClass(group.state)}">${escapeHtml(group.state)}</span>
-      </div>
-      <div class="meta">当前占位：${escapeHtml(group.currentTargetId || '无')}</div>
-      <div class="meta">${group.isTopTargetSelected ? '已达到最高优先级' : '继续观察升级机会'}</div>
-    `;
-    return card;
-  }));
-
-  elements.autoEventLog.replaceChildren(...(task.events || []).slice(-40).reverse().map((event) => {
-    const item = document.createElement('li');
-    item.textContent = `${formatAutoDate(event.at)} ${event.message || event.type}`;
-    return item;
-  }));
-}
-
-function selectAutoGroup(event) {
-  const button = event.target.closest('[data-auto-group-index]');
-  if (!button) return;
-  state.autoSelectionDraft.activeGroupIndex = Number(button.dataset.autoGroupIndex);
-  renderAutoSelectionDraft();
-}
-
-function handleAutoTargetAction(event) {
-  const removeButton = event.target.closest('[data-auto-remove-target]');
-  if (!removeButton) return;
-  const group = activeAutoDraftGroup();
-  group.targets.splice(Number(removeButton.dataset.autoRemoveTarget), 1);
-  renderAutoSelectionDraft();
-}
-
-function updateAutoTargetField(event) {
-  const input = event.target.closest('[data-auto-target-field]');
-  if (!input) return;
-  const group = activeAutoDraftGroup();
-  const target = group.targets[Number(input.dataset.autoTargetIndex)];
-  if (!target) return;
-  const field = input.dataset.autoTargetField;
-  target[field] = input.type === 'checkbox' ? input.checked : Number(input.value);
-  group.targets.sort((a, b) => Number(b.priority) - Number(a.priority));
-  renderAutoSelectionDraft();
-}
-
-function activeAutoDraftGroup() {
-  if (!state.autoSelectionDraft.groups.length) {
-    state.autoSelectionDraft.groups.push({ name: '体育课', targets: [] });
-    state.autoSelectionDraft.activeGroupIndex = 0;
-  }
-  return state.autoSelectionDraft.groups[state.autoSelectionDraft.activeGroupIndex] ?? state.autoSelectionDraft.groups[0];
-}
-
-function sanitizeAutoGroups(groups) {
-  return groups.map((group) => ({
-    name: group.name,
-    targets: group.targets.map((target) => ({
-      courseId: target.courseId,
-      classId: target.classId,
-      submitClassId: target.submitClassId,
-      label: target.label,
-      priority: Number(target.priority),
-      isBackup: Boolean(target.isBackup),
-      allowAutoDrop: Boolean(target.allowAutoDrop),
-      recoverOnUpgradeFailure: target.recoverOnUpgradeFailure !== false,
-      skipAfterNonCapacityFailure: target.skipAfterNonCapacityFailure !== false
-    }))
-  }));
-}
-
-function autoStateTagClass(stateValue) {
-  if (stateValue === 'SUCCEEDED' || stateValue === 'running') return 'ok';
-  if (stateValue === 'PAUSED' || stateValue === 'HOLDING') return 'warn';
-  if (stateValue === 'FAILED' || stateValue === 'cancelled') return 'danger';
-  return '';
-}
-
-function formatAutoDate(value) {
-  if (!value) return '未排程';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleTimeString();
-}
-
 function renderFilterPanel() {
   elements.filterRows.replaceChildren();
   elements.filterPanel.classList.toggle('collapsed', state.filtersCollapsed);
@@ -971,12 +635,6 @@ function renderClasses() {
     chooseButton.disabled = selected || !item.flags.canSelect;
     chooseButton.addEventListener('click', () => chooseClass(item));
     actions.append(chooseButton);
-    const autoButton = document.createElement('button');
-    autoButton.type = 'button';
-    autoButton.className = 'secondary auto-add-class-button';
-    autoButton.textContent = '加入自动选课';
-    autoButton.addEventListener('click', () => addClassToAutoSelection(item));
-    actions.append(autoButton);
     card.append(actions);
     elements.classList.append(card);
   }
@@ -1508,7 +1166,7 @@ async function runTask(label, task) {
 }
 
 function setButtonsDisabled(disabled) {
-  for (const button of document.querySelectorAll('.topbar-actions button, #sessionForm button, #courseTypeTabs button, #searchForm button, #saveOrderBtn, #catalogSearchBtn, #classSortBtn, #exportCoursesBtn, #exportSelectedBtn, #autoSelectionPanel button')) {
+  for (const button of document.querySelectorAll('.topbar-actions button, #sessionForm button, #courseTypeTabs button, #searchForm button, #saveOrderBtn, #catalogSearchBtn, #classSortBtn, #exportCoursesBtn, #exportSelectedBtn')) {
     button.disabled = disabled;
   }
 }

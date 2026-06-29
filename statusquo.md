@@ -303,3 +303,9 @@
 - **Status:** Completed
 - **Next Steps:** Validate in a live session that keyword, teaching-class, retake, and course-ownership filters no longer reload courses unless remote filters change.
 - **Context:** Capacity and schedule-conflict filters remain remote to preserve backend range and real-time rules.
+
+## [2026-06-29 23:01] Main Page Auto Selection Link
+- **Changes:** Removed the embedded auto-selection panel and main-page auto-selection draft/task logic, added a topbar link from the main workspace to `/auto-selection`, removed the class-card auto-selection shortcut, cleaned obsolete styles, and updated Web tests.
+- **Status:** Completed
+- **Next Steps:** Use the topbar `自动选课` link to open the standalone control page from the main workspace.
+- **Context:** The standalone page remains the only place for automatic-selection task configuration and target management.

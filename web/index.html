@@ -14,7 +14,7 @@
           <p id="sessionSummary">未初始化会话</p>
         </div>
         <div class="topbar-actions">
-          <button id="autoSelectionToggleBtn" type="button" title="显示自动选课面板">自动选课</button>
+          <a id="autoSelectionLink" class="topbar-link-button" href="/auto-selection" title="打开独立自动选课页面">自动选课</a>
           <button id="refreshSnapshotBtn" type="button" title="刷新已选">刷新</button>
           <button id="clearLogBtn" type="button" title="清空日志">清空日志</button>
         </div>
@@ -65,63 +65,6 @@
           <div id="filterRows" class="filter-rows" aria-live="polite"></div>
           <button id="toggleFiltersBtn" type="button" class="filter-toggle">展开</button>
         </form>
-      </section>
-
-      <section id="autoSelectionPanel" class="auto-selection-workspace" aria-label="自动选课">
-        <aside class="auto-config-pane" aria-label="任务配置">
-          <div class="section-heading">
-            <h2><span class="step-badge">1</span>任务配置</h2>
-          </div>
-          <label>
-            刷新间隔
-            <input id="autoIntervalInput" type="number" min="500" step="100" value="1500">
-          </label>
-          <label>
-            最大尝试次数
-            <input id="autoMaxAttemptsInput" type="number" min="1" placeholder="不限制">
-          </label>
-          <label>
-            截止时间
-            <input id="autoDeadlineInput" type="datetime-local">
-          </label>
-          <label>
-            失败策略
-            <select id="autoFailureStrategySelect">
-              <option value="skip-non-capacity">非容量失败跳过，容量满继续刷</option>
-            </select>
-          </label>
-          <div class="auto-config-actions">
-            <button id="autoStartBtn" type="button">启动自动选课</button>
-            <button id="autoRefreshTasksBtn" type="button" class="secondary">刷新状态</button>
-            <button id="autoCancelBtn" type="button" class="danger">取消任务</button>
-          </div>
-          <div class="auto-import-export">
-            <button id="autoExportConfigBtn" type="button" class="secondary">导出配置</button>
-            <label class="file-button">
-              加载配置
-              <input id="autoImportConfigInput" type="file" accept="application/json,.json">
-            </label>
-          </div>
-          <p class="mode-note">任务在本地 Node 进程运行；导出文件不包含密码或 Cookie。</p>
-        </aside>
-
-        <section class="auto-groups-pane" aria-label="选课组配置">
-          <div class="section-heading">
-            <h2><span class="step-badge">2</span>选课组配置</h2>
-            <button id="autoAddGroupBtn" type="button">新建选课组</button>
-          </div>
-          <div id="autoGroupTabs" class="auto-group-tabs" aria-live="polite"></div>
-          <div id="autoTargetList" class="auto-target-list" aria-live="polite"></div>
-        </section>
-
-        <aside id="autoTaskStatusPanel" class="auto-status-pane" aria-label="后台任务状态">
-          <div class="section-heading">
-            <h2><span class="step-badge">3</span>后台任务状态</h2>
-          </div>
-          <div id="autoTaskSummary" class="auto-task-summary">暂无运行任务</div>
-          <div id="autoGroupStatusList" class="auto-group-status-list"></div>
-          <ol id="autoEventLog" class="auto-event-log"></ol>
-        </aside>
       </section>
 
       <section class="workspace">

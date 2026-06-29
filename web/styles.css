@@ -119,6 +119,19 @@ textarea {
   gap: 8px;
 }
 
+.topbar-link-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 36px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 0 12px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 750;
+  text-decoration: none;
+}
+
 .session-panel {
   margin-top: 12px;
   padding: 14px;
@@ -359,14 +372,6 @@ textarea {
   display: grid;
   grid-template-columns: minmax(300px, 0.88fr) minmax(460px, 1.22fr) minmax(360px, 1fr);
   gap: 14px;
-  margin-top: 12px;
-  align-items: stretch;
-}
-
-.auto-selection-workspace {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.82fr) minmax(520px, 1.45fr) minmax(340px, 0.95fr);
-  gap: 12px;
   margin-top: 12px;
   align-items: stretch;
 }
@@ -1519,17 +1524,6 @@ body.auto-chrome-compact .auto-page-title {
   gap: 8px;
 }
 
-.class-card .class-actions .auto-add-class-button {
-  min-width: 76px;
-  min-height: 34px;
-  border-color: #d8e5f4;
-  background: #fff;
-  color: #155fa0;
-  box-shadow: none;
-  font-size: 13px;
-  font-weight: 850;
-}
-
 .chosen-card .chosen-actions button {
   min-width: 64px;
   min-height: 40px;
@@ -1730,7 +1724,6 @@ body.auto-chrome-compact .auto-page-title {
 @media (max-width: 1120px) {
   #sessionForm,
   .auto-page-workspace,
-  .auto-selection-workspace,
   .workspace {
     grid-template-columns: 1fr;
   }
