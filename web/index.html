@@ -38,13 +38,20 @@
         <p class="mode-note">前端请求本地 Node 代理；代理带上这里填写的 Cookie 访问学校教务系统。</p>
       </section>
 
+      <section id="filterPanel" class="filter-panel collapsed" aria-label="筛选条件">
+        <form id="searchForm">
+          <div class="filter-search-row">
+            <input id="keywordInput" name="keyword" placeholder="可输入课程号/课程名称/教学班名称/教师姓名/教师工号查询!" autocomplete="off">
+            <button type="submit">查询</button>
+            <button id="resetFiltersBtn" type="button" class="secondary">重置条件</button>
+          </div>
+          <div id="filterRows" class="filter-rows" aria-live="polite"></div>
+          <button id="toggleFiltersBtn" type="button" class="filter-toggle">展开</button>
+        </form>
+      </section>
+
       <section class="workspace">
         <aside class="catalog-pane" aria-label="课程候选">
-          <form id="searchForm" class="search-bar">
-            <input id="keywordInput" name="keyword" placeholder="课程号 / 课程名 / 教师" autocomplete="off">
-            <label class="checkbox"><input id="hasCapacityInput" type="checkbox"> 有余量</label>
-            <button type="submit">搜索</button>
-          </form>
           <div id="courseList" class="course-list" aria-live="polite"></div>
         </aside>
 

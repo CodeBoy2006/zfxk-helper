@@ -7,7 +7,10 @@ const elements = {
   cookieInput: document.querySelector('#cookieInput'),
   pagePathInput: document.querySelector('#pagePathInput'),
   keywordInput: document.querySelector('#keywordInput'),
-  hasCapacityInput: document.querySelector('#hasCapacityInput'),
+  filterPanel: document.querySelector('#filterPanel'),
+  filterRows: document.querySelector('#filterRows'),
+  resetFiltersBtn: document.querySelector('#resetFiltersBtn'),
+  toggleFiltersBtn: document.querySelector('#toggleFiltersBtn'),
   sessionSummary: document.querySelector('#sessionSummary'),
   courseList: document.querySelector('#courseList'),
   classList: document.querySelector('#classList'),
@@ -23,10 +26,15 @@ const elements = {
 
 const state = {
   client: null,
+  transport: null,
   courses: [],
   classes: [],
   selectedCourseId: null,
   snapshot: null,
+  filterGroups: [],
+  filters: {},
+  expandedFilterRows: new Set(),
+  filtersCollapsed: false,
   busy: false
 };
 
@@ -40,6 +48,50 @@ elements.searchForm.addEventListener('submit', async (event) => {
   await searchCourses();
 });
 
+elements.resetFiltersBtn.addEventListener('click', async () => {
+  elements.keywordInput.value = '';
+  state.filters = {};
+  renderFilterPanel();
+  await searchCourses();
+});
+
+elements.toggleFiltersBtn.addEventListener('click', () => {
+  state.filtersCollapsed = !state.filtersCollapsed;
+  renderFilterPanel();
+});
+
+elements.filterRows.addEventListener('click', async (event) => {
+  const expandButton = event.target.closest('[data-expand-filter]');
+  if (expandButton) {
+    const key = expandButton.dataset.expandFilter;
+    if (state.expandedFilterRows.has(key)) state.expandedFilterRows.delete(key);
+    else state.expandedFilterRows.add(key);
+    renderFilterPanel();
+    return;
+  }
+
+  const optionButton = event.target.closest('[data-filter-option]');
+  if (optionButton) {
+    const { key, value } = optionButton.dataset;
+    if (state.filters[key] === value) delete state.filters[key];
+    else state.filters[key] = value;
+    renderFilterPanel();
+    await searchCourses();
+    return;
+  }
+
+  const applyButton = event.target.closest('[data-apply-text-filter]');
+  if (applyButton) {
+    const key = applyButton.dataset.applyTextFilter;
+    const input = elements.filterRows.querySelector(`[data-text-filter="${key}"]`);
+    const value = input?.value.trim() ?? '';
+    if (value) state.filters[key] = value;
+    else delete state.filters[key];
+    renderFilterPanel();
+    await searchCourses();
+  }
+});
+
 elements.refreshSnapshotBtn.addEventListener('click', () => refreshSnapshot());
 elements.saveOrderBtn.addEventListener('click', () => saveOrder());
 elements.clearLogBtn.addEventListener('click', () => {
@@ -50,6 +102,7 @@ elements.clearLogBtn.addEventListener('click', () => {
 renderCourses();
 renderClasses();
 renderChosen();
+renderFilterPanel();
 
 async function initialize() {
   await runTask('初始化会话', async () => {
@@ -60,12 +113,20 @@ async function initialize() {
     if (!cookie) throw new Error('请填写 Cookie。');
     if (!path) throw new Error('请填写选课入口 Path。');
 
+    const transport = new ProxyTransport({ baseUrl, cookie });
     state.client = createZfxkClient({
       baseUrl,
       mode: 'commit',
-      transport: new ProxyTransport({ baseUrl, cookie })
+      transport
     });
-    await state.client.bootstrapFromPage({ path });
+    state.transport = transport;
+    const html = await transport.get(path);
+    await state.client.bootstrap({ html });
+    state.filters = {};
+    state.expandedFilterRows = new Set();
+    state.filtersCollapsed = false;
+    state.filterGroups = await loadFilterGroups(transport, state.client.context);
+    renderFilterPanel();
     log('会话已通过本地代理解析。');
     updateSessionSummary();
     await searchCoursesCore();
@@ -84,7 +145,7 @@ async function searchCourses() {
 async function searchCoursesCore() {
   state.courses = await state.client.catalog.searchCourses({
     keyword: elements.keywordInput.value.trim(),
-    filters: { hasCapacity: elements.hasCapacityInput.checked },
+    extra: selectedFilterPayload(),
     page: { start: 1, size: 20 }
   });
   state.selectedCourseId = state.courses[0]?.courseId ?? null;
@@ -171,6 +232,72 @@ async function refreshSnapshotCore() {
   renderChosen();
   renderClasses();
   updateSessionSummary();
+}
+
+function renderFilterPanel() {
+  elements.filterRows.replaceChildren();
+  elements.filterPanel.classList.toggle('collapsed', state.filtersCollapsed);
+  elements.toggleFiltersBtn.textContent = state.filtersCollapsed ? '展开' : '收起';
+
+  if (!state.filterGroups.length) {
+    const row = document.createElement('div');
+    row.className = 'filter-empty';
+    row.textContent = '初始化后从实际选课页读取筛选条件';
+    elements.filterRows.append(row);
+    return;
+  }
+
+  for (const group of state.filterGroups) {
+    const row = document.createElement('div');
+    row.className = 'filter-row';
+    row.dataset.filterRow = group.key;
+
+    const label = document.createElement('div');
+    label.className = 'filter-label';
+    label.textContent = `${group.label}:`;
+    row.append(label);
+
+    const options = document.createElement('div');
+    options.className = 'filter-options';
+
+    if (group.type === 'text') {
+      const input = document.createElement('input');
+      input.dataset.textFilter = group.key;
+      input.value = state.filters[group.key] ?? '';
+      input.autocomplete = 'off';
+      input.className = 'filter-text-input';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'filter-apply';
+      button.dataset.applyTextFilter = group.key;
+      button.textContent = '确定';
+      options.append(input, button);
+    } else {
+      const expanded = state.expandedFilterRows.has(group.key);
+      const visible = expanded ? group.options : group.options.slice(0, group.showSize);
+      for (const option of visible) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `filter-option ${state.filters[group.key] === option.value ? 'active' : ''}`;
+        button.dataset.filterOption = '';
+        button.dataset.key = group.key;
+        button.dataset.value = option.value;
+        button.textContent = option.text;
+        options.append(button);
+      }
+      if (group.options.length > group.showSize) {
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'filter-more';
+        more.dataset.expandFilter = group.key;
+        more.textContent = expanded ? '收起' : '更多';
+        options.append(more);
+      }
+    }
+
+    row.append(options);
+    elements.filterRows.append(row);
+  }
 }
 
 function renderCourses() {
@@ -334,6 +461,104 @@ function empty(text) {
   box.className = 'empty';
   box.textContent = text;
   return box;
+}
+
+function selectedFilterPayload() {
+  return Object.fromEntries(Object.entries(state.filters).filter(([, value]) => value !== undefined && value !== null && value !== ''));
+}
+
+async function loadFilterGroups(transport, context) {
+  const loaders = filterDefinitions(context).map(async (definition) => {
+    if (!definition.enabled) return null;
+    if (definition.type === 'text') {
+      return { ...definition, options: [] };
+    }
+    if (definition.options) {
+      return { ...definition, options: definition.options };
+    }
+    try {
+      const options = await loadRemoteOptions(transport, definition);
+      return options.length ? { ...definition, options } : null;
+    } catch {
+      return null;
+    }
+  });
+  return (await Promise.all(loaders)).filter(Boolean);
+}
+
+function filterDefinitions(context) {
+  const raw = context.raw ?? {};
+  const locale = encodeURIComponent(raw.localeKey || 'zh_CN');
+  const sameMajor = raw.zzxkgjcxkg_tjbj === '1';
+  return [
+    remoteFilter('kkbm_id_list', '开课学院', raw.zzxkgjcxkg_kkxy, `/xkgl/common_queryKkbmPaged.html?localeKey=${locale}`, 'jg_id', 'jgmc', 'jgxh', 'asc', 6),
+    remoteFilter('njdm_id_list', '年级', raw.zzxkgjcxkg_nj, `/xkgl/common_queryNjPaged.html?njdm_id=${sameMajor ? encodeURIComponent(context.student.njdmId || '') : 'w'}`, 'njdm_id', 'njmc', 'njxh', 'desc', 10),
+    remoteFilter('jg_id_list', '学院', raw.zzxkgjcxkg_xy, `/xkgl/common_queryXyPaged.html?localeKey=${locale}&jg_id=${sameMajor ? encodeURIComponent(context.student.jgId || '') : 'w'}`, 'jg_id', 'jgmc', 'jgxh', 'asc', 6),
+    remoteFilter('zyh_id_list', '专业', raw.zzxkgjcxkg_zy, `/xkgl/common_queryZyPaged.html?localeKey=${locale}&zyh_id=${sameMajor ? encodeURIComponent(context.student.zyhId || '') : 'w'}`, 'zyh_id', 'zymc', 'zyxh', 'asc', 6),
+    remoteFilter('kclb_id_list', '课程类别', raw.zzxkgjcxkg_kclb, '/xkgl/common_queryKclbListPaged.html', 'kclbdm', 'kclbmc', 'kclbdm', 'asc', 6),
+    remoteFilter('kcxzdm_list', '课程性质', raw.zzxkgjcxkg_kcxz, '/xkgl/common_queryKcxzPaged.html', 'dm', 'mc', 'dm', 'asc', 6),
+    remoteFilter('kcgs_list', '课程归属', raw.zzxkgjcxkg_kcgs, '/xkgl/common_queryKcgsPaged.html', 'kcgsdm', 'kcgsmc', 'px,kcgsdm', 'asc', 7),
+    remoteFilter('jxms_list', '教学模式', raw.zzxkgjcxkg_jxms, '/xtgl/comm_cxJcsjList.html?lxdm=0032', 'dm', 'mc', undefined, undefined, 7),
+    remoteFilter('sksj_list', '上课星期', raw.zzxkgjcxkg_skxq, '/xtgl/comm_cxJcsjList.html?lxdm=0036', 'dm', 'mc', undefined, undefined, 7),
+    remoteFilter('skjc_list', '上课节次', raw.zzxkgjcxkg_skjc, '/xkgl/common_querySkjcList.html', 'dm', 'dm', 'dm', 'asc', 15),
+    { key: 'jxbmc_list', label: '教学班', type: 'text', enabled: raw.zzxkgjcxkg_jxb === '1', showSize: 1 },
+    fixedFilter('cxbj_list', '是否重修', raw.zzxkgjcxkg_sfcx, [{ value: '1', text: '是' }, { value: '0', text: '否' }]),
+    fixedFilter('yl_list', '有无余量', raw.zzxkgjcxkg_ywyl, [{ value: '1', text: '有' }, { value: '0', text: '无' }]),
+    fixedFilter('sksjct_list', '上课时间冲突', raw.zzxkgjcxkg_sksjct, [{ value: '1', text: '是' }, { value: '0', text: '否' }])
+  ];
+}
+
+function remoteFilter(key, label, flag, path, valueField, textField, sortName, sortOrder, showSize) {
+  return {
+    key,
+    label,
+    enabled: flag === '1',
+    path,
+    valueField,
+    textField,
+    sortName,
+    sortOrder,
+    showSize,
+    limit: Math.max(showSize * 8, 60)
+  };
+}
+
+function fixedFilter(key, label, flag, options) {
+  return { key, label, enabled: flag === '1', options, showSize: options.length };
+}
+
+async function loadRemoteOptions(transport, definition) {
+  const response = await transport.post(definition.path, queryModelData(definition));
+  return uniqueOptions(rowsFromResponse(response).map((row) => ({
+    value: String(row?.[definition.valueField] ?? ''),
+    text: String(row?.[definition.textField] ?? '')
+  })).filter((option) => option.value && option.text));
+}
+
+function queryModelData(definition) {
+  return {
+    'queryModel.showCount': String(definition.limit ?? 60),
+    'queryModel.currentPage': '1',
+    ...(definition.sortName ? { 'queryModel.sortName': definition.sortName } : {}),
+    ...(definition.sortOrder ? { 'queryModel.sortOrder': definition.sortOrder } : {})
+  };
+}
+
+function rowsFromResponse(response) {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.items)) return response.items;
+  if (Array.isArray(response?.rows)) return response.rows;
+  if (Array.isArray(response?.tmpList)) return response.tmpList;
+  return [];
+}
+
+function uniqueOptions(options) {
+  const seen = new Map();
+  for (const option of options) {
+    const key = `${option.value}::${option.text}`;
+    if (!seen.has(key)) seen.set(key, option);
+  }
+  return [...seen.values()];
 }
 
 class ProxyTransport {

@@ -11,14 +11,25 @@ test('web frontend files expose the restored course-selection workspace', async 
 
   assert.match(html, /id="sessionForm"/);
   assert.match(html, /id="cookieInput"/);
+  assert.match(html, /id="filterPanel"/);
+  assert.match(html, /id="filterRows"/);
+  assert.match(html, /id="resetFiltersBtn"/);
   assert.match(html, /id="courseList"/);
   assert.match(html, /id="chosenPanel"/);
   assert.match(html, /id="activityLog"/);
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(app, /createZfxkClient/);
-  assert.match(app, /bootstrapFromPage/);
+  assert.match(app, /bootstrap\(\{ html \}\)/);
   assert.match(app, /ProxyTransport/);
   assert.match(app, /\/api\/proxy\/post/);
+  assert.match(app, /loadFilterGroups/);
+  assert.match(app, /kkbm_id_list/);
+  assert.match(app, /skjc_list/);
+  assert.match(app, /cxbj_list/);
+  assert.match(app, /yl_list/);
+  assert.match(app, /queryModel\.showCount/);
+  assert.match(app, /\/xkgl\/common_queryKkbmPaged\.html/);
+  assert.match(app, /\/xtgl\/comm_cxJcsjList\.html\?lxdm=0036/);
   assert.match(app, /selection\.choose/);
   assert.match(app, /selection\.drop/);
   assert.match(app, /selection\.reorder/);

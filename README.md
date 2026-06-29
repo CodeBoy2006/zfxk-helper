@@ -119,3 +119,5 @@ Fill in:
 - `Path`: the course-selection entry page used to parse hidden runtime fields.
 
 The browser calls the local Node server under `/api/proxy/*`. The Node proxy then sends requests to the school system with the provided `Cookie` header, avoiding the browser restriction that blocks frontend JavaScript from setting raw cross-origin cookies. Cookies stay in the local browser/server process and are not written to project files.
+
+After initialization, the Web frontend reads the real selection page and dictionary endpoints to render the advanced filter bar. It supports keyword search plus the school system's filter parameters such as opening college, grade, student college, major, course category, course nature, course ownership, teaching mode, weekday, period, teaching-class name, retake, capacity, and schedule-conflict flags.

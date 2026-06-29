@@ -74,6 +74,7 @@ textarea {
 
 .topbar,
 .session-panel,
+.filter-panel,
 .activity-panel,
 .catalog-pane,
 .detail-pane,
@@ -145,6 +146,158 @@ textarea {
 .mode-note {
   margin: 10px 0 0;
   color: var(--muted);
+}
+
+.filter-panel {
+  position: relative;
+  margin-top: 12px;
+  border-color: #9dc5e8;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+#searchForm {
+  display: grid;
+}
+
+.filter-search-row {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) auto auto;
+  width: min(1060px, calc(100% - 96px));
+  margin: 6px auto 10px;
+}
+
+.filter-search-row input {
+  border-radius: 4px 0 0 4px;
+  min-height: 36px;
+}
+
+.filter-search-row button {
+  border-radius: 0;
+  min-width: 74px;
+}
+
+.filter-search-row button:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.filter-rows {
+  border-top: 1px solid #b8d4ec;
+  padding: 0 28px 38px 28px;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  column-gap: 12px;
+  min-height: 45px;
+  align-items: start;
+  padding-top: 12px;
+}
+
+.filter-label {
+  color: #2d2f33;
+  font-weight: 700;
+  line-height: 26px;
+  text-align: right;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 22px;
+  align-items: center;
+  min-width: 0;
+}
+
+.filter-option,
+.filter-more,
+.filter-toggle {
+  border: 0;
+  background: transparent;
+  color: #0d519d;
+  min-height: 26px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.filter-option {
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font-size: 17px;
+}
+
+.filter-option.active {
+  color: #fff;
+  background: #2d79b8;
+  border-radius: 3px;
+  padding: 0 8px;
+}
+
+.filter-more {
+  margin-left: auto;
+  color: #80b4df;
+  font-weight: 500;
+}
+
+.filter-more::before,
+.filter-toggle::before {
+  content: "^";
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  border: 2px solid #c8e1f4;
+  border-radius: 50%;
+  color: #7fb4df;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.filter-panel.collapsed .filter-row:nth-child(n + 6) {
+  display: none;
+}
+
+.filter-panel.collapsed .filter-toggle::before,
+.filter-more::before {
+  content: "v";
+}
+
+.filter-text-input {
+  width: 160px;
+  min-height: 28px;
+  padding: 3px 8px;
+  border-radius: 3px 0 0 3px;
+}
+
+.filter-apply {
+  min-height: 28px;
+  border-radius: 0 3px 3px 0;
+  border-color: var(--line);
+  background: #fff;
+  color: var(--text);
+}
+
+.filter-empty {
+  padding: 18px 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.filter-toggle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 112px;
+  min-height: 28px;
+  border: 1px solid #6bb2f2;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: #e6f4ff;
+  color: #0d519d;
+  font-size: 17px;
 }
 
 .workspace {
@@ -309,12 +462,32 @@ textarea {
   }
 
   .topbar,
-  .search-bar {
+  .search-bar,
+  .filter-search-row,
+  .filter-row {
     grid-template-columns: 1fr;
   }
 
   .topbar {
     display: grid;
+  }
+
+  .filter-search-row {
+    width: calc(100% - 16px);
+  }
+
+  .filter-search-row input,
+  .filter-search-row button,
+  .filter-search-row button:last-child {
+    border-radius: 4px;
+  }
+
+  .filter-rows {
+    padding-inline: 14px;
+  }
+
+  .filter-label {
+    text-align: left;
   }
 
   .topbar-actions,

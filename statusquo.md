@@ -39,3 +39,9 @@
 - **Status:** Completed
 - **Next Steps:** Use the Web frontend for manual read-only browsing first, then only test mutating operations with explicit confirmation.
 - **Context:** No choose/drop/reorder/save endpoint was called during the live check; the local fix prevents literal `"undefined"` values in mapped teaching-class fields.
+
+## [2026-06-29 16:55] Advanced Filter Bar
+- **Changes:** Recreated the school-system advanced filter bar in the Web frontend, loading filter rows and options from the live selection page/dictionary endpoints, wiring selected filters into course search, and updating README/TypeDoc/tests.
+- **Status:** Completed
+- **Next Steps:** Use the filter bar for read-only browsing before trying any mutating action.
+- **Context:** Browser verification loaded 14 real filter rows, including opening college, grade, college, major, course category, course nature, ownership, teaching mode, weekday, period, teaching class, retake, capacity, and schedule-conflict filters.
