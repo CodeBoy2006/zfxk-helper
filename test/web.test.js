@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
+import { courseIdsForDisplayKey, groupCoursesForDisplay } from '../web/course-groups.js';
 import packageJson from '../package.json' with { type: 'json' };
 
 test('web frontend files expose the restored course-selection workspace', async () => {
@@ -22,6 +23,10 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(app, /createZfxkClient/);
   assert.match(app, /parseCourseTypeOptions/);
+  assert.match(app, /groupCoursesForDisplay/);
+  assert.match(app, /courseIdsForDisplayKey/);
+  assert.match(app, /groupCoursesForDisplay\(state\.courses\)/);
+  assert.match(app, /courseIdsForDisplayKey\(state\.courses, courseKey\)/);
   assert.match(app, /bootstrap\(\{ html: state\.entryHtml, raw:/);
   assert.match(app, /ProxyTransport/);
   assert.match(app, /switchCourseType/);
@@ -49,6 +54,20 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /class-card-action/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
+});
+
+test('web course list groups rows with the same course code', () => {
+  const groups = groupCoursesForDisplay([
+    { courseId: 'KC1-A', courseCode: 'CS101', name: '数据库', credit: 3, typeCode: '01' },
+    { courseId: 'KC1-B', courseCode: 'CS101', name: '数据库', credit: 3, typeCode: '01' },
+    { courseId: 'KC2', courseCode: 'CS102', name: '算法', credit: 2, typeCode: '01' }
+  ]);
+
+  assert.deepEqual(groups.map((group) => [group.key, group.courseIds]), [
+    ['CS101', ['KC1-A', 'KC1-B']],
+    ['CS102', ['KC2']]
+  ]);
+  assert.deepEqual(courseIdsForDisplayKey(groups.flatMap((group) => group.courses), 'CS101'), ['KC1-A', 'KC1-B']);
 });
 
 test('web script and static server are wired in package.json', async () => {

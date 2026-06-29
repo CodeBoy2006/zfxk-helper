@@ -75,3 +75,9 @@
 - **Status:** Completed
 - **Next Steps:** Compare against live data with multiple meeting rows and long classroom names.
 - **Context:** This is a frontend layout/style change only; SDK requests and selection logic are unchanged.
+
+## [2026-06-29 17:47] Course Code Grouping
+- **Changes:** Grouped left-column course results by course code and loaded teaching classes for every original `courseId` under the selected code.
+- **Status:** Completed
+- **Next Steps:** Validate with live search results where one course code maps to multiple backend course IDs.
+- **Context:** The selection payload still uses each teaching class's original `courseId`; only the left course display is merged.

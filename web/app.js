@@ -1,4 +1,5 @@
 import { createZfxkClient, parseCourseTypeOptions } from '../src/index.js';
+import { courseIdsForDisplayKey, groupCoursesForDisplay } from './course-groups.js';
 
 const elements = {
   sessionForm: document.querySelector('#sessionForm'),
@@ -193,7 +194,7 @@ async function searchCoursesCore() {
     extra: selectedFilterPayload(),
     page: { start: 1, size: 20 }
   });
-  state.selectedCourseId = state.courses[0]?.courseId ?? null;
+  state.selectedCourseId = groupCoursesForDisplay(state.courses)[0]?.key ?? null;
   renderCourses();
   if (state.selectedCourseId) {
     await loadClassesCore(state.selectedCourseId);
@@ -204,17 +205,19 @@ async function searchCoursesCore() {
   log(`找到 ${state.courses.length} 门课程。`);
 }
 
-async function loadClasses(courseId) {
+async function loadClasses(courseKey) {
   if (!state.client) return;
-  await runTask('加载教学班', () => loadClassesCore(courseId));
+  await runTask('加载教学班', () => loadClassesCore(courseKey));
 }
 
-async function loadClassesCore(courseId) {
-  state.selectedCourseId = courseId;
+async function loadClassesCore(courseKey) {
+  state.selectedCourseId = courseKey;
   renderCourses();
-  state.classes = await state.client.catalog.getTeachingClasses(courseId);
+  const courseIds = courseIdsForDisplayKey(state.courses, courseKey);
+  const classGroups = await Promise.all(courseIds.map((courseId) => state.client.catalog.getTeachingClasses(courseId)));
+  state.classes = classGroups.flat();
   renderClasses();
-  log(`课程 ${courseId} 加载 ${state.classes.length} 个教学班。`);
+  log(`课程 ${courseKey} 加载 ${state.classes.length} 个教学班。`);
 }
 
 async function chooseClass(teachingClass) {
@@ -230,7 +233,7 @@ async function chooseClass(teachingClass) {
     );
     log(`选课结果：${result.status}`);
     await refreshSnapshotCore();
-    await loadClassesCore(teachingClass.courseId);
+    await loadClassesCore(state.selectedCourseId || teachingClass.courseId);
   });
 }
 
@@ -347,15 +350,16 @@ function renderFilterPanel() {
 
 function renderCourses() {
   elements.courseList.replaceChildren();
-  if (!state.courses.length) {
+  const displayCourses = groupCoursesForDisplay(state.courses);
+  if (!displayCourses.length) {
     elements.courseList.append(empty('初始化后搜索课程'));
     return;
   }
 
-  for (const course of state.courses) {
+  for (const course of displayCourses) {
     const card = document.createElement('button');
     card.type = 'button';
-    card.className = `course-card ${course.courseId === state.selectedCourseId ? 'active' : ''}`;
+    card.className = `course-card ${course.key === state.selectedCourseId ? 'active' : ''}`;
     card.innerHTML = `
       <div class="card-title">
         <strong>${escapeHtml(course.name)}</strong>
@@ -369,9 +373,10 @@ function renderCourses() {
         ${course.recommended ? '<span class="tag ok">推荐</span>' : ''}
         ${course.hasPrerequisiteHint ? '<span class="tag warn">先行课</span>' : ''}
         ${course.retake ? '<span class="tag danger">重修</span>' : ''}
+        ${course.courseIds.length > 1 ? `<span class="tag">${course.courseIds.length} 组</span>` : ''}
       </div>
     `;
-    card.addEventListener('click', () => loadClasses(course.courseId));
+    card.addEventListener('click', () => loadClasses(course.key));
     elements.courseList.append(card);
   }
 }
