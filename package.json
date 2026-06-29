@@ -1,0 +1,30 @@
+{
+  "name": "zfxk",
+  "version": "0.1.0",
+  "description": "HTTP workflow SDK for ZFXK/ZZXK course selection sessions.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "zfxk",
+    "zzxk",
+    "sdk"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,180 @@
+export type Mode = 'commit' | 'dry-run';
+
+export interface RuntimeContext {
+  baseUrl: string;
+  term: { xkxnm: string; xkxqm: string };
+  student: {
+    xhId?: string;
+    jgId?: string;
+    zyhId: string;
+    njdmId: string;
+    zyfxId?: string;
+    bhId?: string;
+    xz?: string;
+    ccdm?: string;
+    campusId?: string;
+  };
+  current: {
+    xkkzId: string;
+    kklxdm: string;
+    kklxmc?: string;
+    xklc?: string;
+    xkkzXh?: string;
+  };
+  switches: {
+    isInSelectionTime: boolean;
+    canSelect: boolean;
+    canDrop: boolean;
+    useWeight: boolean;
+    enableTextbook: boolean;
+    enableWaitlist: boolean;
+    enableListenerApply: boolean;
+  };
+  raw: Record<string, string>;
+}
+
+export interface Teacher {
+  id?: string;
+  name?: string;
+  title?: string;
+  raw: string;
+}
+
+export interface Course {
+  courseId: string;
+  courseCode?: string;
+  name: string;
+  credit: number;
+  typeCode: string;
+  typeName?: string;
+  retake: boolean;
+  hasPrerequisiteHint: boolean;
+  recommended?: boolean;
+  raw: Record<string, unknown>;
+}
+
+export interface TeachingClass {
+  classId: string;
+  submitClassId: string;
+  courseId: string;
+  name: string;
+  childClassCount: number;
+  credit: number;
+  selectedCount: number;
+  capacity: number;
+  currentRound: { capacity: number; selected: number };
+  teachers: Teacher[];
+  scheduleText?: string;
+  locationText?: string;
+  examText?: string;
+  campusId?: string;
+  collegeName?: string;
+  flags: {
+    selected: boolean;
+    full: boolean;
+    canSelect: boolean;
+    canDrop?: boolean;
+    hasTextbook?: boolean;
+    retake?: boolean;
+    auxiliary?: boolean;
+  };
+  raw: Record<string, unknown>;
+}
+
+export interface SelectedClass {
+  classId: string;
+  submitClassId: string;
+  courseId: string;
+  name: string;
+  order?: number;
+  weight?: number;
+  selectedBySystem: boolean;
+  selfSelected: boolean;
+  canDrop: boolean;
+  credit?: number;
+  teachers?: Teacher[];
+  scheduleText?: string;
+  locationText?: string;
+  raw: Record<string, unknown>;
+}
+
+export interface SelectedCourse {
+  courseId: string;
+  courseCode?: string;
+  name: string;
+  credit: number;
+  typeCode: string;
+  retake: boolean;
+  classes: SelectedClass[];
+  raw: Record<string, unknown>;
+}
+
+export interface SelectionSnapshot {
+  selectedCourses: SelectedCourse[];
+  selectedClasses: SelectedClass[];
+  totals: { courseCount: number; credit: number; teachingClassCredit: number };
+  byCourseId: Map<string, SelectedCourse>;
+  byClassId: Map<string, SelectedClass>;
+  version: string;
+  fetchedAt: Date;
+}
+
+export interface ZfxkClientOptions {
+  baseUrl: string;
+  auth?: { type: 'cookie'; cookie: string } | { type: 'custom'; [key: string]: unknown };
+  mode?: Mode;
+  context?: RuntimeContext;
+  transport?: Transport;
+}
+
+export interface Transport {
+  post(path: string, data?: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
+}
+
+export declare const endpoints: Record<string, string>;
+
+export declare function createZfxkClient(options: ZfxkClientOptions): ZfxkClient;
+export declare function loadRuntimeContext(input: { baseUrl?: string; html?: string; raw?: Record<string, string>; context?: RuntimeContext }): RuntimeContext;
+export declare function extractHiddenFields(html: string): Record<string, string>;
+export declare function mapCourse(row: Record<string, unknown>): Course;
+export declare function mapTeachingClass(row: Record<string, unknown>): TeachingClass;
+export declare function normalizeSaveSelection(data: unknown): unknown;
+
+export declare class MemoryTransport implements Transport {
+  calls: Array<{ method: string; path: string; data: Record<string, unknown>; options: Record<string, unknown> }>;
+  constructor(routes?: Record<string, unknown>);
+  queue(path: string, response: unknown): void;
+  post(path: string, data?: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
+}
+
+export declare class HttpTransport implements Transport {
+  constructor(options: { baseUrl: string; auth?: ZfxkClientOptions['auth']; fetchImpl?: typeof fetch });
+  post(path: string, data?: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
+}
+
+export declare class ZfxkClient {
+  context: RuntimeContext;
+  catalog: {
+    searchCourses(query?: Record<string, unknown>): Promise<Course[]>;
+    getTeachingClasses(courseId: string, query?: Record<string, unknown>): Promise<TeachingClass[]>;
+  };
+  chosen: {
+    snapshot(): Promise<SelectionSnapshot>;
+    listSelected(): Promise<SelectedClass[]>;
+    hasSelected(input: { courseId?: string; classId?: string }): Promise<boolean>;
+  };
+  selection: {
+    choose(input: Record<string, unknown>, policy?: Record<string, (...args: any[]) => Promise<unknown>>): Promise<Record<string, unknown>>;
+    drop(input: Record<string, unknown>, policy?: Record<string, (...args: any[]) => Promise<unknown>>): Promise<Record<string, unknown>>;
+    quickSelect(input?: Record<string, unknown>): Promise<Record<string, unknown>>;
+    reorder(input: { classIds: string[] }): Promise<SelectionSnapshot>;
+    updateWeight(input: { classId: string; submitClassId?: string; weight: number }): Promise<SelectionSnapshot>;
+    plan(input: Record<string, unknown>): Promise<Record<string, unknown>>;
+  };
+  textbook: Record<string, (...args: any[]) => Promise<unknown>>;
+  waitlist: Record<string, (...args: any[]) => Promise<unknown>>;
+  listener: Record<string, (...args: any[]) => Promise<unknown>>;
+  constructor(options: ZfxkClientOptions);
+  bootstrap(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
+  refreshContext(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
+}
