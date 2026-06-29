@@ -20,12 +20,18 @@ const elements = {
   classCountBadge: document.querySelector('#classCountBadge'),
   chosenList: document.querySelector('#chosenList'),
   chosenTotals: document.querySelector('#chosenTotals'),
+  scheduleStatus: document.querySelector('#scheduleStatus'),
+  selectedScheduleBody: document.querySelector('#selectedScheduleBody'),
   saveOrderBtn: document.querySelector('#saveOrderBtn'),
   refreshSnapshotBtn: document.querySelector('#refreshSnapshotBtn'),
   clearLogBtn: document.querySelector('#clearLogBtn'),
   activityLog: document.querySelector('#activityLog'),
   statusBadge: document.querySelector('#statusBadge')
 };
+
+const WEEKDAYS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+const PERIODS = Array.from({ length: 12 }, (_, index) => index + 1);
+const COURSE_COLORS = ['#1769aa', '#0d8a72', '#b54708', '#7a3db8', '#b42318', '#2563eb', '#6f5e00', '#0f766e'];
 
 const state = {
   client: null,
@@ -445,6 +451,7 @@ function renderChosen() {
   const snapshot = state.snapshot;
   const classes = snapshot?.selectedClasses ?? [];
   elements.chosenTotals.textContent = `${snapshot?.totals.courseCount ?? 0} 门 / ${snapshot?.totals.credit ?? 0} 学分`;
+  renderSelectedSchedule(snapshot);
 
   if (!classes.length) {
     elements.chosenList.append(empty('暂无已选课程'));
@@ -482,6 +489,133 @@ function renderChosen() {
     card.append(actions);
     elements.chosenList.append(card);
   });
+}
+
+function renderSelectedSchedule(snapshot = state.snapshot) {
+  elements.selectedScheduleBody.replaceChildren();
+  const classes = snapshot?.selectedClasses ?? [];
+  const { slots, timedCourseKeys } = buildSelectedScheduleSlots(snapshot);
+  const courseCount = snapshot?.totals.courseCount ?? classes.length;
+  elements.scheduleStatus.textContent = classes.length
+    ? `${timedCourseKeys.size}/${courseCount} 门有时间 · ${classes.length} 个教学班`
+    : '暂无课程';
+
+  for (const period of PERIODS) {
+    const row = document.createElement('tr');
+    const header = document.createElement('th');
+    header.scope = 'row';
+    header.textContent = String(period);
+    row.append(header);
+
+    for (const day of WEEKDAYS) {
+      const entries = slots.get(scheduleSlotKey(day, period)) ?? [];
+      const cell = document.createElement('td');
+      cell.className = `schedule-cell ${entries.length > 1 ? 'conflict' : entries.length ? 'busy' : 'free'}`;
+      if (entries.length) {
+        cell.title = entries.map(formatScheduleTitle).join('\n');
+        const stack = document.createElement('div');
+        stack.className = 'schedule-cell-stack';
+        for (const entry of entries.slice(0, 2)) {
+          const label = document.createElement('span');
+          label.className = 'schedule-course';
+          label.style.setProperty('--course-color', entry.color);
+          label.textContent = entry.courseName;
+          stack.append(label);
+        }
+        if (entries.length > 2) {
+          const more = document.createElement('span');
+          more.className = 'schedule-more';
+          more.textContent = `+${entries.length - 2}`;
+          stack.append(more);
+        }
+        cell.append(stack);
+      }
+      row.append(cell);
+    }
+    elements.selectedScheduleBody.append(row);
+  }
+}
+
+function buildSelectedScheduleSlots(snapshot = state.snapshot) {
+  const slots = new Map();
+  const timedCourseKeys = new Set();
+  const selectedCourses = snapshot?.selectedCourses ?? [];
+  const courseNameMap = new Map(selectedCourses.map((course) => [String(course.courseId), course.name]));
+
+  (snapshot?.selectedClasses ?? []).forEach((item, index) => {
+    for (const entry of selectedScheduleEntries(item, index, courseNameMap)) {
+      if (!entry.periods.length || !entry.day) continue;
+      timedCourseKeys.add(entry.courseKey);
+      for (const period of entry.periods) {
+        const key = scheduleSlotKey(entry.day, period);
+        const slotEntries = slots.get(key) ?? [];
+        slotEntries.push(entry);
+        slots.set(key, slotEntries);
+      }
+    }
+  });
+
+  return { slots, timedCourseKeys };
+}
+
+function selectedScheduleEntries(item, index, courseNameMap) {
+  const courseKey = String(item.raw?.t_kch_id ?? item.courseId ?? item.classId ?? index);
+  const courseName = String(
+    courseNameMap.get(courseKey)
+      ?? courseNameMap.get(String(item.courseId ?? ''))
+      ?? item.raw?.kcmc
+      ?? item.name
+      ?? '未命名课程'
+  );
+  const className = item.name && item.name !== courseName ? item.name : '';
+  const color = COURSE_COLORS[index % COURSE_COLORS.length];
+
+  return parseMeetingLines(item.scheduleText, item.locationText).map((meeting) => {
+    const day = meetingWeekday(meeting);
+    return {
+      courseKey,
+      courseName,
+      className,
+      color,
+      day,
+      periods: parsePeriodNumbers(meeting.period, meeting.raw),
+      periodText: meeting.period || '',
+      weeks: meeting.weeks || '',
+      location: meeting.location || '',
+      teachers: item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || ''
+    };
+  });
+}
+
+function scheduleSlotKey(day, period) {
+  return `${day}:${period}`;
+}
+
+function meetingWeekday(meeting) {
+  const source = meeting.day || meeting.raw || '';
+  const match = normalizeWeekday(source.match(/(?:星期|周)?[一二三四五六日天1-7]/u)?.[0] || source);
+  return WEEKDAYS.includes(match) ? match : '';
+}
+
+function parsePeriodNumbers(period, raw) {
+  const source = `${period || ''} ${raw || ''}`;
+  const match = source.match(/(\d+)(?:\s*(?:-|~|至)\s*(\d+))?/u);
+  if (!match) return [];
+  const start = Number(match[1]);
+  const end = Number(match[2] ?? match[1]);
+  const first = Math.max(1, Math.min(start, end));
+  const last = Math.min(12, Math.max(start, end));
+  return Array.from({ length: last - first + 1 }, (_, index) => first + index);
+}
+
+function formatScheduleTitle(entry) {
+  return [
+    entry.courseName,
+    entry.className,
+    [entry.day, entry.periodText, entry.weeks].filter(Boolean).join(' '),
+    entry.location,
+    entry.teachers ? `教师：${entry.teachers}` : ''
+  ].filter(Boolean).join(' · ');
 }
 
 function renderCourseTypeTabs() {

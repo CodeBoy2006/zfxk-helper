@@ -20,6 +20,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /id="resetFiltersBtn"/);
   assert.match(html, /id="courseList"/);
   assert.match(html, /id="chosenPanel"/);
+  assert.match(html, /id="selectedScheduleBody"/);
+  assert.match(html, /当前已选课程时间分布/);
   assert.match(html, /id="activityLog"/);
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(app, /createZfxkClient/);
@@ -38,6 +40,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /loadFilterGroups/);
   assert.match(app, /renderMeetingList/);
   assert.match(app, /parseMeetingTime/);
+  assert.match(app, /renderSelectedSchedule/);
+  assert.match(app, /selectedScheduleEntries/);
+  assert.match(app, /parsePeriodNumbers/);
   assert.match(app, /splitHtmlLines/);
   assert.match(app, /kkbm_id_list/);
   assert.match(app, /skjc_list/);
@@ -55,6 +60,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /course-type-tabs/);
   assert.match(css, /class-card-main/);
   assert.match(css, /class-card-action/);
+  assert.match(css, /schedule-grid/);
+  assert.match(css, /schedule-course/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
 });

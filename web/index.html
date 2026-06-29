@@ -78,6 +78,35 @@
         </aside>
       </section>
 
+      <section class="schedule-panel" aria-label="当前已选课程时间分布">
+        <div class="section-heading">
+          <h2>已选课表</h2>
+          <span id="scheduleStatus">暂无课程</span>
+        </div>
+        <div class="schedule-legend" aria-hidden="true">
+          <span><i class="legend-swatch free"></i>空闲</span>
+          <span><i class="legend-swatch busy"></i>已选课程</span>
+          <span><i class="legend-swatch conflict"></i>时间重叠</span>
+        </div>
+        <div class="schedule-scroll">
+          <table class="schedule-grid">
+            <thead>
+              <tr>
+                <th scope="col">节次</th>
+                <th scope="col">星期一</th>
+                <th scope="col">星期二</th>
+                <th scope="col">星期三</th>
+                <th scope="col">星期四</th>
+                <th scope="col">星期五</th>
+                <th scope="col">星期六</th>
+                <th scope="col">星期日</th>
+              </tr>
+            </thead>
+            <tbody id="selectedScheduleBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="activity-panel" aria-label="操作日志">
         <div class="section-heading">
           <h2>操作日志</h2>

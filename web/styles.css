@@ -76,6 +76,7 @@ textarea {
 .session-panel,
 .filter-panel,
 .activity-panel,
+.schedule-panel,
 .catalog-pane,
 .detail-pane,
 .chosen-pane {
@@ -645,6 +646,127 @@ textarea {
 .activity-panel {
   margin-top: 12px;
   padding: 14px;
+}
+
+.schedule-panel {
+  margin-top: 12px;
+  padding: 12px;
+}
+
+.schedule-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin: -4px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.schedule-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 28px;
+  height: 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.legend-swatch.free {
+  background: #eff8f0;
+}
+
+.legend-swatch.busy {
+  background: #eaf4ff;
+}
+
+.legend-swatch.conflict {
+  background: #fff0ec;
+}
+
+.schedule-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.schedule-grid {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.schedule-grid th,
+.schedule-grid td {
+  border: 1px solid #e3e8f0;
+}
+
+.schedule-grid thead th {
+  height: 30px;
+  background: #f8fafc;
+  color: #2d2f33;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.schedule-grid tbody th {
+  width: 42px;
+  background: #fbfcfe;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.schedule-cell {
+  height: 38px;
+  padding: 2px;
+  vertical-align: top;
+}
+
+.schedule-cell.free {
+  background: #eff8f0;
+}
+
+.schedule-cell.busy {
+  background: #eaf4ff;
+}
+
+.schedule-cell.conflict {
+  background: #fff0ec;
+}
+
+.schedule-cell-stack {
+  display: grid;
+  gap: 2px;
+}
+
+.schedule-course {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  border-left: 3px solid var(--course-color);
+  border-radius: 4px;
+  padding: 2px 4px;
+  background: #fff;
+  color: #172033;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.schedule-more {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 #activityLog {

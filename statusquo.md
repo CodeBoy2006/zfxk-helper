@@ -87,3 +87,9 @@
 - **Status:** Completed
 - **Next Steps:** Validate `/api/captcha/solve` against a live Zhengfang deployment and confirm whether that cookie is sufficient or must be followed by a separate username/password login flow.
 - **Context:** The helper solves the `zfcaptchaLogin` slider flow only; it intentionally does not submit account credentials.
+
+## [2026-06-29 18:23] Selected Schedule Grid
+- **Changes:** Added a compact selected-course timetable panel in the Web frontend, filling weekday/period cells from the current chosen snapshot and showing course names plus overlap states.
+- **Status:** Completed
+- **Next Steps:** Verify against live selected-course data with multi-week, weekend, or overlapping classes.
+- **Context:** The grid reuses existing `<br/>` schedule parsing and falls back to raw course names from the snapshot when course IDs differ across chosen rows.
