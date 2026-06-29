@@ -389,6 +389,75 @@ textarea {
   font-size: 13px;
 }
 
+.class-detail-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.detail-label {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.meeting-list {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.meeting-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid #d8e8f7;
+  border-radius: 6px;
+  background: #f8fbff;
+  font-size: 13px;
+}
+
+.meeting-time {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.meeting-time span {
+  overflow-wrap: anywhere;
+}
+
+.meeting-day {
+  color: #155fa0;
+  font-weight: 700;
+}
+
+.meeting-period {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.meeting-weeks {
+  color: var(--muted);
+}
+
+.meeting-location {
+  max-width: 160px;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(13, 138, 114, 0.2);
+  border-radius: 999px;
+  padding: 2px 7px;
+  background: #ecfdf3;
+  color: var(--accent-2);
+  text-align: center;
+}
+
 .tag {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -452,6 +521,15 @@ textarea {
   .detail-pane,
   .chosen-pane {
     min-height: auto;
+  }
+
+  .meeting-item {
+    grid-template-columns: 1fr;
+  }
+
+  .meeting-location {
+    width: fit-content;
+    max-width: 100%;
   }
 }
 

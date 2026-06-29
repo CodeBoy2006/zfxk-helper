@@ -3,9 +3,19 @@ import { bool, firstDefined, number } from './utils.js';
 export function parseTeachers(jsxx) {
   if (!jsxx) return [];
   return String(jsxx)
-    .split(';')
+    .replace(/<br\s*\/?>/gi, ';')
+    .split(/[;；]+/)
     .filter(Boolean)
     .map((item) => {
+      if (!item.includes('/')) {
+        const name = item.trim();
+        return {
+          id: undefined,
+          name: name && name !== '--' ? name : undefined,
+          title: undefined,
+          raw: item
+        };
+      }
       const [id, name, title] = item.split('/');
       return {
         id: id || undefined,

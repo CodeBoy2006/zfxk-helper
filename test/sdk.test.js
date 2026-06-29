@@ -205,6 +205,16 @@ test('maps course and teaching-class rows into SDK models', () => {
   assert.equal(teachingClass.capacity, 30);
   assert.equal(teachingClass.flags.full, false);
   assert.equal(teachingClass.teachers[1].name, '李四');
+
+  const actualFormat = mapTeachingClass({
+    jxb_id: 'JXB2',
+    jsxx: '周文委',
+    sksj: '星期二第8-9节{5-16周}<br/>星期三第6-7节{5-16周}',
+    jxdd: '健B105<br/>健B105'
+  });
+  assert.equal(actualFormat.teachers[0].name, '周文委');
+  assert.match(actualFormat.scheduleText, /<br\/>/);
+  assert.match(actualFormat.locationText, /健B105/);
 });
 
 test('searchCourses and getTeachingClasses post context-rich requests', async () => {

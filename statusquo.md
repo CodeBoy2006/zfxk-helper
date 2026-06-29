@@ -45,3 +45,9 @@
 - **Status:** Completed
 - **Next Steps:** Use the filter bar for read-only browsing before trying any mutating action.
 - **Context:** Browser verification loaded 14 real filter rows, including opening college, grade, college, major, course category, course nature, ownership, teaching mode, weekday, period, teaching class, retake, capacity, and schedule-conflict filters.
+
+## [2026-06-29 17:02] Teaching Class Schedule Display
+- **Changes:** Parsed plain teacher names and rendered `<br/>` separated teaching-class schedule/location fields as paired meeting rows in the Web frontend.
+- **Status:** Completed
+- **Next Steps:** Re-check with live course data if the school system returns additional schedule formats.
+- **Context:** The sample `星期二第8-9节{5-16周}<br/>星期三第6-7节{5-16周}` format now displays as two readable meeting rows with matching `健B105` locations.

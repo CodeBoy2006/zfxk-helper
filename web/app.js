@@ -348,11 +348,7 @@ function renderClasses() {
         <strong>${escapeHtml(item.name)}</strong>
         <span>${item.selectedCount}/${item.capacity || '--'}</span>
       </div>
-      <div class="meta">
-        <span>${escapeHtml(item.teachers.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定')}</span>
-        <span>${escapeHtml(item.scheduleText || '时间待定')}</span>
-        <span>${escapeHtml(item.locationText || '地点待定')}</span>
-      </div>
+      ${renderClassDetails(item)}
       <div class="flags">
         <span class="tag ${item.flags.full ? 'danger' : 'ok'}">${item.flags.full ? '已满' : '可选'}</span>
         ${selected ? '<span class="tag ok">已在志愿</span>' : ''}
@@ -391,10 +387,7 @@ function renderChosen() {
         <strong>${index + 1}. ${escapeHtml(item.name)}</strong>
         <span>${item.weight ? `权重 ${item.weight}` : '志愿'}</span>
       </div>
-      <div class="meta">
-        <span>${escapeHtml(item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定')}</span>
-        <span>${escapeHtml(item.scheduleText || '时间待定')}</span>
-      </div>
+      ${renderClassDetails(item)}
       <div class="flags">
         <span class="tag ${item.selectedBySystem ? 'ok' : 'warn'}">${item.selectedBySystem ? '已选上' : '待筛选'}</span>
         <span class="tag">${item.selfSelected ? '自选' : '系统调整'}</span>
@@ -412,6 +405,117 @@ function renderChosen() {
     card.append(actions);
     elements.chosenList.append(card);
   });
+}
+
+function renderClassDetails(item) {
+  const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
+  return `
+    <div class="class-detail-line">
+      <span class="detail-label">教师</span>
+      <span>${escapeHtml(teachers)}</span>
+    </div>
+    ${renderMeetingList(item.scheduleText, item.locationText)}
+  `;
+}
+
+function renderMeetingList(scheduleText, locationText) {
+  const meetings = parseMeetingLines(scheduleText, locationText);
+  if (!meetings.length) {
+    return `
+      <div class="meeting-list">
+        <div class="meeting-item">
+          <div class="meeting-time"><span>时间待定</span></div>
+          <span class="meeting-location">地点待定</span>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="meeting-list">
+      ${meetings.map((meeting) => {
+        const timeParts = [];
+        if (meeting.day) timeParts.push(`<span class="meeting-day">${escapeHtml(meeting.day)}</span>`);
+        if (meeting.period) timeParts.push(`<span class="meeting-period">${escapeHtml(meeting.period)}</span>`);
+        if (meeting.weeks) timeParts.push(`<span class="meeting-weeks">${escapeHtml(meeting.weeks)}</span>`);
+        if (!timeParts.length && meeting.raw) timeParts.push(`<span>${escapeHtml(meeting.raw)}</span>`);
+        if (!timeParts.length) timeParts.push('<span>时间待定</span>');
+        return `
+          <div class="meeting-item">
+            <div class="meeting-time">${timeParts.join('')}</div>
+            <span class="meeting-location">${escapeHtml(meeting.location || '地点待定')}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function parseMeetingLines(scheduleText, locationText) {
+  const scheduleLines = splitHtmlLines(scheduleText);
+  const locationLines = splitHtmlLines(locationText);
+  const count = Math.max(scheduleLines.length, locationLines.length);
+  if (!count) return [];
+
+  return Array.from({ length: count }, (_, index) => ({
+    ...parseMeetingTime(scheduleLines[index] ?? ''),
+    location: locationLines[index] ?? (locationLines.length === 1 ? locationLines[0] : '')
+  }));
+}
+
+function parseMeetingTime(line) {
+  const raw = line.trim();
+  if (!raw) return { raw: '' };
+
+  const match = raw.match(/^(?:(?<day>(?:星期|周)?[一二三四五六日天]|(?:星期|周)?[1-7])\s*)?(?:第)?(?<period>\d+(?:\s*(?:-|~|至)\s*\d+)?)?\s*节?\s*(?:\{(?<weeks>[^}]+)\})?$/u);
+  if (!match?.groups || (!match.groups.day && !match.groups.period && !match.groups.weeks)) {
+    return { raw };
+  }
+
+  return {
+    raw,
+    day: normalizeWeekday(match.groups.day),
+    period: normalizePeriod(match.groups.period),
+    weeks: match.groups.weeks?.trim() || ''
+  };
+}
+
+function splitHtmlLines(value) {
+  if (!value) return [];
+  const template = document.createElement('template');
+  template.innerHTML = String(value).replace(/<br\s*\/?>/gi, '\n');
+  return (template.content.textContent ?? '')
+    .split(/\n+/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
+function normalizeWeekday(day) {
+  if (!day) return '';
+  const key = String(day).match(/[一二三四五六日天1-7]$/u)?.[0];
+  const weekdays = {
+    一: '星期一',
+    二: '星期二',
+    三: '星期三',
+    四: '星期四',
+    五: '星期五',
+    六: '星期六',
+    日: '星期日',
+    天: '星期日',
+    1: '星期一',
+    2: '星期二',
+    3: '星期三',
+    4: '星期四',
+    5: '星期五',
+    6: '星期六',
+    7: '星期日'
+  };
+  return weekdays[key] ?? day;
+}
+
+function normalizePeriod(period) {
+  if (!period) return '';
+  return `第${String(period).replace(/\s+/g, '').replace(/[~至]/g, '-')}节`;
 }
 
 function updateSessionSummary() {
