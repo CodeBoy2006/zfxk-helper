@@ -40,7 +40,6 @@ const elements = {
   autoClassIdInput: document.querySelector('#autoClassIdInput'),
   autoRefreshTasksBtn: document.querySelector('#autoRefreshTasksBtn'),
   autoTaskSummary: document.querySelector('#autoTaskSummary'),
-  autoAuthRefreshBtn: document.querySelector('#autoAuthRefreshBtn'),
   autoGroupStatusList: document.querySelector('#autoGroupStatusList'),
   autoEventLog: document.querySelector('#autoEventLog'),
   autoClearEventsBtn: document.querySelector('#autoClearEventsBtn'),
@@ -100,7 +99,6 @@ function bindEvents() {
   elements.autoResumeBtn.addEventListener('click', () => resumeCurrentAutoTask());
   elements.autoCancelBtn.addEventListener('click', () => cancelCurrentAutoTask());
   elements.autoRefreshTasksBtn.addEventListener('click', () => pollAutoSelectionTasks({ schedule: false, logErrors: true }));
-  elements.autoAuthRefreshBtn.addEventListener('click', () => refreshAuthFromStatusPanel());
   elements.autoClearEventsBtn.addEventListener('click', () => clearRenderedEvents());
   elements.autoExportConfigBtn.addEventListener('click', () => exportAutoSelectionDraft());
   elements.autoImportConfigInput.addEventListener('change', () => importAutoSelectionDraft());
@@ -453,11 +451,6 @@ async function cancelCurrentAutoTask() {
     await refreshTaskEvents(task.id);
     renderAutoTaskStatus();
   });
-}
-
-async function refreshAuthFromStatusPanel() {
-  await loginWithCaptchaCookie();
-  if (!state.client && state.sessionConfig?.cookie) await initializeSession();
 }
 
 function buildAutoSelectionPayload(includeSecrets = false) {

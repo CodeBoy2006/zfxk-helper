@@ -1146,12 +1146,6 @@ body[data-page="setup"] {
   flex-direction: column;
 }
 
-.auto-auth-refresh {
-  align-self: flex-end;
-  min-height: 32px;
-  margin-top: 8px;
-}
-
 .auto-state-grid {
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);

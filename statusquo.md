@@ -387,3 +387,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; auto-selection already uses the same saved credentials path when Cookie is absent.
+
+## [2026-06-30 00:49] Remove Auto Re-login Button
+- **Changes:** Removed the auto-selection status panel `重新登录` button, its click handler, and its unused styling; updated web tests to enforce the removal.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; automatic login during initialization remains available.

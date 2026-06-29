@@ -253,7 +253,8 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.doesNotMatch(html, /id="autoRefreshClassesBtn"/);
   assert.match(html, /id="autoTaskStatusPanel"/);
   assert.match(html, /id="autoTaskSummary"/);
-  assert.match(html, /id="autoAuthRefreshBtn"/);
+  assert.doesNotMatch(html, /id="autoAuthRefreshBtn"/);
+  assert.doesNotMatch(html, /重新登录/);
   assert.match(html, /id="autoGroupStatusList"/);
   assert.match(html, /id="autoEventLog"/);
   assert.match(html, /id="autoClearEventsBtn"/);
@@ -299,12 +300,14 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /\/api\/auto-selection\/tasks\/.+\/pause/);
   assert.match(app, /\/api\/auto-selection\/tasks\/.+\/resume/);
   assert.match(app, /\/api\/auto-selection\/tasks\/.+\/events/);
+  assert.doesNotMatch(app, /refreshAuthFromStatusPanel/);
   assert.match(app, /showHelpDialog/);
   assert.doesNotMatch(app, /toggleChromeCompactMode/);
   assert.match(css, /auto-session-summary/);
   assert.match(css, /auto-page-shell/);
   assert.match(css, /auto-page-topbar/);
   assert.doesNotMatch(css, /auto-top-icon/);
+  assert.doesNotMatch(css, /auto-auth-refresh/);
   assert.match(css, /auto-page-workspace/);
   assert.match(css, /auto-id-target-form/);
   assert.doesNotMatch(css, /auto-teaching-table/);
