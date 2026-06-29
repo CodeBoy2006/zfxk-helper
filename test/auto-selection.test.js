@@ -415,3 +415,30 @@ test('auto-selection task manager creates sanitized task snapshots and cancels t
   const cancelled = manager.cancelTask(created.id);
   assert.equal(cancelled.status, 'cancelled');
 });
+
+test('auto-selection task manager pauses and resumes running tasks', async () => {
+  const manager = new AutoSelectionTaskManager({
+    autoStartTasks: false,
+    login: async () => ({ cookieHeader: 'JSESSIONID=test' }),
+    createClient: () => ({
+      bootstrapFromPage: async () => {},
+      chosen: { snapshot: async () => makeSnapshot([]) },
+      catalog: { getTeachingClasses: async () => [] }
+    })
+  });
+
+  const created = await manager.createTask({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    username: '2023123456',
+    password: 'secret',
+    pagePath: '/xsxk/index.html',
+    groups: [{ name: '体育课', targets: [{ courseId: 'KC1', classId: 'A', priority: 1 }] }]
+  });
+
+  const paused = manager.pauseTask(created.id);
+  assert.equal(paused.status, 'paused');
+  assert.equal(paused.pauseScope, 'task');
+
+  const resumed = manager.resumeTask(created.id);
+  assert.equal(resumed.status, 'running');
+});

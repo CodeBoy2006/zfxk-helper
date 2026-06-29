@@ -342,6 +342,7 @@ export interface AutoSelectionTaskSnapshot {
   status: AutoSelectionTaskStatus;
   usernameMasked: string;
   authStatus: string;
+  pauseScope?: 'group' | 'task';
   attempts: number;
   intervalMs: number;
   nextRunAt: string | null;
@@ -361,6 +362,7 @@ export declare class AutoSelectionTaskManager {
   listTasks(): AutoSelectionTaskSnapshot[];
   getTask(id: string): AutoSelectionTaskSnapshot | null;
   getTaskEvents(id: string): AutoSelectionEvent[] | null;
+  pauseTask(id: string): AutoSelectionTaskSnapshot | null;
   cancelTask(id: string): AutoSelectionTaskSnapshot | null;
   resumeTask(id: string): AutoSelectionTaskSnapshot | null;
   validateConfig(input: AutoSelectionTaskConfig): { valid: boolean; errors: string[]; config: AutoSelectionTaskConfig };

@@ -500,6 +500,202 @@
           }
         }
       }
+    },
+    "/sdk/auto-selection/tasks": {
+      "post": {
+        "tags": [
+          "AutoSelection"
+        ],
+        "operationId": "createAutoSelectionTask",
+        "summary": "Create and start a background automatic-selection task.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoSelectionTaskConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created task snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoSelectionTaskSnapshot"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "AutoSelection"
+        ],
+        "operationId": "listAutoSelectionTasks",
+        "summary": "List in-memory automatic-selection task snapshots.",
+        "responses": {
+          "200": {
+            "description": "Task list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AutoSelectionTaskSnapshot"
+                      }
+                    }
+                  },
+                  "required": [
+                    "tasks"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/auto-selection/tasks/{id}/events": {
+      "get": {
+        "tags": [
+          "AutoSelection"
+        ],
+        "operationId": "listAutoSelectionTaskEvents",
+        "summary": "List recent events for one automatic-selection task.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AutoSelectionEvent"
+                      }
+                    }
+                  },
+                  "required": [
+                    "events"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/auto-selection/tasks/{id}/pause": {
+      "post": {
+        "tags": [
+          "AutoSelection"
+        ],
+        "operationId": "pauseAutoSelectionTask",
+        "summary": "Pause a running automatic-selection task without deleting it.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paused task snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoSelectionTaskSnapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/auto-selection/tasks/{id}/resume": {
+      "post": {
+        "tags": [
+          "AutoSelection"
+        ],
+        "operationId": "resumeAutoSelectionTask",
+        "summary": "Resume a paused automatic-selection task.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumed task snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoSelectionTaskSnapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/auto-selection/tasks/{id}/cancel": {
+      "post": {
+        "tags": [
+          "AutoSelection"
+        ],
+        "operationId": "cancelAutoSelectionTask",
+        "summary": "Cancel an automatic-selection task.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancelled task snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoSelectionTaskSnapshot"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1401,6 +1597,9 @@
           "authStatus": {
             "type": "string"
           },
+          "pauseScope": {
+            "type": "string"
+          },
           "attempts": {
             "type": "integer"
           },
@@ -1422,31 +1621,7 @@
           "events": {
             "type": "array",
             "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "at": {
-                  "type": "string"
-                },
-                "type": {
-                  "type": "string"
-                },
-                "message": {
-                  "type": "string"
-                },
-                "details": {
-                  "type": "object",
-                  "additionalProperties": {}
-                }
-              },
-              "required": [
-                "id",
-                "at",
-                "type",
-                "message"
-              ]
+              "$ref": "#/components/schemas/AutoSelectionEvent"
             }
           }
         },
@@ -1459,6 +1634,33 @@
           "intervalMs",
           "groups",
           "events"
+        ]
+      },
+      "AutoSelectionEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "type",
+          "message"
         ]
       },
       "WorkflowMessage": {

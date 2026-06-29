@@ -41,6 +41,16 @@ export class AutoSelectionTaskRunner {
     return this.snapshot();
   }
 
+  pause() {
+    if (['cancelled', 'succeeded', 'failed'].includes(this.status)) return this.snapshot();
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
+    this.status = 'paused';
+    this.pauseScope = 'task';
+    this.events.add('task-paused', 'Task paused');
+    return this.snapshot();
+  }
+
   resume() {
     if (this.status !== 'paused') return this.snapshot();
     this.pauseScope = undefined;
@@ -164,6 +174,7 @@ export class AutoSelectionTaskRunner {
       status: this.status,
       usernameMasked: maskUsername(this.config.username),
       authStatus: this.authStatus,
+      pauseScope: this.pauseScope,
       attempts: this.attempts,
       intervalMs: this.config.intervalMs,
       nextRunAt: this.nextRunAt?.toISOString() ?? null,

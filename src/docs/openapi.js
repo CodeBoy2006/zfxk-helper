@@ -199,6 +199,73 @@ export function buildOpenApiDocument(options = {}) {
             }, ['valid', 'errors', 'config']))
           }
         }
+      },
+      '/sdk/auto-selection/tasks': {
+        post: {
+          tags: ['AutoSelection'],
+          operationId: 'createAutoSelectionTask',
+          summary: 'Create and start a background automatic-selection task.',
+          requestBody: requestBody(ref('AutoSelectionTaskConfig')),
+          responses: {
+            200: ok('Created task snapshot', ref('AutoSelectionTaskSnapshot'))
+          }
+        },
+        get: {
+          tags: ['AutoSelection'],
+          operationId: 'listAutoSelectionTasks',
+          summary: 'List in-memory automatic-selection task snapshots.',
+          responses: {
+            200: ok('Task list', object({
+              tasks: arrayOf(ref('AutoSelectionTaskSnapshot'))
+            }, ['tasks']))
+          }
+        }
+      },
+      '/sdk/auto-selection/tasks/{id}/events': {
+        get: {
+          tags: ['AutoSelection'],
+          operationId: 'listAutoSelectionTaskEvents',
+          summary: 'List recent events for one automatic-selection task.',
+          parameters: [pathIdParameter()],
+          responses: {
+            200: ok('Task events', object({
+              events: arrayOf(ref('AutoSelectionEvent'))
+            }, ['events']))
+          }
+        }
+      },
+      '/sdk/auto-selection/tasks/{id}/pause': {
+        post: {
+          tags: ['AutoSelection'],
+          operationId: 'pauseAutoSelectionTask',
+          summary: 'Pause a running automatic-selection task without deleting it.',
+          parameters: [pathIdParameter()],
+          responses: {
+            200: ok('Paused task snapshot', ref('AutoSelectionTaskSnapshot'))
+          }
+        }
+      },
+      '/sdk/auto-selection/tasks/{id}/resume': {
+        post: {
+          tags: ['AutoSelection'],
+          operationId: 'resumeAutoSelectionTask',
+          summary: 'Resume a paused automatic-selection task.',
+          parameters: [pathIdParameter()],
+          responses: {
+            200: ok('Resumed task snapshot', ref('AutoSelectionTaskSnapshot'))
+          }
+        }
+      },
+      '/sdk/auto-selection/tasks/{id}/cancel': {
+        post: {
+          tags: ['AutoSelection'],
+          operationId: 'cancelAutoSelectionTask',
+          summary: 'Cancel an automatic-selection task.',
+          parameters: [pathIdParameter()],
+          responses: {
+            200: ok('Cancelled task snapshot', ref('AutoSelectionTaskSnapshot'))
+          }
+        }
       }
     },
     components: {
@@ -460,19 +527,21 @@ const schemas = {
     status: string(),
     usernameMasked: string(),
     authStatus: string(),
+    pauseScope: string(),
     attempts: integer(),
     intervalMs: integer(),
     nextRunAt: string(),
     startedAt: string(),
     groups: arrayOf(ref('AutoSelectionGroupConfig')),
-    events: arrayOf(object({
-      id: string(),
-      at: string(),
-      type: string(),
-      message: string(),
-      details: mapOf({})
-    }, ['id', 'at', 'type', 'message']))
+    events: arrayOf(ref('AutoSelectionEvent'))
   }, ['id', 'status', 'usernameMasked', 'authStatus', 'attempts', 'intervalMs', 'groups', 'events']),
+  AutoSelectionEvent: object({
+    id: string(),
+    at: string(),
+    type: string(),
+    message: string(),
+    details: mapOf({})
+  }, ['id', 'at', 'type', 'message']),
   WorkflowMessage: object({
     code: string(),
     message: string(),
@@ -489,6 +558,15 @@ function requestBody(schema) {
   return {
     required: true,
     content: json(schema)
+  };
+}
+
+function pathIdParameter() {
+  return {
+    name: 'id',
+    in: 'path',
+    required: true,
+    schema: string()
   };
 }
 

@@ -42,7 +42,11 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  const pathname = url.pathname === '/' ? '/web/index.html' : url.pathname;
+  const pathname = url.pathname === '/'
+    ? '/web/index.html'
+    : url.pathname === '/auto-selection'
+      ? '/web/auto-selection.html'
+      : url.pathname;
   const requestPath = normalize(pathname).replace(/^[/\\]+/, '').replace(/^(\.\.[/\\])+/, '');
   const filePath = resolve(root, requestPath);
 
@@ -162,6 +166,7 @@ async function handleAutoSelection(request, response, url) {
       const [, id, action] = taskMatch;
       if (!action && request.method === 'GET') return writeFoundTask(response, autoSelectionManager.getTask(id));
       if (action === 'events' && request.method === 'GET') return writeFoundEvents(response, autoSelectionManager.getTaskEvents(id));
+      if (action === 'pause' && request.method === 'POST') return writeFoundTask(response, autoSelectionManager.pauseTask(id));
       if (action === 'cancel' && request.method === 'POST') return writeFoundTask(response, autoSelectionManager.cancelTask(id));
       if (action === 'resume' && request.method === 'POST') return writeFoundTask(response, autoSelectionManager.resumeTask(id));
     }

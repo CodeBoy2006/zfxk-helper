@@ -24,6 +24,7 @@ test('buildOpenApiDocument exposes SDK schemas and workflow-oriented paths', () 
   assert.equal(document.tags.some((tag) => tag.name === 'AutoSelection'), true);
   assert.equal(document.paths['/sdk/auto-selection/config/validate'].post.operationId, 'validateAutoSelectionConfig');
   assert.equal(document.paths['/sdk/auto-selection/config/import'].post.operationId, 'importAutoSelectionConfig');
+  assert.equal(document.paths['/sdk/auto-selection/tasks/{id}/pause'].post.operationId, 'pauseAutoSelectionTask');
   assert.equal(document.components.schemas.AutoSelectionTaskConfig.required.includes('groups'), true);
   assert.equal(document.components.schemas.AutoSelectionTarget.required.includes('priority'), true);
 });
@@ -62,6 +63,8 @@ test('auto selection docs and declarations are exported', async () => {
   assert.match(index, /auto-selection\/index\.js/);
   assert.match(declarations, /AutoSelectionTaskManager/);
   assert.match(declarations, /AutoSelectionTaskConfig/);
+  assert.match(declarations, /pauseTask/);
   assert.match(readme, /自动选课后台任务/);
+  assert.match(readme, /\/auto-selection/);
   assert.match(readme, /导出文件不包含密码、Cookie/);
 });

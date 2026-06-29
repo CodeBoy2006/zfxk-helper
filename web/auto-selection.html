@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>zfxk 自动选课控制台</title>
+    <link rel="stylesheet" href="/web/styles.css">
+  </head>
+  <body data-page="auto-selection">
+    <main class="auto-page-shell">
+      <header class="auto-page-topbar">
+        <nav class="auto-page-tabs" aria-label="课程类型">
+          <span class="auto-current-label">当前显示</span>
+          <div id="autoCourseTypeTabs" class="auto-page-tab-list" aria-live="polite"></div>
+        </nav>
+        <div class="auto-page-actions">
+          <label class="auto-switch">
+            <span>自动选课</span>
+            <input id="autoEnabledSwitch" type="checkbox" checked>
+            <i aria-hidden="true"></i>
+            <strong>已启用</strong>
+          </label>
+          <button id="autoHelpBtn" type="button" class="auto-top-button">使用帮助</button>
+          <button id="autoCollapseBtn" type="button" class="auto-top-icon" aria-label="折叠顶部区域">⌃</button>
+        </div>
+      </header>
+
+      <section class="auto-page-workspace" aria-label="自动选课控制台">
+        <aside class="auto-page-card auto-config-pane" aria-label="任务配置">
+          <div class="section-heading">
+            <h2><span class="step-badge">1</span>任务配置</h2>
+          </div>
+
+          <form id="sessionForm" class="auto-session-form">
+            <label>
+              Base URL
+              <input id="baseUrlInput" name="baseUrl" placeholder="https://xkxt.example.edu.cn" autocomplete="off">
+            </label>
+            <label>
+              用户名
+              <input id="usernameInput" name="username" placeholder="2023123456" autocomplete="username">
+            </label>
+            <label>
+              密码
+              <input id="passwordInput" name="password" type="password" autocomplete="current-password">
+            </label>
+            <label>
+              Path <small>选填</small>
+              <input id="pagePathInput" name="pagePath" value="/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512" autocomplete="off">
+            </label>
+            <label>
+              Cookie <small>用于手动操作</small>
+              <textarea id="cookieInput" name="cookie" rows="2" placeholder="可选，仅手动操作时使用" autocomplete="off"></textarea>
+            </label>
+            <div class="auto-inline-actions">
+              <button id="loginWithCaptchaBtn" type="button" class="secondary">登录获取 Cookie</button>
+              <button id="solveCaptchaBtn" type="button" class="secondary">仅验证验证码</button>
+              <button id="autoInitBtn" type="submit">初始化页面</button>
+            </div>
+          </form>
+
+          <div class="auto-divider"></div>
+
+          <div class="auto-setting-grid">
+            <label>
+              刷新间隔
+              <span class="auto-input-with-unit">
+                <input id="autoIntervalInput" type="number" min="500" step="100" value="1500">
+                <b>ms</b>
+              </span>
+              <small>默认 1500ms</small>
+            </label>
+            <label>
+              最大尝试次数
+              <input id="autoMaxAttemptsInput" type="number" min="1" placeholder="不限制">
+              <small>默认不限</small>
+            </label>
+            <label>
+              截止时间
+              <input id="autoDeadlineInput" type="datetime-local">
+              <small>可选</small>
+            </label>
+            <label>
+              失败策略
+              <select id="autoFailureStrategySelect">
+                <option value="skip-non-capacity">非容量失败跳过，容量满继续续刷</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="auto-primary-actions">
+            <button id="autoStartBtn" type="button">启动自动选课</button>
+            <button id="autoPauseBtn" type="button" class="secondary">暂停任务</button>
+            <button id="autoResumeBtn" type="button" class="secondary">恢复任务</button>
+            <button id="autoCancelBtn" type="button" class="danger">取消任务</button>
+          </div>
+
+          <div class="auto-import-export">
+            <button id="autoExportConfigBtn" type="button" class="secondary">导出配置</button>
+            <label class="file-button">
+              加载配置
+              <input id="autoImportConfigInput" type="file" accept="application/json,.json">
+            </label>
+          </div>
+        </aside>
+
+        <section class="auto-page-card auto-groups-pane" aria-label="选课组配置">
+          <div class="section-heading">
+            <h2><span class="step-badge">2</span>选课组配置</h2>
+            <button id="autoAddGroupBtn" type="button">新建选课组</button>
+          </div>
+
+          <div class="auto-groups-toolbar">
+            <div id="autoGroupTabs" class="auto-group-tabs" aria-live="polite"></div>
+            <span>拖拽可调整组内顺序</span>
+          </div>
+
+          <section class="auto-group-detail" aria-label="当前选课组">
+            <div class="auto-group-fields">
+              <label>
+                组名
+                <input id="autoGroupNameInput" autocomplete="off">
+              </label>
+              <label>
+                组策略
+                <input id="autoGroupStrategyInput" value="按优先级从高到低执行，独立维护占位" autocomplete="off">
+              </label>
+              <button id="autoClearGroupBtn" type="button" class="danger secondary">清空占位</button>
+            </div>
+            <div id="autoTargetList" class="auto-target-list" aria-live="polite"></div>
+          </section>
+
+          <section class="auto-teaching-source" aria-label="可加入选课组的教学班">
+            <div class="section-heading auto-subheading">
+              <h3>教学班列表 <small>可加入选课组</small></h3>
+              <button id="autoRefreshClassesBtn" type="button" class="secondary">刷新</button>
+            </div>
+            <form id="autoSearchForm" class="auto-teaching-filters">
+              <select id="autoCollegeFilter" aria-label="学院筛选">
+                <option value="">全部学院</option>
+              </select>
+              <select id="autoCourseFilter" aria-label="课程筛选">
+                <option value="">全部课程</option>
+              </select>
+              <input id="autoKeywordInput" placeholder="请输入课程名/教学班名/教师" autocomplete="off">
+              <button type="submit" class="secondary">查询</button>
+            </form>
+            <div id="autoTeachingClassList" class="auto-teaching-class-list" aria-live="polite"></div>
+          </section>
+        </section>
+
+        <aside id="autoTaskStatusPanel" class="auto-page-card auto-status-pane" aria-label="后台任务状态">
+          <div class="section-heading">
+            <h2><span class="step-badge">3</span>后台任务状态</h2>
+            <button id="autoRefreshTasksBtn" type="button" class="secondary">刷新状态</button>
+          </div>
+          <div id="autoTaskSummary" class="auto-task-summary">暂无运行任务</div>
+          <button id="autoAuthRefreshBtn" type="button" class="secondary auto-auth-refresh">重新登录</button>
+
+          <section class="auto-status-section">
+            <h3>各组选课状态</h3>
+            <div id="autoGroupStatusList" class="auto-group-status-list"></div>
+          </section>
+
+          <section class="auto-status-section">
+            <div class="auto-log-heading">
+              <h3>最近事件日志</h3>
+              <button id="autoClearEventsBtn" type="button" class="secondary">清空</button>
+            </div>
+            <ol id="autoEventLog" class="auto-event-log"></ol>
+          </section>
+        </aside>
+      </section>
+
+      <p class="auto-page-footnote">注：浏览器关闭后任务将继续在后台运行，重新打开本页面可恢复查看任务状态。Node 进程退出则任务将消失，当前版本不持久化账号密码或任务配置。</p>
+
+      <dialog id="autoHelpDialog" class="auto-help-dialog">
+        <form method="dialog">
+          <div class="section-heading">
+            <h2>使用帮助</h2>
+            <button type="submit" class="secondary">关闭</button>
+          </div>
+          <p>先初始化账号会话，再把教学班加入选课组。组内高优先级先抢；低优先级可作为保底，占位后继续观察更高优先级目标。</p>
+          <p>导出配置只保存目标和策略，不保存密码或 Cookie。后台任务只在本地 Node 进程存活期间运行。</p>
+        </form>
+      </dialog>
+    </main>
+    <script type="module" src="/web/auto-selection.js"></script>
+  </body>
+</html>

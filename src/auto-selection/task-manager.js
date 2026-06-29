@@ -51,6 +51,10 @@ export class AutoSelectionTaskManager {
     return this.tasks.get(id)?.cancel() ?? null;
   }
 
+  pauseTask(id) {
+    return this.tasks.get(id)?.pause() ?? null;
+  }
+
   resumeTask(id) {
     return this.tasks.get(id)?.resume() ?? null;
   }

@@ -286,6 +286,12 @@
 - **Next Steps:** Validate with a real school account and live selectable teaching classes; exported configs intentionally omit password and Cookie.
 - **Context:** Background tasks are in-memory and continue only while `npm run web` keeps the local Node process running. Browser verification used `http://127.0.0.1:4174/` because port 4173 was already occupied.
 
+## [2026-06-29 22:43] Standalone Auto Selection Page
+- **Changes:** Added a standalone `/auto-selection` control page with dense task configuration, group/target management, teaching-class intake, task status, event log, import/export, help, responsive layout, pause/resume task API support, OpenAPI/TypeDoc updates, README notes, design QA, and focused tests.
+- **Status:** Completed
+- **Next Steps:** Validate the standalone page with a real school account and live selectable teaching classes.
+- **Context:** Browser QA used a seeded local draft for visual parity with the reference image; no password or Cookie is saved in exported task configs.
+
 ## [2026-06-29 22:27] Local Course Filtering
 - **Changes:** Added Web course-filter helpers, split filter execution into local/hybrid/remote modes, cached remote course result sets, and documented which filters stay local.
 - **Status:** Completed
