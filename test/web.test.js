@@ -54,6 +54,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /\/api\/proxy\/post/);
   assert.match(app, /loadFilterGroups/);
   assert.match(app, /renderMeetingList/);
+  assert.doesNotMatch(app, /renderClassTitle/);
   assert.match(app, /parseMeetingTime/);
   assert.match(app, /renderSelectedSchedule/);
   assert.match(app, /buildSelectedScheduleLayout/);
@@ -82,6 +83,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /schedule-course/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
+  assert.doesNotMatch(css, /class-title-row/);
 });
 
 test('selected schedule layout merges continuous periods and avoids adjacent duplicate colors', () => {

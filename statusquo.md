@@ -141,3 +141,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh a live initialized session to compare populated course and selected-course cards against the reference screenshot.
 - **Context:** Existing search, select, drop, snapshot refresh, and save-order logic remain in place; visual verification used the available local page state because fixture data URLs were blocked by browser policy.
+
+## [2026-06-29 19:31] Minimal Teaching-Class Card
+- **Changes:** Removed the teaching-class course title, course-code metadata, and ownership row from Web teaching-class cards, leaving only teacher, status/capacity, schedule/location, and the choose action.
+- **Status:** Completed
+- **Next Steps:** Refresh the live Web frontend and confirm the teaching-class card matches the latest reference crop.
+- **Context:** This also avoids showing fallback internal course IDs such as long backend UUID-like identifiers in the teaching-class card header.

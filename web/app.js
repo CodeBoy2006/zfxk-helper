@@ -484,7 +484,6 @@ function renderClasses() {
     card.className = 'class-card';
     card.innerHTML = `
       <div class="class-card-content">
-        ${renderClassTitle(item)}
         <div class="class-card-main">
           <div class="class-card-top">
             ${renderTeacherLine(item)}
@@ -495,7 +494,6 @@ function renderClasses() {
               <span class="capacity-pill">${item.selectedCount}/${item.capacity || '--'}</span>
             </div>
           </div>
-          ${renderOwnershipLine(item)}
           ${renderMeetingList(item.scheduleText, item.locationText)}
         </div>
       </div>
@@ -725,24 +723,6 @@ function renderCourseTypeTabs() {
   }
 }
 
-function renderClassTitle(item) {
-  const courseName = textFromRaw(item, 'kcmc') || item.name || '未命名课程';
-  const courseCode = textFromRaw(item, 'kch') || item.courseId;
-  const typeName = textFromRaw(item, 'kklxmc', 'kclxmc') || state.courseTypes.find((option) => courseTypeKey(option) === state.activeCourseTypeKey)?.label;
-  const meta = [
-    courseCode ? escapeHtml(courseCode) : '',
-    Number.isFinite(item.credit) && item.credit > 0 ? `${escapeHtml(item.credit)} 学分` : '',
-    typeName ? escapeHtml(typeName) : ''
-  ].filter(Boolean);
-
-  return `
-    <div class="class-title-row">
-      <strong>${escapeHtml(courseName)}</strong>
-      ${meta.length ? `<span>${meta.join('<i></i>')}</span>` : ''}
-    </div>
-  `;
-}
-
 function renderTeacherLine(item) {
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
@@ -755,25 +735,6 @@ function renderTeacherLine(item) {
 
 function renderCourseTypeTag(label) {
   return label ? `<span class="course-type-pill">${escapeHtml(label)}</span>` : '';
-}
-
-function renderOwnershipLine(item) {
-  const ownership = item.ownershipName || item.ownershipCode;
-  if (!ownership) return '';
-  return `
-    <div class="class-detail-line">
-      <span class="detail-label">归属</span>
-      <span>${escapeHtml(ownership)}</span>
-    </div>
-  `;
-}
-
-function textFromRaw(item, ...keys) {
-  for (const key of keys) {
-    const value = item.raw?.[key];
-    if (value !== undefined && value !== null && String(value).trim()) return String(value);
-  }
-  return '';
 }
 
 function renderMeetingList(scheduleText, locationText) {

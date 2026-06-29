@@ -458,7 +458,7 @@ textarea {
   display: grid;
   gap: 8px;
   min-width: 0;
-  padding: 10px 14px 12px;
+  padding: 14px;
 }
 
 .class-card-action {
@@ -525,42 +525,6 @@ textarea {
   color: #172033;
   font-size: 13px;
   font-weight: 700;
-}
-
-.class-title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 12px 14px;
-  border-bottom: 1px solid #e5edf6;
-}
-
-.class-title-row strong {
-  min-width: 0;
-  color: #176db6;
-  font-size: 16px;
-  font-weight: 850;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.class-title-row span {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 1 auto;
-  gap: 9px;
-  min-width: 0;
-  color: #718099;
-  font-size: 13px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.class-title-row i {
-  width: 1px;
-  height: 12px;
-  background: #9aa8bc;
 }
 
 .class-card-top {
