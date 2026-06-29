@@ -249,3 +249,9 @@
 - **Status:** Completed
 - **Next Steps:** Review the design document, then turn it into an implementation plan before coding.
 - **Context:** The design keeps passwords and cookies in Node memory only; exported task configs intentionally omit credentials and runtime state.
+
+## [2026-06-29 21:34] Auto Selection Review Update
+- **Changes:** Revised the auto-selection design with stricter group states, task-level write locking, snapshot reconciliation, target ID matching, outcome normalization, upgrade recovery handling, config validation APIs, and expanded tests.
+- **Status:** Completed
+- **Next Steps:** Review the updated design, then write the implementation plan around contracts, core runners, API, UI, import/export, and docs.
+- **Context:** `HOLDING` now means a group has a lower-priority placement and continues watching; only `SUCCEEDED` means the top active target is selected.
