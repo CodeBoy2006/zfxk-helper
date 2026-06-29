@@ -27,3 +27,9 @@
 - **Status:** Completed
 - **Next Steps:** Test the proxy against a real authenticated school session.
 - **Context:** Browser JavaScript still does not set raw Cookie headers directly; the local Node proxy attaches the provided Cookie server-side.
+
+## [2026-06-29 16:24] Initial Hidden Field Fallback
+- **Changes:** Updated runtime-context parsing to read `firstXkkzId`, `firstKklxdm`, `firstKklxmc`, `firstXkkzXh`, `firstNjdmId`, and `firstZyhId` when the active hidden fields are still blank; added regression coverage and README/TypeDoc notes.
+- **Status:** Completed
+- **Next Steps:** Retry the Web initialization with the same Cookie/Base URL/Path.
+- **Context:** The original ZFXK page scripts copy these `first*` values into `xkkz_id` and `kklxdm` after load; the SDK parses static HTML and must mirror that setup.

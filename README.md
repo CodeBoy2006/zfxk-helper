@@ -62,6 +62,7 @@ await client.bootstrapFromPage({
 ```
 
 If the cookie is expired or the page is not a supported selection entry, `bootstrapFromPage()` throws `CONTEXT_NOT_FOUND`.
+Some ZFXK entry pages leave `xkkz_id` and `kklxdm` blank until the browser runs page scripts; the parser also reads the original `firstXkkzId`, `firstKklxdm`, `firstKklxmc`, `firstXkkzXh`, `firstNjdmId`, and `firstZyhId` hidden fields used by those scripts.
 
 ## Implemented Surface
 

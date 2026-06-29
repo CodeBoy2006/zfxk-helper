@@ -70,6 +70,34 @@ test('loads runtime context from hidden fields', () => {
   assert.equal(ctx.switches.enableTextbook, true);
 });
 
+test('loads initial course-type context from first hidden fields before page scripts run', () => {
+  const initialPageHtml = `
+    <input id="xkxnm" value="2025"/>
+    <input id="xkxqm" value="12"/>
+    <input id="xkkz_id" value=""/>
+    <input id="kklxdm" value=""/>
+    <input id="kklxmc" value=""/>
+    <input id="xkkz_xh" value=""/>
+    <input id="njdm_id" value=""/>
+    <input id="zyh_id" value=""/>
+    <input id="firstXkkzId" value="KZ_FIRST"/>
+    <input id="firstKklxdm" value="10"/>
+    <input id="firstKklxmc" value="自主选课"/>
+    <input id="firstXkkzXh" value="3"/>
+    <input id="firstNjdmId" value="2024"/>
+    <input id="firstZyhId" value="CS"/>
+  `;
+
+  const ctx = loadRuntimeContext({ baseUrl: 'https://example.edu.cn/jwglxt', html: initialPageHtml });
+
+  assert.equal(ctx.current.xkkzId, 'KZ_FIRST');
+  assert.equal(ctx.current.kklxdm, '10');
+  assert.equal(ctx.current.kklxmc, '自主选课');
+  assert.equal(ctx.current.xkkzXh, '3');
+  assert.equal(ctx.student.njdmId, '2024');
+  assert.equal(ctx.student.zyhId, 'CS');
+});
+
 test('bootstrapFromPage fetches an authenticated page and parses hidden context', async () => {
   const transport = new MemoryTransport({
     '/xsxk/index.html': html

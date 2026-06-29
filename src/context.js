@@ -84,8 +84,8 @@ export function loadRuntimeContext(input = {}) {
     student: {
       xhId: firstDefined(raw.xh_id, raw.xhId, input.context?.student?.xhId),
       jgId: firstDefined(raw.jg_id_1, raw.jg_id, input.context?.student?.jgId),
-      zyhId: firstDefined(raw.zyh_id, input.context?.student?.zyhId, ''),
-      njdmId: firstDefined(raw.njdm_id, input.context?.student?.njdmId, ''),
+      zyhId: firstDefined(raw.zyh_id, raw.firstZyhId, input.context?.student?.zyhId, ''),
+      njdmId: firstDefined(raw.njdm_id, raw.firstNjdmId, input.context?.student?.njdmId, ''),
       zyfxId: firstDefined(raw.zyfx_id, input.context?.student?.zyfxId),
       bhId: firstDefined(raw.bh_id, input.context?.student?.bhId),
       xz: firstDefined(raw.xz, input.context?.student?.xz),
@@ -93,11 +93,11 @@ export function loadRuntimeContext(input = {}) {
       campusId: firstDefined(raw.xqh_id, input.context?.student?.campusId)
     },
     current: {
-      xkkzId: firstDefined(raw.xkkz_id, input.context?.current?.xkkzId, ''),
-      kklxdm: firstDefined(raw.kklxdm, input.context?.current?.kklxdm, ''),
-      kklxmc: firstDefined(raw.kklxmc, input.context?.current?.kklxmc),
+      xkkzId: firstDefined(raw.xkkz_id, raw.firstXkkzId, input.context?.current?.xkkzId, ''),
+      kklxdm: firstDefined(raw.kklxdm, raw.firstKklxdm, input.context?.current?.kklxdm, ''),
+      kklxmc: firstDefined(raw.kklxmc, raw.firstKklxmc, input.context?.current?.kklxmc),
       xklc: firstDefined(raw.xklc, input.context?.current?.xklc),
-      xkkzXh: firstDefined(raw.xkkz_xh, input.context?.current?.xkkzXh)
+      xkkzXh: firstDefined(raw.xkkz_xh, raw.firstXkkzXh, input.context?.current?.xkkzXh)
     },
     switches: {
       isInSelectionTime: bool(firstDefined(raw.isinxksj, input.context?.switches?.isInSelectionTime)),
