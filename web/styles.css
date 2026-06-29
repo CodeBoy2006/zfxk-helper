@@ -122,14 +122,21 @@ textarea {
 .topbar-link-button {
   display: inline-grid;
   place-items: center;
-  min-height: 36px;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  padding: 0 12px;
-  background: var(--accent);
+  min-height: 40px;
+  border: 1px solid #0f8f68;
+  border-radius: 7px;
+  padding: 0 16px;
+  background: #0f9f6e;
   color: #fff;
-  font-weight: 750;
+  box-shadow: 0 8px 18px rgba(15, 143, 104, 0.24);
+  font-weight: 900;
   text-decoration: none;
+  white-space: nowrap;
+}
+
+.topbar-link-button:hover {
+  border-color: #0b7656;
+  background: #0b8d62;
 }
 
 .session-panel {
@@ -1131,7 +1138,7 @@ body.auto-chrome-compact .auto-page-title {
 .class-card,
 .chosen-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px;
+  grid-template-columns: minmax(0, 1fr) 108px;
   gap: 0;
   padding: 0;
   box-shadow: none;
@@ -1507,7 +1514,7 @@ body.auto-chrome-compact .auto-page-title {
 }
 
 .class-card .class-actions .auto-class-button {
-  min-width: 78px;
+  min-width: 88px;
   min-height: 38px;
   border-color: #91d3bc;
   background: #effaf5;
@@ -1515,6 +1522,7 @@ body.auto-chrome-compact .auto-page-title {
   box-shadow: none;
   font-size: 14px;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .class-card .class-actions .auto-class-button:hover:not(:disabled) {
@@ -1540,29 +1548,44 @@ body.auto-chrome-compact .auto-page-title {
 .auto-class-menu {
   position: absolute;
   top: calc(100% + 6px);
-  right: 0;
+  left: 50%;
   z-index: 8;
   display: grid;
-  min-width: 132px;
-  max-width: min(220px, 70vw);
+  gap: 5px;
+  width: 184px;
+  max-width: min(220px, 72vw);
   max-height: min(240px, 48vh);
   overflow-y: auto;
-  border: 1px solid #d7e4f2;
-  border-radius: 7px;
-  padding: 6px;
+  border: 1px solid #cde4da;
+  border-radius: 8px;
+  padding: 8px;
   background: #fff;
-  box-shadow: 0 12px 24px rgba(31, 48, 78, 0.16);
+  box-shadow: 0 14px 28px rgba(31, 48, 78, 0.18);
+  transform: translateX(-50%);
 }
 
 .auto-class-menu[hidden] {
   display: none;
 }
 
-.auto-class-menu-item {
-  min-height: 32px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
+.auto-class-menu-heading {
+  padding: 2px 4px 5px;
+  color: #607087;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.class-card .class-actions .auto-class-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0 10px;
+  background: #f7fbf9;
   color: #1f2a44;
   box-shadow: none;
   font-size: 13px;
@@ -1571,9 +1594,28 @@ body.auto-chrome-compact .auto-page-title {
   white-space: nowrap;
 }
 
-.auto-class-menu-item:hover:not(:disabled) {
-  background: #eef6ff;
-  color: #155fa0;
+.class-card .class-actions .auto-class-menu-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.class-card .class-actions .auto-class-menu-item small {
+  flex: 0 0 auto;
+  color: #6b7b91;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.class-card .class-actions .auto-class-menu-item:hover:not(:disabled) {
+  border-color: #9fdcc5;
+  background: #eaf8f1;
+  color: #08734f;
+}
+
+.class-card .class-actions .auto-class-menu-item:disabled {
+  background: #f4f7fb;
+  color: #7b8798;
 }
 
 .chosen-card .chosen-actions button {

@@ -671,11 +671,17 @@ function toggleAutoClassMenu(wrapper, teachingClass) {
   closeAutoClassMenus();
   if (!shouldOpen) return;
   const draft = readAutoSelectionDraft();
-  menu.replaceChildren(...draft.groups.map((group, index) => {
+  const heading = document.createElement('div');
+  heading.className = 'auto-class-menu-heading';
+  heading.textContent = '加入选课组';
+  menu.replaceChildren(heading, ...draft.groups.map((group, index) => {
     const option = document.createElement('button');
     option.type = 'button';
     option.className = 'auto-class-menu-item';
-    option.textContent = group.name || `选课组 ${index + 1}`;
+    option.innerHTML = `
+      <span>${escapeHtml(group.name || `选课组 ${index + 1}`)}</span>
+      <small>${group.targets.length} 个目标</small>
+    `;
     option.disabled = group.targets.some((target) => sameAutoTarget(target, teachingClass));
     option.title = option.disabled ? '该教学班已在此选课组' : '加入此选课组';
     option.addEventListener('click', (event) => {

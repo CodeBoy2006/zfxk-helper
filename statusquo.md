@@ -339,3 +339,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** The topbar link and standalone page title still use `自动选课`; only the per-class action button label changed.
+
+## [2026-06-29 23:57] Auto Grab UI Polish
+- **Changes:** Renamed the main topbar link to `自动抢课页面`, emphasized it with a green action style, widened the class-card action column so `加入抢课` stays on one line, and redesigned the group popover with a heading, target counts, scoped item styles, and scrolling.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** The standalone page route remains `/auto-selection`; only the main-page navigation label changed.

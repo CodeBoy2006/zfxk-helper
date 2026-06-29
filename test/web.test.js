@@ -43,6 +43,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /id="activityLog"/);
   assert.match(html, /id="autoSelectionLink"/);
   assert.match(html, /href="\/auto-selection"/);
+  assert.match(html, /自动抢课页面/);
   assert.doesNotMatch(html, /id="autoSelectionPanel"/);
   assert.doesNotMatch(html, /id="autoGroupTabs"/);
   assert.doesNotMatch(html, /id="autoTargetList"/);
@@ -92,6 +93,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /addTeachingClassToAutoGroup/);
   assert.match(app, /auto-class-button/);
   assert.match(app, /textContent = '加入抢课'/);
+  assert.match(app, /auto-class-menu-heading/);
   assert.match(app, /switchCourseType/);
   assert.match(app, /renderCourseTypeTabs/);
   assert.match(app, /\/api\/proxy\/post/);
@@ -149,9 +151,13 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
   assert.match(css, /topbar-link-button/);
+  assert.match(css, /\.topbar-link-button\s*\{[^}]*background:\s*#0f9f6e/s);
   assert.match(css, /auto-class-menu/);
   assert.match(css, /\.class-card \.class-actions \.auto-class-button\s*\{[^}]*background:\s*#effaf5/s);
+  assert.match(css, /\.class-card \.class-actions \.auto-class-button\s*\{[^}]*white-space:\s*nowrap/s);
   assert.match(css, /\.auto-class-menu\s*\{[^}]*max-height:\s*min\(240px,\s*48vh\)/s);
+  assert.match(css, /auto-class-menu-heading/);
+  assert.match(css, /\.class-card \.class-actions \.auto-class-menu-item/);
   assert.match(css, /\.section-heading \.step-badge\s*\{[^}]*color:\s*#fff/s);
   assert.doesNotMatch(css, /auto-selection-workspace/);
   assert.match(css, /auto-config-pane/);
