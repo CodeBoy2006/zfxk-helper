@@ -13,10 +13,19 @@
   },
   "files": [
     "src",
-    "README.md"
+    "scripts",
+    "docs/openapi.json",
+    "README.md",
+    "typedoc.json"
   ],
   "scripts": {
+    "openapi": "node scripts/generate-openapi.js",
+    "docs:api": "typedoc",
+    "docs": "npm run openapi && npm run docs:api",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "typedoc": "^0.28.19"
   },
   "engines": {
     "node": ">=20"

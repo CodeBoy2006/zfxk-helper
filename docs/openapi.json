@@ -1,0 +1,1113 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "zfxk SDK API",
+    "version": "0.1.0",
+    "description": "Documented SDK-facing operations for the ZFXK/ZZXK HTTP workflow client."
+  },
+  "servers": [
+    {
+      "url": "sdk://zfxk",
+      "description": "Logical SDK surface. Calls are executed through an authenticated school session."
+    }
+  ],
+  "tags": [
+    {
+      "name": "Context"
+    },
+    {
+      "name": "Catalog"
+    },
+    {
+      "name": "Chosen"
+    },
+    {
+      "name": "Selection"
+    },
+    {
+      "name": "Extras"
+    }
+  ],
+  "paths": {
+    "/sdk/context/bootstrap": {
+      "post": {
+        "tags": [
+          "Context"
+        ],
+        "operationId": "bootstrapContext",
+        "summary": "Load runtime context from hidden fields or known raw values.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BootstrapInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Runtime context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/catalog/courses": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "searchCourses",
+        "summary": "Search paged course candidates.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Course list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/catalog/teaching-classes": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "getTeachingClasses",
+        "summary": "Load teaching classes for a course.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeachingClassQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Teaching-class list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeachingClass"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/chosen/snapshot": {
+      "post": {
+        "tags": [
+          "Chosen"
+        ],
+        "operationId": "getSelectionSnapshot",
+        "summary": "Refresh selected courses and classes.",
+        "responses": {
+          "200": {
+            "description": "Selection snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelectionSnapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/selection/choose": {
+      "post": {
+        "tags": [
+          "Selection"
+        ],
+        "operationId": "chooseCourse",
+        "summary": "Run the SDK course-selection workflow.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChooseInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Choose result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChooseResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/selection/drop": {
+      "post": {
+        "tags": [
+          "Selection"
+        ],
+        "operationId": "dropCourse",
+        "summary": "Run the SDK drop workflow.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DropInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Drop result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DropResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/selection/reorder": {
+      "post": {
+        "tags": [
+          "Selection"
+        ],
+        "operationId": "reorderSelectedClasses",
+        "summary": "Save ordinary wish order for selected classes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Selection snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelectionSnapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/selection/update-weight": {
+      "post": {
+        "tags": [
+          "Selection"
+        ],
+        "operationId": "updateSelectionWeight",
+        "summary": "Update a weighted selection value.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWeightInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Selection snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelectionSnapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/textbook/order": {
+      "post": {
+        "tags": [
+          "Extras"
+        ],
+        "operationId": "orderTextbook",
+        "summary": "Order textbook for a teaching class.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextbookInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Textbook result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/waitlist/join": {
+      "post": {
+        "tags": [
+          "Extras"
+        ],
+        "operationId": "joinWaitlist",
+        "summary": "Join a course waitlist/intention list.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitlistInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Waitlist result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sdk/listener/apply": {
+      "post": {
+        "tags": [
+          "Extras"
+        ],
+        "operationId": "applyListener",
+        "summary": "Submit a listener application.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListenerApplyInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Listener result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BootstrapInput": {
+        "type": "object",
+        "properties": {
+          "baseUrl": {
+            "type": "string",
+            "description": "School jwglxt base URL."
+          },
+          "html": {
+            "type": "string",
+            "description": "Course-selection page HTML containing hidden inputs."
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RuntimeContext": {
+        "type": "object",
+        "properties": {
+          "baseUrl": {
+            "type": "string"
+          },
+          "term": {
+            "type": "object",
+            "properties": {
+              "xkxnm": {
+                "type": "string"
+              },
+              "xkxqm": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "xkxnm",
+              "xkxqm"
+            ]
+          },
+          "student": {
+            "type": "object",
+            "properties": {
+              "xhId": {
+                "type": "string"
+              },
+              "jgId": {
+                "type": "string"
+              },
+              "zyhId": {
+                "type": "string"
+              },
+              "njdmId": {
+                "type": "string"
+              },
+              "zyfxId": {
+                "type": "string"
+              },
+              "bhId": {
+                "type": "string"
+              },
+              "campusId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "zyhId",
+              "njdmId"
+            ]
+          },
+          "current": {
+            "type": "object",
+            "properties": {
+              "xkkzId": {
+                "type": "string"
+              },
+              "kklxdm": {
+                "type": "string"
+              },
+              "kklxmc": {
+                "type": "string"
+              },
+              "xklc": {
+                "type": "string"
+              },
+              "xkkzXh": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "xkkzId",
+              "kklxdm"
+            ]
+          },
+          "switches": {
+            "type": "object",
+            "properties": {
+              "isInSelectionTime": {
+                "type": "boolean"
+              },
+              "canSelect": {
+                "type": "boolean"
+              },
+              "canDrop": {
+                "type": "boolean"
+              },
+              "useWeight": {
+                "type": "boolean"
+              },
+              "enableTextbook": {
+                "type": "boolean"
+              },
+              "enableWaitlist": {
+                "type": "boolean"
+              },
+              "enableListenerApply": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "isInSelectionTime",
+              "canSelect",
+              "canDrop",
+              "useWeight",
+              "enableTextbook",
+              "enableWaitlist",
+              "enableListenerApply"
+            ]
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "baseUrl",
+          "term",
+          "student",
+          "current",
+          "switches",
+          "raw"
+        ]
+      },
+      "CourseQuery": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string"
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "integer"
+              },
+              "size": {
+                "type": "integer"
+              }
+            }
+          },
+          "filters": {
+            "type": "object",
+            "properties": {
+              "hasCapacity": {
+                "type": "boolean"
+              },
+              "recommended": {
+                "type": "boolean"
+              },
+              "retake": {
+                "type": "boolean"
+              }
+            }
+          },
+          "extra": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        }
+      },
+      "TeachingClassQuery": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "retake": {
+            "type": "string"
+          },
+          "auxiliary": {
+            "type": "string"
+          },
+          "extra": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "courseId"
+        ]
+      },
+      "Course": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "courseCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "credit": {
+            "type": "number"
+          },
+          "typeCode": {
+            "type": "string"
+          },
+          "typeName": {
+            "type": "string"
+          },
+          "retake": {
+            "type": "boolean"
+          },
+          "hasPrerequisiteHint": {
+            "type": "boolean"
+          },
+          "recommended": {
+            "type": "boolean"
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "courseId",
+          "name",
+          "credit",
+          "typeCode",
+          "retake",
+          "hasPrerequisiteHint",
+          "raw"
+        ]
+      },
+      "TeachingClass": {
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string"
+          },
+          "submitClassId": {
+            "type": "string"
+          },
+          "courseId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "childClassCount": {
+            "type": "integer"
+          },
+          "credit": {
+            "type": "number"
+          },
+          "selectedCount": {
+            "type": "integer"
+          },
+          "capacity": {
+            "type": "integer"
+          },
+          "currentRound": {
+            "type": "object",
+            "properties": {
+              "capacity": {
+                "type": "integer"
+              },
+              "selected": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "capacity",
+              "selected"
+            ]
+          },
+          "teachers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Teacher"
+            }
+          },
+          "scheduleText": {
+            "type": "string"
+          },
+          "locationText": {
+            "type": "string"
+          },
+          "examText": {
+            "type": "string"
+          },
+          "campusId": {
+            "type": "string"
+          },
+          "collegeName": {
+            "type": "string"
+          },
+          "flags": {
+            "type": "object",
+            "properties": {
+              "selected": {
+                "type": "boolean"
+              },
+              "full": {
+                "type": "boolean"
+              },
+              "canSelect": {
+                "type": "boolean"
+              },
+              "canDrop": {
+                "type": "boolean"
+              },
+              "hasTextbook": {
+                "type": "boolean"
+              },
+              "retake": {
+                "type": "boolean"
+              },
+              "auxiliary": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "selected",
+              "full",
+              "canSelect"
+            ]
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "classId",
+          "submitClassId",
+          "courseId",
+          "name",
+          "childClassCount",
+          "credit",
+          "selectedCount",
+          "capacity",
+          "currentRound",
+          "teachers",
+          "flags",
+          "raw"
+        ]
+      },
+      "Teacher": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "raw": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "raw"
+        ]
+      },
+      "SelectedCourse": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "courseCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "credit": {
+            "type": "number"
+          },
+          "typeCode": {
+            "type": "string"
+          },
+          "retake": {
+            "type": "boolean"
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SelectedClass"
+            }
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "courseId",
+          "name",
+          "credit",
+          "typeCode",
+          "retake",
+          "classes",
+          "raw"
+        ]
+      },
+      "SelectedClass": {
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string"
+          },
+          "submitClassId": {
+            "type": "string"
+          },
+          "courseId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "number"
+          },
+          "selectedBySystem": {
+            "type": "boolean"
+          },
+          "selfSelected": {
+            "type": "boolean"
+          },
+          "canDrop": {
+            "type": "boolean"
+          },
+          "credit": {
+            "type": "number"
+          },
+          "teachers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Teacher"
+            }
+          },
+          "scheduleText": {
+            "type": "string"
+          },
+          "locationText": {
+            "type": "string"
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "classId",
+          "submitClassId",
+          "courseId",
+          "name",
+          "selectedBySystem",
+          "selfSelected",
+          "canDrop",
+          "raw"
+        ]
+      },
+      "SelectionSnapshot": {
+        "type": "object",
+        "properties": {
+          "selectedCourses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SelectedCourse"
+            }
+          },
+          "selectedClasses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SelectedClass"
+            }
+          },
+          "totals": {
+            "type": "object",
+            "properties": {
+              "courseCount": {
+                "type": "integer"
+              },
+              "credit": {
+                "type": "number"
+              },
+              "teachingClassCredit": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "courseCount",
+              "credit",
+              "teachingClassCredit"
+            ]
+          },
+          "version": {
+            "type": "string"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "description": "ISO date-time string.",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "selectedCourses",
+          "selectedClasses",
+          "totals",
+          "version",
+          "fetchedAt"
+        ]
+      },
+      "ChooseInput": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string"
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "courseId",
+          "classId"
+        ]
+      },
+      "ChooseResult": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "selected | pending-filter | rejected | capacity-full | requires-listener-apply | planned"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/SelectedClass"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/SelectionSnapshot"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "waitlistAvailable": {
+            "type": "boolean"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowMessage"
+            }
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "DropInput": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string"
+          },
+          "submitClassId": {
+            "type": "string"
+          },
+          "controlId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "courseId",
+          "classId"
+        ]
+      },
+      "DropResult": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "dropped | rejected | sms-failed | already-dropped"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/SelectionSnapshot"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ReorderInput": {
+        "type": "object",
+        "properties": {
+          "classIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "classIds"
+        ]
+      },
+      "UpdateWeightInput": {
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string"
+          },
+          "submitClassId": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "classId",
+          "weight"
+        ]
+      },
+      "TextbookInput": {
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "classId"
+        ]
+      },
+      "WaitlistInput": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "courseId",
+          "classId"
+        ]
+      },
+      "ListenerApplyInput": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string"
+          },
+          "conflictClassIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "courseId",
+          "classId"
+        ]
+      },
+      "WorkflowMessage": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        }
+      },
+      "SimpleResult": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "raw": {}
+        },
+        "required": [
+          "ok"
+        ]
+      }
+    }
+  }
+}

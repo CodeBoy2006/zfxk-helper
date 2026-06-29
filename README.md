@@ -4,9 +4,10 @@
 
 ## Install
 
-This repository currently has no runtime dependencies.
+This repository has no runtime dependencies. TypeDoc is installed as a development dependency for API documentation generation.
 
 ```bash
+npm install
 npm test
 ```
 
@@ -58,3 +59,23 @@ console.log(result.status);
 - Minimal textbook, waitlist, and listener helpers are exposed as direct endpoint wrappers.
 
 The original `zzxkYzb*.js` files are kept at the repository root as reference material for endpoint names and flag semantics.
+
+## Documentation
+
+Generate the OpenAPI document and TypeDoc API reference:
+
+```bash
+npm run docs
+```
+
+Generated outputs:
+
+- `docs/openapi.json`: OpenAPI 3.0.3 description of the SDK-facing operations.
+- `docs/api/`: TypeDoc HTML API reference generated from `src/index.d.ts`.
+
+You can also run each generator separately:
+
+```bash
+npm run openapi
+npm run docs:api
+```
