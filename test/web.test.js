@@ -102,16 +102,14 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /schedule-course/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
-  assert.match(css, /\.catalog-pane,\s*\.detail-pane,\s*\.chosen-pane\s*\{[^}]*height:\s*clamp\([^;]*100vh/s);
+  assert.match(css, /\.catalog-pane,\s*\.detail-pane,\s*\.chosen-pane\s*\{[^}]*height:\s*100vh/s);
   assert.match(css, /\.catalog-pane,\s*\.detail-pane,\s*\.chosen-pane\s*\{[^}]*max-height:\s*100vh/s);
-  assert.match(css, /\.course-list\s*\{[^}]*flex:\s*1 1 auto/s);
-  assert.match(css, /\.course-list\s*\{[^}]*max-height:\s*none/s);
-  assert.match(css, /\.course-list\s*\{[^}]*overflow-y:\s*auto/s);
-  assert.match(css, /\.class-list,\s*\.chosen-list\s*\{[^}]*flex:\s*1 1 auto/s);
-  assert.match(css, /\.class-list,\s*\.chosen-list\s*\{[^}]*overflow-y:\s*auto/s);
-  assert.match(css, /\.course-list\s*\{[^}]*display:\s*flex/s);
-  assert.match(css, /\.course-list\s*\{[^}]*flex-direction:\s*column/s);
-  assert.match(css, /\.course-card\s*\{[^}]*flex:\s*0 0 auto/s);
+  assert.match(css, /\.course-list,\s*\.class-list,\s*\.chosen-list\s*\{[^}]*display:\s*flex/s);
+  assert.match(css, /\.course-list,\s*\.class-list,\s*\.chosen-list\s*\{[^}]*flex-direction:\s*column/s);
+  assert.match(css, /\.course-list,\s*\.class-list,\s*\.chosen-list\s*\{[^}]*flex:\s*1 1 auto/s);
+  assert.match(css, /\.course-list,\s*\.class-list,\s*\.chosen-list\s*\{[^}]*max-height:\s*none/s);
+  assert.match(css, /\.course-list,\s*\.class-list,\s*\.chosen-list\s*\{[^}]*overflow-y:\s*auto/s);
+  assert.match(css, /\.course-card,\s*\.class-card,\s*\.chosen-card\s*\{[^}]*flex:\s*0 0 auto/s);
   assert.doesNotMatch(css, /class-title-row/);
 });
 

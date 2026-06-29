@@ -219,3 +219,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and confirm all three columns scroll inside their panes without exceeding one screen height.
 - **Context:** The shared pane height now caps at `100vh`; narrow layouts still switch back to auto pane height.
+
+## [2026-06-29 20:40] Full-Height Workspace Panes
+- **Changes:** Increased all three Web workspace panes to a full viewport-height cap, made course/class/chosen lists share the same flex scrolling layout, and prevented cards from shrinking inside those scrollers.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and confirm the three lists use the full available column height without changing card styling.
+- **Context:** Narrow layouts still use viewport-relative list caps so stacked columns do not become unbounded.

@@ -364,9 +364,9 @@ textarea {
 .chosen-pane {
   display: flex;
   flex-direction: column;
-  height: clamp(620px, calc(100vh - 320px), 100vh);
+  height: 100vh;
   max-height: 100vh;
-  min-height: 620px;
+  min-height: min(620px, 100vh);
   padding: 12px;
   border-color: #e4ebf5;
   border-radius: 10px;
@@ -424,33 +424,21 @@ textarea {
 .course-list,
 .class-list,
 .chosen-list {
-  display: grid;
-  align-content: start;
-  gap: 8px;
-  min-height: 0;
-  overflow: auto;
-  padding-right: 2px;
-}
-
-.course-list {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+  gap: 8px;
   max-height: none;
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-}
-
-.class-list,
-.chosen-list {
-  flex: 1 1 auto;
-  overflow-x: hidden;
-  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .course-card,
 .class-card,
 .chosen-card {
+  flex: 0 0 auto;
   border: 1px solid #e0e8f2;
   border-radius: 7px;
   background: #fff;
@@ -505,7 +493,6 @@ textarea {
 }
 
 .course-card {
-  flex: 0 0 auto;
   cursor: pointer;
   width: 100%;
   color: var(--text);
@@ -1032,10 +1019,13 @@ textarea {
   .detail-pane,
   .chosen-pane {
     height: auto;
+    max-height: none;
     min-height: auto;
   }
 
-  .course-list {
+  .course-list,
+  .class-list,
+  .chosen-list {
     max-height: clamp(360px, 64vh, 720px);
   }
 
