@@ -68,20 +68,30 @@
 
       <section class="workspace">
         <aside class="catalog-pane" aria-label="课程候选">
+          <div class="section-heading">
+            <div class="section-heading-main">
+              <h2>课程列表</h2>
+              <span id="courseTotalBadge">共 0 门</span>
+            </div>
+            <button id="catalogSearchBtn" class="section-text-button" type="button">搜索</button>
+          </div>
           <div id="courseList" class="course-list" aria-live="polite"></div>
         </aside>
 
         <section class="detail-pane" aria-label="教学班详情">
           <div class="section-heading">
-            <h2>教学班</h2>
-            <span id="classCountBadge">0 个</span>
+            <div class="section-heading-main">
+              <h2>教学班</h2>
+              <span id="classCountBadge">共 0 个教学班</span>
+            </div>
+            <button id="classSortBtn" class="section-text-button" type="button">默认排序</button>
           </div>
           <div id="classList" class="class-list"></div>
         </section>
 
         <aside id="chosenPanel" class="chosen-pane" aria-label="已选课程">
           <div class="section-heading">
-            <h2>已选</h2>
+            <h2>已选课程</h2>
             <span id="chosenTotals">0 门 / 0 学分</span>
           </div>
           <div id="chosenList" class="chosen-list"></div>

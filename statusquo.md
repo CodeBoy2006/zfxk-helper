@@ -135,3 +135,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and verify against live selected-course data with long course names or classroom labels.
 - **Context:** CSS-only layout change; SDK requests and selection/drop behavior are unchanged.
+
+## [2026-06-29 19:26] Reference Course Workspace Design
+- **Changes:** Reworked the Web workspace toward the provided three-column reference: added list counts/search/sort header controls, reshaped course/teaching/selected cards, tightened metadata rows, and restyled status tags plus selected-course drop buttons.
+- **Status:** Completed
+- **Next Steps:** Refresh a live initialized session to compare populated course and selected-course cards against the reference screenshot.
+- **Context:** Existing search, select, drop, snapshot refresh, and save-order logic remain in place; visual verification used the available local page state because fixture data URLs were blocked by browser policy.

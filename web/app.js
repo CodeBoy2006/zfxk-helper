@@ -21,8 +21,11 @@ const elements = {
   toggleFiltersBtn: document.querySelector('#toggleFiltersBtn'),
   sessionSummary: document.querySelector('#sessionSummary'),
   courseList: document.querySelector('#courseList'),
+  courseTotalBadge: document.querySelector('#courseTotalBadge'),
+  catalogSearchBtn: document.querySelector('#catalogSearchBtn'),
   classList: document.querySelector('#classList'),
   classCountBadge: document.querySelector('#classCountBadge'),
+  classSortBtn: document.querySelector('#classSortBtn'),
   chosenList: document.querySelector('#chosenList'),
   chosenTotals: document.querySelector('#chosenTotals'),
   scheduleStatus: document.querySelector('#scheduleStatus'),
@@ -134,6 +137,19 @@ elements.courseTypeTabs.addEventListener('click', async (event) => {
 
 elements.refreshSnapshotBtn.addEventListener('click', () => refreshSnapshot());
 elements.saveOrderBtn.addEventListener('click', () => saveOrder());
+elements.catalogSearchBtn.addEventListener('click', () => {
+  elements.keywordInput.focus();
+  elements.filterPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+elements.classSortBtn.addEventListener('click', () => {
+  state.classes = [...state.classes].sort((a, b) => {
+    const aFull = Number(Boolean(a.flags.full));
+    const bFull = Number(Boolean(b.flags.full));
+    if (aFull !== bFull) return aFull - bFull;
+    return (b.capacity - b.selectedCount) - (a.capacity - a.selectedCount);
+  });
+  renderClasses();
+});
 elements.clearLogBtn.addEventListener('click', () => {
   elements.activityLog.replaceChildren();
   setStatus('idle');
@@ -422,6 +438,7 @@ function renderFilterPanel() {
 function renderCourses() {
   elements.courseList.replaceChildren();
   const displayCourses = groupCoursesForDisplay(state.courses);
+  elements.courseTotalBadge.textContent = `共 ${displayCourses.length} 门`;
   if (!displayCourses.length) {
     elements.courseList.append(empty('初始化后搜索课程'));
     return;
@@ -436,9 +453,9 @@ function renderCourses() {
         <strong>${escapeHtml(course.name)}</strong>
         <span>${escapeHtml(course.credit)} 学分</span>
       </div>
-      <div class="meta">
+      <div class="meta course-card-meta">
         <span>${escapeHtml(course.courseCode || course.courseId)}</span>
-        <span>${escapeHtml(course.typeName || course.typeCode)}</span>
+        ${renderCourseTypeTag(course.typeName || course.typeCode)}
         ${course.ownershipName ? `<span>课程归属：${escapeHtml(course.ownershipName)}</span>` : ''}
       </div>
       <div class="flags">
@@ -455,7 +472,7 @@ function renderCourses() {
 
 function renderClasses() {
   elements.classList.replaceChildren();
-  elements.classCountBadge.textContent = `${state.classes.length} 个`;
+  elements.classCountBadge.textContent = `共 ${state.classes.length} 个教学班`;
   if (!state.classes.length) {
     elements.classList.append(empty('选择课程后显示教学班'));
     return;
@@ -466,18 +483,21 @@ function renderClasses() {
     const card = document.createElement('article');
     card.className = 'class-card';
     card.innerHTML = `
-      <div class="class-card-main">
-        <div class="class-card-top">
-          ${renderTeacherLine(item)}
-          <div class="class-card-badges">
-            <span class="tag ${item.flags.full ? 'danger' : 'ok'}">${item.flags.full ? '已满' : '可选'}</span>
-            ${selected ? '<span class="tag ok">已在志愿</span>' : ''}
-            ${item.childClassCount > 1 ? `<span class="tag warn">${item.childClassCount} 个子班</span>` : ''}
-            <span class="capacity-pill">${item.selectedCount}/${item.capacity || '--'}</span>
+      <div class="class-card-content">
+        ${renderClassTitle(item)}
+        <div class="class-card-main">
+          <div class="class-card-top">
+            ${renderTeacherLine(item)}
+            <div class="class-card-badges">
+              <span class="tag ${item.flags.full ? 'danger' : 'ok'}">${item.flags.full ? '已满' : '可选'}</span>
+              ${selected ? '<span class="tag ok">已在志愿</span>' : ''}
+              ${item.childClassCount > 1 ? `<span class="tag warn">${item.childClassCount} 个子班</span>` : ''}
+              <span class="capacity-pill">${item.selectedCount}/${item.capacity || '--'}</span>
+            </div>
           </div>
+          ${renderOwnershipLine(item)}
+          ${renderMeetingList(item.scheduleText, item.locationText)}
         </div>
-        ${renderOwnershipLine(item)}
-        ${renderMeetingList(item.scheduleText, item.locationText)}
       </div>
     `;
     const actions = document.createElement('div');
@@ -509,19 +529,21 @@ function renderChosen() {
     const card = document.createElement('article');
     card.className = 'chosen-card';
     card.innerHTML = `
-      <div class="class-card-main">
+      <div class="class-card-content">
         <div class="card-title">
           <strong>${index + 1}. ${escapeHtml(item.name)}</strong>
           <span>${item.weight ? `权重 ${item.weight}` : '志愿'}</span>
         </div>
-        <div class="class-card-top">
-          ${renderTeacherLine(item)}
-          <div class="class-card-badges">
-            <span class="tag ${item.selectedBySystem ? 'ok' : 'warn'}">${item.selectedBySystem ? '已选上' : '待筛选'}</span>
-            <span class="tag">${item.selfSelected ? '自选' : '系统调整'}</span>
+        <div class="class-card-main">
+          <div class="class-card-top">
+            ${renderTeacherLine(item)}
+            <div class="class-card-badges">
+              <span class="tag ${item.selectedBySystem ? 'ok' : 'warn'}">${item.selectedBySystem ? '已选上' : '待筛选'}</span>
+              <span class="tag">${item.selfSelected ? '自选' : '系统调整'}</span>
+            </div>
           </div>
+          ${renderMeetingList(item.scheduleText, item.locationText)}
         </div>
-        ${renderMeetingList(item.scheduleText, item.locationText)}
       </div>
     `;
     const actions = document.createElement('div');
@@ -703,6 +725,24 @@ function renderCourseTypeTabs() {
   }
 }
 
+function renderClassTitle(item) {
+  const courseName = textFromRaw(item, 'kcmc') || item.name || '未命名课程';
+  const courseCode = textFromRaw(item, 'kch') || item.courseId;
+  const typeName = textFromRaw(item, 'kklxmc', 'kclxmc') || state.courseTypes.find((option) => courseTypeKey(option) === state.activeCourseTypeKey)?.label;
+  const meta = [
+    courseCode ? escapeHtml(courseCode) : '',
+    Number.isFinite(item.credit) && item.credit > 0 ? `${escapeHtml(item.credit)} 学分` : '',
+    typeName ? escapeHtml(typeName) : ''
+  ].filter(Boolean);
+
+  return `
+    <div class="class-title-row">
+      <strong>${escapeHtml(courseName)}</strong>
+      ${meta.length ? `<span>${meta.join('<i></i>')}</span>` : ''}
+    </div>
+  `;
+}
+
 function renderTeacherLine(item) {
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
@@ -711,6 +751,10 @@ function renderTeacherLine(item) {
       <span>${escapeHtml(teachers)}</span>
     </div>
   `;
+}
+
+function renderCourseTypeTag(label) {
+  return label ? `<span class="course-type-pill">${escapeHtml(label)}</span>` : '';
 }
 
 function renderOwnershipLine(item) {
@@ -722,6 +766,14 @@ function renderOwnershipLine(item) {
       <span>${escapeHtml(ownership)}</span>
     </div>
   `;
+}
+
+function textFromRaw(item, ...keys) {
+  for (const key of keys) {
+    const value = item.raw?.[key];
+    if (value !== undefined && value !== null && String(value).trim()) return String(value);
+  }
+  return '';
 }
 
 function renderMeetingList(scheduleText, locationText) {
@@ -852,7 +904,7 @@ async function runTask(label, task) {
 }
 
 function setButtonsDisabled(disabled) {
-  for (const button of document.querySelectorAll('.topbar-actions button, #sessionForm button, #courseTypeTabs button, #searchForm button, #saveOrderBtn')) {
+  for (const button of document.querySelectorAll('.topbar-actions button, #sessionForm button, #courseTypeTabs button, #searchForm button, #saveOrderBtn, #catalogSearchBtn, #classSortBtn')) {
     button.disabled = disabled;
   }
 }

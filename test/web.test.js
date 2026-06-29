@@ -23,6 +23,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /当前显示/);
   assert.match(html, /id="resetFiltersBtn"/);
   assert.match(html, /id="courseList"/);
+  assert.match(html, /id="courseTotalBadge"/);
+  assert.match(html, /id="catalogSearchBtn"/);
+  assert.match(html, /id="classSortBtn"/);
   assert.match(html, /id="chosenPanel"/);
   assert.match(html, /id="selectedScheduleBody"/);
   assert.match(html, /当前已选课程时间分布/);
