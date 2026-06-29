@@ -201,3 +201,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and search a large course set to confirm the left list scrolls internally.
 - **Context:** The cap uses a viewport-relative clamp so the list stays usable on both compact and large screens.
+
+## [2026-06-29 20:27] Course Card Scroll Layout
+- **Changes:** Changed the scrollable Web course list to a non-shrinking flex column so each course card keeps its internal metadata layout while the list itself scrolls.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and confirm course cards no longer overlap or expose inner metadata between rows.
+- **Context:** The prior scroll cap could compress grid rows visually when many courses were loaded.

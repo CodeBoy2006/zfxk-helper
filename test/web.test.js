@@ -104,6 +104,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /meeting-location/);
   assert.match(css, /\.course-list\s*\{[^}]*max-height:/s);
   assert.match(css, /\.course-list\s*\{[^}]*overflow-y:\s*auto/s);
+  assert.match(css, /\.course-list\s*\{[^}]*display:\s*flex/s);
+  assert.match(css, /\.course-list\s*\{[^}]*flex-direction:\s*column/s);
+  assert.match(css, /\.course-card\s*\{[^}]*flex:\s*0 0 auto/s);
   assert.doesNotMatch(css, /class-title-row/);
 });
 

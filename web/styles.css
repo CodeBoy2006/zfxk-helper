@@ -431,7 +431,10 @@ textarea {
 }
 
 .course-list {
+  display: flex;
+  flex-direction: column;
   max-height: clamp(360px, 58vh, 720px);
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -492,6 +495,7 @@ textarea {
 }
 
 .course-card {
+  flex: 0 0 auto;
   cursor: pointer;
   width: 100%;
   color: var(--text);
