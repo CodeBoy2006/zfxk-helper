@@ -1,10 +1,10 @@
-import { createZfxkClient, endpoints, loadRuntimeContext, MemoryTransport } from '../src/index.js';
+import { createZfxkClient } from '../src/index.js';
 
 const elements = {
   sessionForm: document.querySelector('#sessionForm'),
   searchForm: document.querySelector('#searchForm'),
-  modeInputs: [...document.querySelectorAll('input[name="mode"]')],
   baseUrlInput: document.querySelector('#baseUrlInput'),
+  cookieInput: document.querySelector('#cookieInput'),
   pagePathInput: document.querySelector('#pagePathInput'),
   keywordInput: document.querySelector('#keywordInput'),
   hasCapacityInput: document.querySelector('#hasCapacityInput'),
@@ -12,7 +12,6 @@ const elements = {
   courseList: document.querySelector('#courseList'),
   classList: document.querySelector('#classList'),
   classCountBadge: document.querySelector('#classCountBadge'),
-  chosenPanel: document.querySelector('#chosenPanel'),
   chosenList: document.querySelector('#chosenList'),
   chosenTotals: document.querySelector('#chosenTotals'),
   saveOrderBtn: document.querySelector('#saveOrderBtn'),
@@ -24,7 +23,6 @@ const elements = {
 
 const state = {
   client: null,
-  mode: 'demo',
   courses: [],
   classes: [],
   selectedCourseId: null,
@@ -49,18 +47,26 @@ elements.clearLogBtn.addEventListener('click', () => {
   setStatus('idle');
 });
 
+renderCourses();
+renderClasses();
+renderChosen();
+
 async function initialize() {
   await runTask('初始化会话', async () => {
-    state.mode = elements.modeInputs.find((input) => input.checked)?.value || 'demo';
-    if (state.mode === 'demo') {
-      state.client = createDemoClient();
-      await state.client.bootstrap({ html: demoPageHtml });
-      log('Demo 会话已加载，可直接搜索、选课、退课。');
-    } else {
-      state.client = createBrowserClient(elements.baseUrlInput.value.trim());
-      await state.client.bootstrapFromPage({ path: elements.pagePathInput.value.trim() });
-      log('浏览器会话已解析。后续请求将使用 credentials=include。');
-    }
+    const baseUrl = elements.baseUrlInput.value.trim();
+    const cookie = elements.cookieInput.value.trim();
+    const path = elements.pagePathInput.value.trim();
+    if (!baseUrl) throw new Error('请填写教务系统 Base URL。');
+    if (!cookie) throw new Error('请填写 Cookie。');
+    if (!path) throw new Error('请填写选课入口 Path。');
+
+    state.client = createZfxkClient({
+      baseUrl,
+      mode: 'commit',
+      transport: new ProxyTransport({ baseUrl, cookie })
+    });
+    await state.client.bootstrapFromPage({ path });
+    log('会话已通过本地代理解析。');
     updateSessionSummary();
     await searchCoursesCore();
     await refreshSnapshotCore();
@@ -68,7 +74,10 @@ async function initialize() {
 }
 
 async function searchCourses() {
-  if (!state.client) return;
+  if (!state.client) {
+    log('请先初始化会话。');
+    return;
+  }
   await runTask('搜索课程', searchCoursesCore);
 }
 
@@ -90,8 +99,7 @@ async function searchCoursesCore() {
 }
 
 async function loadClasses(courseId) {
-  state.selectedCourseId = courseId;
-  renderCourses();
+  if (!state.client) return;
   await runTask('加载教学班', () => loadClassesCore(courseId));
 }
 
@@ -108,7 +116,7 @@ async function chooseClass(teachingClass) {
     const result = await state.client.selection.choose(
       { courseId: teachingClass.courseId, classId: teachingClass.classId },
       {
-        confirm: async (event) => confirmAction(event.message || '后端要求确认，是否继续？'),
+        confirm: async (event) => window.confirm(event.message || '后端要求确认，是否继续？'),
         chooseWeight: async () => window.prompt('请输入权重/积分', '1') || '1',
         chooseChildClasses: async () => [teachingClass.submitClassId],
         chooseTextbooks: async () => []
@@ -121,8 +129,7 @@ async function chooseClass(teachingClass) {
 }
 
 async function dropClass(selection) {
-  const confirmed = await confirmAction(`确认退选 ${selection.name}？`);
-  if (!confirmed) return;
+  if (!window.confirm(`确认退选 ${selection.name}？`)) return;
   await runTask('提交退课', async () => {
     const result = await state.client.selection.drop(
       {
@@ -131,7 +138,7 @@ async function dropClass(selection) {
         submitClassId: selection.submitClassId
       },
       {
-        confirm: async (event) => confirmAction(event.message || '确认退课？'),
+        confirm: async (event) => window.confirm(event.message || '确认退课？'),
         smsCode: async () => window.prompt('请输入短信验证码', '') || ''
       }
     );
@@ -139,11 +146,6 @@ async function dropClass(selection) {
     await refreshSnapshotCore();
     if (state.selectedCourseId) await loadClassesCore(state.selectedCourseId);
   });
-}
-
-function confirmAction(message) {
-  if (state.mode === 'demo') return Promise.resolve(true);
-  return Promise.resolve(window.confirm(message));
 }
 
 async function saveOrder() {
@@ -157,7 +159,10 @@ async function saveOrder() {
 }
 
 async function refreshSnapshot() {
-  if (!state.client?.context) return;
+  if (!state.client?.context) {
+    log('请先初始化会话。');
+    return;
+  }
   await runTask('刷新已选', refreshSnapshotCore);
 }
 
@@ -171,7 +176,7 @@ async function refreshSnapshotCore() {
 function renderCourses() {
   elements.courseList.replaceChildren();
   if (!state.courses.length) {
-    elements.courseList.append(empty('暂无课程'));
+    elements.courseList.append(empty('初始化后搜索课程'));
     return;
   }
 
@@ -288,7 +293,7 @@ function updateSessionSummary() {
     elements.sessionSummary.textContent = '未初始化会话';
     return;
   }
-  elements.sessionSummary.textContent = `${state.mode === 'demo' ? 'Demo' : '浏览器会话'} · ${context.term.xkxnm}-${context.term.xkxqm} · ${context.current.kklxdm} · ${context.current.xkkzId}`;
+  elements.sessionSummary.textContent = `代理会话 · ${context.term.xkxnm}-${context.term.xkxqm} · ${context.current.kklxdm} · ${context.current.xkkzId}`;
 }
 
 async function runTask(label, task) {
@@ -331,49 +336,31 @@ function empty(text) {
   return box;
 }
 
-function createBrowserClient(baseUrl) {
-  return createZfxkClient({
-    baseUrl,
-    mode: 'commit',
-    transport: new BrowserSessionTransport(baseUrl)
-  });
-}
-
-class BrowserSessionTransport {
-  constructor(baseUrl) {
-    this.baseUrl = baseUrl.replace(/\/$/, '');
+class ProxyTransport {
+  constructor({ baseUrl, cookie }) {
+    this.baseUrl = baseUrl;
+    this.cookie = cookie;
   }
 
   async get(path, options = {}) {
-    const response = await fetch(this.url(path), {
-      method: 'GET',
-      credentials: 'include',
-      headers: options.headers || {}
-    });
-    return readResponse(response, path);
+    return this.proxy('/api/proxy/get', { path, options });
   }
 
   async post(path, data = {}, options = {}) {
-    const body = new URLSearchParams();
-    for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined && value !== null) body.set(key, Array.isArray(value) ? value.join(',') : String(value));
-    }
-    const response = await fetch(this.url(path), {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'x-requested-with': 'XMLHttpRequest',
-        ...(options.headers || {})
-      },
-      body
-    });
-    return readResponse(response, path);
+    return this.proxy('/api/proxy/post', { path, data, options });
   }
 
-  url(path) {
-    if (/^https?:\/\//i.test(path)) return path;
-    return `${this.baseUrl}${path}`;
+  async proxy(endpoint, payload) {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json; charset=UTF-8' },
+      body: JSON.stringify({
+        baseUrl: this.baseUrl,
+        cookie: this.cookie,
+        ...payload
+      })
+    });
+    return readResponse(response, endpoint);
   }
 }
 
@@ -387,111 +374,6 @@ async function readResponse(response, path) {
   }
 }
 
-function createDemoClient() {
-  const fixture = createDemoFixture();
-  const transport = new MemoryTransport({
-    '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512': demoPageHtml,
-    [endpoints.coursePage]: ({ data }) => ({
-      tmpList: fixture.courses.filter((course) => {
-        const keyword = String(data.searchInput || '').trim();
-        const matchesKeyword = !keyword || `${course.kch}${course.kcmc}`.includes(keyword);
-        const hasCapacity = data.yl_list === '1'
-          ? fixture.classes[course.kch_id].some((item) => Number(item.yxzrs) < Number(item.jxbrl))
-          : true;
-        return matchesKeyword && hasCapacity;
-      }),
-      sfxsjc: '0'
-    }),
-    [endpoints.teachingClasses]: ({ data }) => fixture.classes[data.kch_id] || [],
-    [endpoints.chosenDisplay]: () => fixture.selected.map((item, index) => ({ ...item, zypx: String(index + 1) })),
-    [endpoints.titleCheck]: { flag: '1' },
-    [endpoints.conflictCheck]: { flag: '1' },
-    [endpoints.textbookCheck]: '0',
-    [endpoints.saveSelection]: ({ data }) => {
-      const row = findClassBySubmitId(fixture, data.jxb_ids);
-      if (!row) return { flag: '0', msg: '教学班不存在' };
-      if (fixture.selected.some((item) => item.do_jxb_id === row.do_jxb_id)) return { flag: '6' };
-      if (Number(row.yxzrs) >= Number(row.jxbrl)) return { flag: '-1', msg: `0,${row.jxb_id},${row.yxzrs},${row.yxzrs}` };
-      row.yxzrs = String(Number(row.yxzrs) + 1);
-      fixture.selected.push(toSelectedRow(fixture, row, data.qz));
-      return { flag: '1' };
-    },
-    [endpoints.dropSelection]: ({ data }) => {
-      const before = fixture.selected.length;
-      fixture.selected = fixture.selected.filter((item) => item.do_jxb_id !== data.jxb_ids);
-      const row = findClassBySubmitId(fixture, data.jxb_ids);
-      if (row && before !== fixture.selected.length) row.yxzrs = String(Math.max(0, Number(row.yxzrs) - 1));
-      return '1';
-    },
-    [endpoints.saveOrder]: ({ data }) => {
-      const ids = String(data.jxb_ids || '').split(',').filter(Boolean);
-      fixture.selected.sort((a, b) => ids.indexOf(a.jxb_id) - ids.indexOf(b.jxb_id));
-      return 'success';
-    }
-  });
-
-  return createZfxkClient({
-    baseUrl: 'https://demo.local/jwglxt',
-    auth: { type: 'cookie', cookie: 'demo=1' },
-    transport,
-    context: loadRuntimeContext({ baseUrl: 'https://demo.local/jwglxt', html: demoPageHtml })
-  });
-}
-
-function createDemoFixture() {
-  const courses = [
-    { kch_id: 'KC_DB', kch: 'CS301', kcmc: '数据库系统', xf: '3', kklxdm: '10', kklxmc: '专业选修', cxbj: '0', xxkbj: '0', sftj: '1' },
-    { kch_id: 'KC_OS', kch: 'CS302', kcmc: '操作系统', xf: '4', kklxdm: '10', kklxmc: '专业核心', cxbj: '0', xxkbj: '1', sftj: '0' },
-    { kch_id: 'KC_AI', kch: 'CS408', kcmc: '人工智能导论', xf: '2', kklxdm: '10', kklxmc: '通识拓展', cxbj: '0', xxkbj: '0', sftj: '1' }
-  ];
-  const classes = {
-    KC_DB: [
-      { jxb_id: 'JXB_DB_01', do_jxb_id: 'DO_DB_01', kch_id: 'KC_DB', jxbmc: '数据库系统-01', jxbzls: '1', xf: '3', yxzrs: '28', jxbrl: '35', blzyl: '7', blyxrs: '28', sksj: '周一 1-2', jxdd: '一教 101', jsxx: 'T001/陈敏/教授' },
-      { jxb_id: 'JXB_DB_02', do_jxb_id: 'DO_DB_02', kch_id: 'KC_DB', jxbmc: '数据库系统-02', jxbzls: '1', xf: '3', yxzrs: '35', jxbrl: '35', blzyl: '0', blyxrs: '35', sksj: '周三 5-6', jxdd: '二教 204', jsxx: 'T002/周航/副教授' }
-    ],
-    KC_OS: [
-      { jxb_id: 'JXB_OS_01', do_jxb_id: 'DO_OS_01', kch_id: 'KC_OS', jxbmc: '操作系统-01', jxbzls: '1', xf: '4', yxzrs: '42', jxbrl: '60', blzyl: '18', blyxrs: '42', sksj: '周二 3-4', jxdd: '三教 305', jsxx: 'T003/李宁/讲师', xxkbj: '1' }
-    ],
-    KC_AI: [
-      { jxb_id: 'JXB_AI_01', do_jxb_id: 'DO_AI_01', kch_id: 'KC_AI', jxbmc: '人工智能导论-01', jxbzls: '2', xf: '2', yxzrs: '20', jxbrl: '50', blzyl: '30', blyxrs: '20', sksj: '周五 7-8', jxdd: '实验楼 B201', jsxx: 'T004/王青/教授' }
-    ]
-  };
-  return {
-    courses,
-    classes,
-    selected: [toSelectedRow({ courses }, classes.KC_OS[0], '0')]
-  };
-}
-
-function findClassBySubmitId(fixture, submitId) {
-  return Object.values(fixture.classes).flat().find((item) => item.do_jxb_id === submitId || item.jxb_id === submitId);
-}
-
-function toSelectedRow(fixture, row, qz = '0') {
-  const course = fixture.courses.find((item) => item.kch_id === row.kch_id) || {};
-  return {
-    t_kch_id: row.kch_id,
-    kch_id: row.kch_id,
-    kch: course.kch,
-    kcmc: course.kcmc,
-    xf: course.xf || row.xf,
-    kklxdm: course.kklxdm || '10',
-    cxbj: course.cxbj || '0',
-    xxkbj: course.xxkbj || '0',
-    jxb_id: row.jxb_id,
-    do_jxb_id: row.do_jxb_id,
-    jxbmc: row.jxbmc,
-    qz,
-    sxbj: '0',
-    zixf: '1',
-    jxbxf: row.xf,
-    jsxx: row.jsxx,
-    sksj: row.sksj,
-    jxdd: row.jxdd,
-    sfktk: '1'
-  };
-}
-
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -500,28 +382,3 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 }
-
-const demoPageHtml = `
-  <input id="xkxnm" value="2025">
-  <input id="xkxqm" value="12">
-  <input id="xkkz_id" value="DEMO_KZ">
-  <input id="kklxdm" value="10">
-  <input id="kklxmc" value="自主选课">
-  <input id="xklc" value="DEMO_LC">
-  <input id="njdm_id" value="2024">
-  <input id="zyh_id" value="CS">
-  <input id="jg_id_1" value="JG">
-  <input id="zyfx_id" value="FX">
-  <input id="bh_id" value="BH">
-  <input id="xz" value="4">
-  <input id="ccdm" value="3">
-  <input id="xqh_id" value="MAIN">
-  <input id="iskxk" value="1">
-  <input id="isinxksj" value="1">
-  <input id="sfqzxk" value="0">
-  <input id="sfyxsksjct" value="1">
-  <input id="xkpksjctqrkg" value="1">
-  <input id="xksdxjckg" value="0">
-`;
-
-await initialize();

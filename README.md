@@ -111,7 +111,10 @@ Open:
 http://127.0.0.1:4173/
 ```
 
-The Web frontend has two modes:
+Fill in:
 
-- `Demo 回放`: uses in-memory fixtures and exercises search, teaching-class expansion, choose, drop, snapshot refresh, and order save without a school system.
-- `浏览器会话`: uses `fetch(..., { credentials: 'include' })` and the current browser's same-origin cookies. For a real school deployment, serve this frontend from the same origin as `jwglxt` or put it behind a local same-origin proxy. Browsers do not allow JavaScript to set a raw `Cookie` header for cross-origin school domains.
+- `Base URL`: the school system root, for example `https://example.edu.cn/jwglxt`.
+- `Cookie`: the authenticated browser cookie copied from the school system.
+- `Path`: the course-selection entry page used to parse hidden runtime fields.
+
+The browser calls the local Node server under `/api/proxy/*`. The Node proxy then sends requests to the school system with the provided `Cookie` header, avoiding the browser restriction that blocks frontend JavaScript from setting raw cross-origin cookies. Cookies stay in the local browser/server process and are not written to project files.

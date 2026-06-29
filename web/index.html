@@ -21,14 +21,13 @@
 
       <section class="session-panel" aria-label="会话配置">
         <form id="sessionForm">
-          <fieldset class="mode-group">
-            <legend>运行模式</legend>
-            <label><input type="radio" name="mode" value="demo" checked> Demo 回放</label>
-            <label><input type="radio" name="mode" value="browser"> 浏览器会话</label>
-          </fieldset>
           <label>
             教务系统 Base URL
-            <input id="baseUrlInput" name="baseUrl" value="https://example.edu.cn/jwglxt" autocomplete="off">
+            <input id="baseUrlInput" name="baseUrl" placeholder="https://example.edu.cn/jwglxt" autocomplete="off">
+          </label>
+          <label>
+            Cookie
+            <textarea id="cookieInput" name="cookie" rows="2" placeholder="JSESSIONID=...; route=..." autocomplete="off"></textarea>
           </label>
           <label>
             选课入口 Path
@@ -36,7 +35,7 @@
           </label>
           <button type="submit">初始化</button>
         </form>
-        <p class="mode-note">浏览器会话模式使用当前浏览器同源 Cookie；跨域访问学校站点通常需要同源部署或本地代理。</p>
+        <p class="mode-note">前端请求本地 Node 代理；代理带上这里填写的 Cookie 访问学校教务系统。</p>
       </section>
 
       <section class="workspace">

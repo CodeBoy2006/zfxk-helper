@@ -21,3 +21,9 @@
 - **Status:** Completed
 - **Next Steps:** Add a local same-origin proxy if the frontend must drive a real cross-origin school deployment from localhost.
 - **Context:** Browser-session mode relies on existing browser cookies via `credentials: include`; raw Cookie headers cannot be set from browser JavaScript.
+
+## [2026-06-29 16:18] Proxy Web Frontend
+- **Changes:** Removed the Web Demo/browser-session mode switch, added Cookie/Base URL inputs, routed frontend SDK calls through local Node proxy endpoints, and updated README/TypeDoc/tests.
+- **Status:** Completed
+- **Next Steps:** Test the proxy against a real authenticated school session.
+- **Context:** Browser JavaScript still does not set raw Cookie headers directly; the local Node proxy attaches the provided Cookie server-side.

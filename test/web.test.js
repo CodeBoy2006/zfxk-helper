@@ -10,14 +10,20 @@ test('web frontend files expose the restored course-selection workspace', async 
   const css = await readFile(new URL('../web/styles.css', import.meta.url), 'utf8');
 
   assert.match(html, /id="sessionForm"/);
+  assert.match(html, /id="cookieInput"/);
   assert.match(html, /id="courseList"/);
   assert.match(html, /id="chosenPanel"/);
   assert.match(html, /id="activityLog"/);
+  assert.doesNotMatch(html, /Demo 回放/);
   assert.match(app, /createZfxkClient/);
   assert.match(app, /bootstrapFromPage/);
+  assert.match(app, /ProxyTransport/);
+  assert.match(app, /\/api\/proxy\/post/);
   assert.match(app, /selection\.choose/);
   assert.match(app, /selection\.drop/);
   assert.match(app, /selection\.reorder/);
+  assert.doesNotMatch(app, /MemoryTransport/);
+  assert.doesNotMatch(app, /createDemoClient/);
   assert.match(css, /grid-template-columns/);
 });
 
@@ -27,4 +33,6 @@ test('web script and static server are wired in package.json', async () => {
   assert.equal(packageJson.scripts.web, 'node scripts/serve-web.js');
   assert.match(server, /createServer/);
   assert.match(server, /web\/index\.html/);
+  assert.match(server, /\/api\/proxy\/get/);
+  assert.match(server, /\/api\/proxy\/post/);
 });

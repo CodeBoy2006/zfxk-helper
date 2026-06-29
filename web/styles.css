@@ -25,7 +25,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -55,13 +56,15 @@ button:disabled {
   opacity: 0.55;
 }
 
-input {
+input,
+textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 6px;
   min-height: 36px;
-  padding: 0 10px;
+  padding: 8px 10px;
   background: #fff;
+  resize: vertical;
 }
 
 .app-shell {
@@ -116,32 +119,11 @@ input {
 
 #sessionForm {
   display: grid;
-  grid-template-columns: minmax(190px, 1fr) minmax(240px, 1.2fr) minmax(300px, 1.4fr) auto;
+  grid-template-columns: minmax(240px, 1fr) minmax(300px, 1.2fr) minmax(300px, 1.2fr) auto;
   align-items: end;
   gap: 12px;
 }
 
-fieldset {
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  margin: 0;
-  min-height: 62px;
-  padding: 8px 10px;
-}
-
-legend {
-  padding: 0 4px;
-  color: var(--muted);
-}
-
-.mode-group {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.mode-group label,
 .checkbox {
   display: inline-flex;
   align-items: center;
@@ -149,7 +131,6 @@ legend {
   white-space: nowrap;
 }
 
-.mode-group input,
 .checkbox input {
   width: auto;
   min-height: auto;
