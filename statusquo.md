@@ -117,3 +117,9 @@
 - **Status:** Completed
 - **Next Steps:** Verify against live 通识选修课 data where the backend returns `kcgsmc`.
 - **Context:** Grouped course cards aggregate multiple ownership names with `、` when the same course code maps to multiple backend course IDs.
+
+## [2026-06-29 18:57] README Chinese Simplification
+- **Changes:** Rewrote `README.md` in concise Chinese while preserving install, SDK usage, login/Cookie helpers, supported surface, docs, and Web frontend instructions.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** Documentation-only change; no SDK or Web runtime behavior changed.
