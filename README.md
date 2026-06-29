@@ -129,4 +129,4 @@ npm run web
 - `用户名` / `密码`：仅在点击 `登录获取 Cookie` 时由本地 Node 进程使用。
 - `Path`：用于解析隐藏运行时字段的选课入口路径。
 
-浏览器只访问本地 `/api/proxy/*`、`/api/captcha/solve` 和 `/api/login/zfcaptcha`。本地 Node 代理再携带 Cookie 请求学校系统，以避开浏览器禁止前端脚本设置跨域原始 Cookie 的限制。Cookie 只保留在本地浏览器/服务进程中，不会写入项目文件。
+浏览器会用 `localStorage` 缓存 Base URL、Cookie、用户名、密码和 Path，刷新页面后会自动回填，避免重复输入。浏览器只访问本地 `/api/proxy/*`、`/api/captcha/solve` 和 `/api/login/zfcaptcha`。本地 Node 代理再携带 Cookie 请求学校系统，以避开浏览器禁止前端脚本设置跨域原始 Cookie 的限制。缓存只保留在本地浏览器中，不会写入项目文件；请勿在共享设备上保存账号信息。

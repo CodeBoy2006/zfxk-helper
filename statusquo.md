@@ -123,3 +123,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** Documentation-only change; no SDK or Web runtime behavior changed.
+
+## [2026-06-29 19:03] Web Session Cache
+- **Changes:** Cached Web frontend Base URL, Cookie, username, password, and entry Path in browser `localStorage`, restored them on page load, and documented the local persistence behavior.
+- **Status:** Completed
+- **Next Steps:** Avoid using the Web frontend on shared devices when credentials are cached.
+- **Context:** Persistence is browser-local only and gracefully no-ops if `localStorage` is unavailable.

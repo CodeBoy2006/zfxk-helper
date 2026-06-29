@@ -36,6 +36,14 @@ const elements = {
 
 const WEEKDAYS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
 const PERIODS = Array.from({ length: 12 }, (_, index) => index + 1);
+const SESSION_STORAGE_KEY = 'zfxk.web.session.v1';
+const SESSION_CACHE_FIELDS = [
+  ['baseUrl', elements.baseUrlInput],
+  ['cookie', elements.cookieInput],
+  ['pagePath', elements.pagePathInput],
+  ['username', elements.usernameInput],
+  ['password', elements.passwordInput]
+];
 
 const state = {
   client: null,
@@ -53,6 +61,13 @@ const state = {
   filtersCollapsed: false,
   busy: false
 };
+
+restoreSessionCache();
+
+for (const [, element] of SESSION_CACHE_FIELDS) {
+  element.addEventListener('input', persistSessionCache);
+  element.addEventListener('change', persistSessionCache);
+}
 
 elements.sessionForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -138,6 +153,7 @@ async function initialize() {
     if (!baseUrl) throw new Error('请填写教务系统 Base URL。');
     if (!cookie) throw new Error('请填写 Cookie。');
     if (!path) throw new Error('请填写选课入口 Path。');
+    persistSessionCache();
 
     const transport = new ProxyTransport({ baseUrl, cookie });
     state.client = createZfxkClient({
@@ -178,6 +194,7 @@ async function solveCaptchaCookie() {
     const result = await readResponse(response, '/api/captcha/solve');
     if (!result.cookie) throw new Error('验证码接口未返回 Cookie。');
     elements.cookieInput.value = result.cookie;
+    persistSessionCache();
     log('验证码 Cookie 已填入。');
   });
 }
@@ -190,6 +207,7 @@ async function loginWithCaptchaCookie() {
     if (!baseUrl) throw new Error('请填写教务系统 Base URL。');
     if (!username) throw new Error('请填写用户名。');
     if (!password) throw new Error('请填写密码。');
+    persistSessionCache();
 
     const response = await fetch('/api/login/zfcaptcha', {
       method: 'POST',
@@ -199,6 +217,7 @@ async function loginWithCaptchaCookie() {
     const result = await readResponse(response, '/api/login/zfcaptcha');
     if (!result.cookie) throw new Error('登录接口未返回 Cookie。');
     elements.cookieInput.value = result.cookie;
+    persistSessionCache();
     log(`登录 Cookie 已填入，验证码尝试 ${result.attempts || 1} 次。`);
   });
 }
@@ -846,6 +865,38 @@ function log(message) {
   const item = document.createElement('li');
   item.textContent = `${new Date().toLocaleTimeString()} ${message}`;
   elements.activityLog.prepend(item);
+}
+
+function restoreSessionCache() {
+  const cache = readSessionCache();
+  if (!cache) return;
+  for (const [key, element] of SESSION_CACHE_FIELDS) {
+    if (typeof cache[key] === 'string') element.value = cache[key];
+  }
+}
+
+function persistSessionCache() {
+  writeSessionCache(Object.fromEntries(SESSION_CACHE_FIELDS.map(([key, element]) => [
+    key,
+    key === 'password' ? element.value : element.value.trim()
+  ])));
+}
+
+function readSessionCache() {
+  try {
+    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionCache(cache) {
+  try {
+    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    // Some privacy modes disable localStorage; the form still works without persistence.
+  }
 }
 
 function empty(text) {

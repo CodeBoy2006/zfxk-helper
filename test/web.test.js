@@ -42,6 +42,10 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /\/api\/login\/zfcaptcha/);
   assert.match(app, /solveCaptchaCookie/);
   assert.match(app, /\/api\/captcha\/solve/);
+  assert.match(app, /SESSION_STORAGE_KEY/);
+  assert.match(app, /restoreSessionCache/);
+  assert.match(app, /persistSessionCache/);
+  assert.match(app, /localStorage/);
   assert.match(app, /switchCourseType/);
   assert.match(app, /renderCourseTypeTabs/);
   assert.match(app, /\/api\/proxy\/post/);
