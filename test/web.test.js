@@ -307,6 +307,8 @@ test('setup page owns saved login configuration for web pages', async () => {
 
   assert.match(html, /<body[^>]*data-page="setup"/);
   assert.match(html, /初始化配置/);
+  assert.doesNotMatch(html, /setup-hero/);
+  assert.doesNotMatch(html, /setup-status-grid/);
   assert.match(html, /id="setupForm"/);
   assert.match(html, /id="setupBaseUrlInput"/);
   assert.match(html, /id="setupUsernameInput"/);
@@ -328,7 +330,8 @@ test('setup page owns saved login configuration for web pages', async () => {
   assert.match(sessionConfig, /window\.location\.replace\(setupUrl\(nextPath\)\)/);
   assert.match(css, /setup-shell/);
   assert.match(css, /setup-panel/);
-  assert.match(css, /setup-status-grid/);
+  assert.doesNotMatch(css, /setup-status-grid/);
+  assert.doesNotMatch(css, /setup-hero/);
   assert.match(server, /url\.pathname === '\/setup'/);
   assert.match(server, /web\/setup\.html/);
 });

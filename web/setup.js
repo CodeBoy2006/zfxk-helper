@@ -4,7 +4,6 @@ import {
   normalizeSessionConfig,
   readSessionConfig,
   sanitizeNextPath,
-  sessionHost,
   writeSessionConfig
 } from './session-config.js';
 
@@ -19,9 +18,6 @@ const elements = {
   solveCaptchaBtn: document.querySelector('#setupSolveCaptchaBtn'),
   submitBtn: document.querySelector('#setupSubmitBtn'),
   message: document.querySelector('#setupMessage'),
-  basePreview: document.querySelector('#setupBasePreview'),
-  cookiePreview: document.querySelector('#setupCookiePreview'),
-  nextPreview: document.querySelector('#setupNextPreview'),
   returnLink: document.querySelector('#setupReturnLink')
 };
 
@@ -125,9 +121,6 @@ function formConfig() {
 
 function renderPreview() {
   const config = formConfig();
-  elements.basePreview.textContent = config.baseUrl ? sessionHost(config) : '待填写';
-  elements.cookiePreview.textContent = config.cookie ? '已填写' : '未保存';
-  elements.nextPreview.textContent = nextPath === '/auto-selection' ? '自动选课页面' : '主页面';
   elements.submitBtn.textContent = hasSavedSessionConfig(config) ? '保存并继续' : '保存配置';
 }
 

@@ -626,99 +626,21 @@ body[data-page="setup"] {
 
 .setup-shell {
   display: grid;
-  grid-template-columns: minmax(300px, 0.78fr) minmax(420px, 1fr);
-  gap: 22px;
-  width: min(1120px, calc(100vw - 28px));
+  grid-template-columns: minmax(0, 680px);
+  justify-content: center;
+  width: min(720px, calc(100vw - 28px));
   min-height: 100vh;
   margin: 0 auto;
   padding: 34px 0;
   align-items: center;
 }
 
-.setup-hero,
 .setup-panel {
   min-width: 0;
   border: 1px solid #dbe5f1;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 18px 50px rgba(31, 48, 78, 0.1);
-}
-
-.setup-hero {
-  display: grid;
-  align-content: center;
-  gap: 18px;
-  min-height: 560px;
-  padding: 34px;
-}
-
-.setup-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.setup-brand span {
-  display: inline-grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 8px;
-  background: #123d67;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.setup-brand strong {
-  color: #1d2a42;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.setup-hero h1 {
-  max-width: 520px;
-  margin: 0;
-  color: #132239;
-  font-size: 36px;
-  line-height: 1.15;
-  letter-spacing: 0;
-}
-
-.setup-hero p {
-  max-width: 520px;
-  margin: 0;
-  color: #52627a;
-  font-size: 16px;
-  line-height: 1.7;
-}
-
-.setup-status-grid {
-  display: grid;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.setup-status-grid div {
-  display: grid;
-  gap: 4px;
-  border: 1px solid #e0e8f2;
-  border-radius: 8px;
-  padding: 12px;
-  background: #fff;
-}
-
-.setup-status-grid span {
-  color: #73829a;
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.setup-status-grid strong {
-  min-width: 0;
-  color: #1e2a42;
-  font-size: 15px;
-  overflow-wrap: anywhere;
 }
 
 .setup-panel {
@@ -2055,10 +1977,6 @@ body.auto-chrome-compact .auto-page-title {
     align-items: stretch;
   }
 
-  .setup-hero {
-    min-height: auto;
-  }
-
   .catalog-pane,
   .detail-pane,
   .chosen-pane,
@@ -2132,13 +2050,8 @@ body.auto-chrome-compact .auto-page-title {
     padding: 8px 0;
   }
 
-  .setup-hero,
   .setup-panel {
     padding: 18px;
-  }
-
-  .setup-hero h1 {
-    font-size: 28px;
   }
 
   .auto-page-shell {

@@ -351,3 +351,9 @@
 - **Status:** Completed
 - **Next Steps:** Use `/setup` to save real school configuration before using the main or auto-selection pages.
 - **Context:** `npm test` passes; local smoke checks used `http://127.0.0.1:4176/` because ports 4173-4175 were already occupied.
+
+## [2026-06-30 00:21] Remove Setup Intro Panel
+- **Changes:** Removed the setup page left-side intro/status panel, deleted its preview wiring and unused styles, and updated web tests to enforce the streamlined single-panel setup layout.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; `/setup` now renders only the login configuration panel.
