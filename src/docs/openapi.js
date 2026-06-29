@@ -20,13 +20,13 @@ export function buildOpenApiDocument(options = {}) {
   return {
     openapi: '3.0.3',
     info: {
-      title: 'zfxk SDK API',
+      title: '正方选课助手 SDK API',
       version,
-      description: 'Documented SDK-facing operations for the ZFXK/ZZXK HTTP workflow client.'
+      description: 'Documented SDK-facing operations for 正方选课助手 and the ZFXK/ZZXK HTTP workflow client.'
     },
     servers: [
       {
-        url: 'sdk://zfxk',
+        url: 'sdk://zhengfang-selection-assistant',
         description: 'Logical SDK surface. Calls are executed through an authenticated school session.'
       }
     ],

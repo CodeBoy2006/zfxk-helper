@@ -560,7 +560,7 @@ function clearRenderedEvents() {
 }
 
 function exportAutoSelectionDraft() {
-  downloadJson(`zfxk-auto-selection-${filenameTimestamp()}.json`, {
+  downloadJson(`zhengfang-selection-assistant-auto-selection-${filenameTimestamp()}.json`, {
     version: 1,
     kind: 'zfxk.autoSelectionTask',
     ...buildAutoSelectionPayload(false)

@@ -435,7 +435,7 @@ async function exportCourses() {
       getTeachingClasses: (courseId) => state.client.catalog.getTeachingClasses(courseId)
     });
     const payload = buildCourseExport(courses, { metadata: currentExportMetadata() });
-    downloadJson(`zfxk-courses-${filenameTimestamp()}.json`, payload);
+    downloadJson(`zhengfang-selection-assistant-courses-${filenameTimestamp()}.json`, payload);
     const classCount = courses.reduce((sum, course) => sum + (course.teachingClasses?.length ?? 0), 0);
     log(`已导出 ${courses.length} 条课程信息和 ${classCount} 个教学班详情。`);
   });
@@ -455,7 +455,7 @@ async function exportSelectedCourses() {
       getTeachingClasses: (courseId) => state.client.catalog.getTeachingClasses(courseId)
     });
     const payload = buildSelectedCoursesExport(snapshot, { metadata: currentExportMetadata() });
-    downloadJson(`zfxk-selected-${filenameTimestamp()}.json`, payload);
+    downloadJson(`zhengfang-selection-assistant-selected-${filenameTimestamp()}.json`, payload);
     log(`已导出 ${snapshot.selectedClasses.length} 个已选教学班。`);
   });
 }

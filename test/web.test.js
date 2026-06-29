@@ -18,6 +18,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   const css = await readFile(new URL('../web/styles.css', import.meta.url), 'utf8');
   const server = await readFile(new URL('../scripts/serve-web.js', import.meta.url), 'utf8');
 
+  assert.match(html, /<title>正方选课助手<\/title>/);
+  assert.match(html, /<h1>正方选课助手<\/h1>/);
   assert.doesNotMatch(html, /id="sessionForm"/);
   assert.doesNotMatch(html, /id="cookieInput"/);
   assert.doesNotMatch(html, /id="usernameInput"/);
@@ -60,6 +62,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(html, /id="autoImportConfigInput"/);
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(server, /AutoSelectionTaskManager/);
+  assert.match(server, /正方选课助手 web frontend/);
   assert.match(server, /\/api\/auto-selection\/tasks/);
   assert.match(server, /\/api\/auto-selection\/config\/validate/);
   assert.match(server, /\/api\/auto-selection\/config\/import/);
@@ -75,6 +78,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /buildSelectedCoursesExport/);
   assert.match(app, /buildCoursesForExport/);
   assert.match(app, /downloadJson/);
+  assert.match(app, /zhengfang-selection-assistant-courses/);
+  assert.match(app, /zhengfang-selection-assistant-selected/);
   assert.match(exportBuilders, /withRetry/);
   assert.match(exportBuilders, /sourceCourseRowCount/);
   assert.match(app, /parseCourseTypeOptions/);
@@ -198,6 +203,7 @@ test('standalone auto-selection page implements the reference workflow surface',
   const server = await readFile(new URL('../scripts/serve-web.js', import.meta.url), 'utf8');
 
   assert.match(html, /<body[^>]*data-page="auto-selection"/);
+  assert.match(html, /正方选课助手 · 自动选课控制台/);
   assert.match(html, /自动选课控制台/);
   assert.match(html, /id="autoReturnHomeBtn"/);
   assert.match(html, /href="\/"/);
@@ -299,6 +305,7 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /cancelCurrentAutoTask/);
   assert.match(app, /exportAutoSelectionDraft/);
   assert.match(app, /importAutoSelectionDraft/);
+  assert.match(app, /zhengfang-selection-assistant-auto-selection/);
   assert.match(app, /DEFAULT_GROUP_NAME = '默认'/);
   assert.match(app, /deleteActiveGroup/);
   assert.match(app, /\/api\/auto-selection\/tasks\/.+\/pause/);
@@ -334,6 +341,7 @@ test('setup page owns saved login configuration for web pages', async () => {
   const server = await readFile(new URL('../scripts/serve-web.js', import.meta.url), 'utf8');
 
   assert.match(html, /<body[^>]*data-page="setup"/);
+  assert.match(html, /正方选课助手 · 初始化配置/);
   assert.match(html, /初始化配置/);
   assert.doesNotMatch(html, /setup-hero/);
   assert.doesNotMatch(html, /setup-status-grid/);

@@ -399,3 +399,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; starting an auto-selection task no longer depends on a separate UI switch.
+
+## [2026-06-30 00:56] Rename Product Branding
+- **Changes:** Renamed user-facing project branding from `zfxk 选课工作台` / `zfxk SDK` to `正方选课助手` across web titles, README, generated API docs, OpenAPI metadata, console output, export filenames, package description, and tests.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm run docs` regenerated OpenAPI and TypeDoc output; `npm test` passes. Technical identifiers such as npm package name, imports, localStorage keys, and export config kind remain `zfxk` for compatibility.

@@ -12,7 +12,7 @@ test('buildOpenApiDocument exposes SDK schemas and workflow-oriented paths', () 
   const document = buildOpenApiDocument({ version: '9.9.9' });
 
   assert.equal(document.openapi, '3.0.3');
-  assert.equal(document.info.title, 'zfxk SDK API');
+  assert.equal(document.info.title, '正方选课助手 SDK API');
   assert.equal(document.info.version, '9.9.9');
   assert.equal(document.components.schemas.Course.type, 'object');
   assert.equal(document.components.schemas.TeachingClass.required.includes('submitClassId'), true);
@@ -54,6 +54,7 @@ test('typedoc config targets public declarations and docs/api output', () => {
   assert.equal(typedocConfig.readme, 'README.md');
   assert.equal(typedocConfig.excludePrivate, true);
   assert.equal(typedocConfig.excludeInternal, true);
+  assert.equal(typedocConfig.name, '正方选课助手 SDK');
 });
 
 test('auto selection docs and declarations are exported', async () => {

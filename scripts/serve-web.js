@@ -255,5 +255,5 @@ function writeJson(response, status, payload) {
 }
 
 server.listen(port, host, () => {
-  console.log(`zfxk web frontend: http://${host}:${port}/`);
+  console.log(`正方选课助手 web frontend: http://${host}:${port}/`);
 });

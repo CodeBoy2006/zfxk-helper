@@ -1,7 +1,7 @@
 {
   "name": "zfxk",
   "version": "0.1.0",
-  "description": "HTTP workflow SDK for ZFXK/ZZXK course selection sessions.",
+  "description": "正方选课助手 SDK for ZFXK/ZZXK course selection sessions.",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
