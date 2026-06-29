@@ -1,6 +1,7 @@
 export const AUTO_SELECTION_CONFIG_KIND = 'zfxk.autoSelectionTask';
 export const AUTO_SELECTION_CONFIG_VERSION = 1;
 export const DEFAULT_INTERVAL_MS = 1500;
+export const DEFAULT_GROUP_STRATEGY = 'priority';
 
 export function normalizeAutoSelectionConfig(input = {}, options = {}) {
   const errors = [];
@@ -62,6 +63,7 @@ export function exportAutoSelectionConfig(config) {
     groups: normalized.groups.map((group) => ({
       groupId: group.groupId,
       name: group.name,
+      strategy: group.strategy,
       targets: group.targets.map((target) => {
         const {
           status,
@@ -105,13 +107,17 @@ export function byPriorityDescThenCreatedOrder(a, b) {
 }
 
 function normalizeGroup(group = {}, groupIndex = 0) {
+  const strategy = normalizeGroupStrategy(group.strategy);
   const targets = asArray(group.targets)
     .map((target, targetIndex) => normalizeTarget(target, targetIndex))
-    .sort(byPriorityDescThenCreatedOrder);
+    .sort((a, b) => strategy === 'equivalent'
+      ? a.createdOrder - b.createdOrder
+      : byPriorityDescThenCreatedOrder(a, b));
 
   return {
     groupId: group.groupId || `group_${groupIndex + 1}`,
     name: String(group.name || ''),
+    strategy,
     state: group.state || 'WATCHING',
     currentPlacement: null,
     isTopTargetSelected: false,
@@ -119,6 +125,12 @@ function normalizeGroup(group = {}, groupIndex = 0) {
     lastMessage: '',
     targets
   };
+}
+
+function normalizeGroupStrategy(value) {
+  const text = String(value || '').trim().toLowerCase();
+  if (text === 'equivalent' || text === 'equal' || text.includes('等价')) return 'equivalent';
+  return DEFAULT_GROUP_STRATEGY;
 }
 
 function normalizeTarget(target = {}, createdOrder = 0) {

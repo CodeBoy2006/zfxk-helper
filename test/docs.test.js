@@ -26,6 +26,7 @@ test('buildOpenApiDocument exposes SDK schemas and workflow-oriented paths', () 
   assert.equal(document.paths['/sdk/auto-selection/config/import'].post.operationId, 'importAutoSelectionConfig');
   assert.equal(document.paths['/sdk/auto-selection/tasks/{id}/pause'].post.operationId, 'pauseAutoSelectionTask');
   assert.equal(document.components.schemas.AutoSelectionTaskConfig.required.includes('groups'), true);
+  assert.equal(document.components.schemas.AutoSelectionGroupConfig.properties.strategy.type, 'string');
   assert.equal(document.components.schemas.AutoSelectionTarget.required.includes('priority'), true);
 });
 

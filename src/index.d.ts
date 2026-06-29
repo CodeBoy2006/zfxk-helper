@@ -288,6 +288,7 @@ export declare class ZfxkClient {
 
 export type AutoSelectionTaskStatus = 'queued' | 'running' | 'auth-refreshing' | 'paused' | 'succeeded' | 'failed' | 'cancelled';
 export type AutoSelectionGroupStatus = 'WATCHING' | 'ATTEMPTING' | 'HOLDING' | 'PRECHECK_UPGRADE' | 'DROP_BACKUP' | 'CHOOSE_TARGET' | 'RECOVER_BACKUP' | 'SUCCEEDED' | 'PAUSED' | 'FAILED';
+export type AutoSelectionGroupStrategy = 'priority' | 'equivalent';
 export type AutoSelectionTargetStatus = 'watching' | 'selected' | 'skipped' | 'failed';
 
 export interface AutoSelectionTarget {
@@ -310,6 +311,7 @@ export interface AutoSelectionTarget {
 export interface AutoSelectionGroupConfig {
   groupId?: string;
   name: string;
+  strategy?: AutoSelectionGroupStrategy;
   state?: AutoSelectionGroupStatus;
   currentPlacement?: AutoSelectionTarget | null;
   isTopTargetSelected?: boolean;

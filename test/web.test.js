@@ -197,6 +197,9 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(html, /id="autoGroupTabs"/);
   assert.match(html, /id="autoGroupNameInput"/);
   assert.match(html, /id="autoGroupStrategyInput"/);
+  assert.match(html, /<select id="autoGroupStrategyInput"/);
+  assert.match(html, /value="priority">优先级模式/);
+  assert.match(html, /value="equivalent">等价模式/);
   assert.match(html, /id="autoClearGroupBtn"/);
   assert.match(html, /id="autoTargetList"/);
   assert.match(html, /id="autoTeachingClassList"/);
@@ -228,6 +231,8 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /renderTeachingClasses/);
   assert.match(app, /addClassToAutoSelection/);
   assert.match(app, /reorderTarget/);
+  assert.match(app, /normalizeDraftGroupStrategy/);
+  assert.match(app, /strategy: normalizeDraftGroupStrategy/);
   assert.match(app, /startAutoSelectionTask/);
   assert.match(app, /pauseCurrentAutoTask/);
   assert.match(app, /resumeCurrentAutoTask/);

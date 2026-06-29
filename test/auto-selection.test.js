@@ -38,6 +38,7 @@ test('auto-selection config normalizes defaults, target ids, and priority order'
   assert.equal(config.intervalMs, 1500);
   assert.equal(config.maxAttempts, null);
   assert.equal(config.deadlineAt, null);
+  assert.equal(config.groups[0].strategy, 'priority');
   assert.equal(config.groups[0].targets[0].classId, 'HIGH');
   assert.equal(config.groups[0].targets[0].targetId, 'KC1:HIGH:1');
   assert.equal(config.groups[0].targets[0].allowAutoDrop, false);
@@ -54,13 +55,14 @@ test('auto-selection export and import omit password and cookie but keep runnabl
     password: 'secret',
     cookie: 'JSESSIONID=secret',
     pagePath: '/xsxk/index.html',
-    groups: [{ name: '体育课', targets: [{ courseId: 'KC1', classId: 'A', priority: 1 }] }]
+    groups: [{ name: '体育课', strategy: 'equivalent', targets: [{ courseId: 'KC1', classId: 'A', priority: 1 }] }]
   });
 
   const exported = exportAutoSelectionConfig(normalized);
   assert.equal(exported.kind, 'zfxk.autoSelectionTask');
   assert.equal(exported.version, 1);
   assert.equal(exported.username, '2023123456');
+  assert.equal(exported.groups[0].strategy, 'equivalent');
   assert.equal('password' in exported, false);
   assert.equal('cookie' in exported, false);
 
@@ -68,6 +70,7 @@ test('auto-selection export and import omit password and cookie but keep runnabl
   assert.equal(imported.valid, true);
   assert.equal(imported.config.password, undefined);
   assert.equal(imported.config.cookie, undefined);
+  assert.equal(imported.config.groups[0].strategy, 'equivalent');
   assert.equal(imported.config.groups[0].targets[0].courseId, 'KC1');
 });
 
@@ -195,6 +198,40 @@ test('auto-selection group planner refreshes only target course ids and picks hi
   assert.equal(action.target.classId, 'LOW');
   assert.equal(config.groups[0].targets[0].lastObservedRemaining, 0);
   assert.equal(config.groups[0].targets[1].lastObservedRemaining, 25);
+});
+
+test('auto-selection equivalent groups treat any selected target as satisfied', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: '体育课',
+      strategy: 'equivalent',
+      targets: [
+        { courseId: 'KC1', classId: 'A', priority: 100 },
+        { courseId: 'KC1', classId: 'B', priority: 10 }
+      ]
+    }]
+  });
+  const group = config.groups[0];
+
+  reconcileGroups(config.groups, makeSnapshot([{ courseId: 'KC1', classId: 'B', submitClassId: 'B' }]));
+  assert.equal(group.currentPlacement.targetId, group.targets[1].targetId);
+  assert.equal(group.state, 'SUCCEEDED');
+  assert.equal(group.isTopTargetSelected, true);
+
+  const task = {
+    client: {
+      catalog: {
+        getTeachingClasses: async (courseId) => [
+          { courseId, classId: 'A', submitClassId: 'A', selectedCount: 0, capacity: 30, flags: { canSelect: true, full: false } },
+          { courseId, classId: 'B', submitClassId: 'B', selectedCount: 0, capacity: 30, flags: { canSelect: true, full: false } }
+        ]
+      }
+    }
+  };
+  const action = await planGroupAction(task, group);
+  assert.equal(action.type, 'none');
 });
 
 test('auto-selection choose does a second snapshot before treating selected as confirmed', async () => {

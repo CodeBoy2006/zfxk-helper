@@ -182,6 +182,7 @@ export class AutoSelectionTaskRunner {
       groups: this.config.groups.map((group) => ({
         groupId: group.groupId,
         name: group.name,
+        strategy: group.strategy,
         state: group.state,
         currentTargetId: group.currentPlacement?.targetId ?? null,
         currentPriority: group.currentPlacement?.priority ?? null,

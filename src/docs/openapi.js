@@ -507,6 +507,7 @@ const schemas = {
   AutoSelectionGroupConfig: object({
     groupId: string(),
     name: string(),
+    strategy: string(),
     state: string(),
     pauseScope: string(),
     targets: arrayOf(ref('AutoSelectionTarget'))

@@ -123,7 +123,10 @@
               </label>
               <label>
                 组策略
-                <input id="autoGroupStrategyInput" value="按优先级从高到低执行，独立维护占位" autocomplete="off">
+                <select id="autoGroupStrategyInput">
+                  <option value="priority">优先级模式</option>
+                  <option value="equivalent">等价模式</option>
+                </select>
               </label>
               <button id="autoClearGroupBtn" type="button" class="danger secondary">清空占位</button>
             </div>

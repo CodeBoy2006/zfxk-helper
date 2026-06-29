@@ -8,6 +8,7 @@ const DEFAULT_PAGE_PATH = '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512';
 const MAIN_SESSION_STORAGE_KEY = 'zfxk.web.session.v1';
 const AUTO_SESSION_STORAGE_KEY = 'zfxk.autoSelection.session.v1';
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
+const DEFAULT_GROUP_STRATEGY = 'priority';
 const elements = {
   autoEnabledSwitch: document.querySelector('#autoEnabledSwitch'),
   autoHelpBtn: document.querySelector('#autoHelpBtn'),
@@ -61,7 +62,7 @@ const state = {
   classes: [],
   selectedCourseKey: '',
   draft: {
-    groups: [{ name: '体育课', strategy: '按优先级从高到低执行，独立维护占位', targets: [] }],
+    groups: [defaultGroup('体育课')],
     activeGroupIndex: 0
   },
   tasks: [],
@@ -103,7 +104,7 @@ function bindEvents() {
   elements.autoAddGroupBtn.addEventListener('click', () => addAutoSelectionGroup());
   elements.autoGroupTabs.addEventListener('click', (event) => selectAutoGroup(event));
   elements.autoGroupNameInput.addEventListener('input', () => updateActiveGroupInfo());
-  elements.autoGroupStrategyInput.addEventListener('input', () => updateActiveGroupInfo());
+  elements.autoGroupStrategyInput.addEventListener('change', () => updateActiveGroupInfo());
   elements.autoClearGroupBtn.addEventListener('click', () => clearActiveGroupTargets());
   elements.autoTargetList.addEventListener('click', (event) => handleAutoTargetAction(event));
   elements.autoTargetList.addEventListener('input', (event) => updateAutoTargetField(event));
@@ -299,7 +300,7 @@ function renderTeachingClasses() {
 
 function addAutoSelectionGroup() {
   const next = state.draft.groups.length + 1;
-  state.draft.groups.push({ name: `选课组 ${next}`, strategy: '按优先级从高到低执行，独立维护占位', targets: [] });
+  state.draft.groups.push(defaultGroup(`选课组 ${next}`));
   state.draft.activeGroupIndex = next - 1;
   persistDraft();
   renderAutoSelectionDraft();
@@ -315,7 +316,7 @@ function selectAutoGroup(event) {
 function updateActiveGroupInfo() {
   const group = activeGroup();
   group.name = elements.autoGroupNameInput.value.trim() || group.name;
-  group.strategy = elements.autoGroupStrategyInput.value.trim();
+  group.strategy = normalizeDraftGroupStrategy(elements.autoGroupStrategyInput.value);
   persistDraft();
   renderGroupTabs();
 }
@@ -390,7 +391,7 @@ function renderAutoSelectionDraft() {
   renderGroupTabs();
   const group = activeGroup();
   elements.autoGroupNameInput.value = group.name;
-  elements.autoGroupStrategyInput.value = group.strategy || '按优先级从高到低执行，独立维护占位';
+  elements.autoGroupStrategyInput.value = normalizeDraftGroupStrategy(group.strategy);
 
   if (!group.targets.length) {
     elements.autoTargetList.replaceChildren(empty('从教学班列表加入目标'));
@@ -726,9 +727,9 @@ function applyImportedConfig(config) {
   state.draft = {
     groups: config.groups?.length ? config.groups.map((group) => ({
       name: group.name,
-      strategy: '按优先级从高到低执行，独立维护占位',
+      strategy: normalizeDraftGroupStrategy(group.strategy),
       targets: group.targets ?? []
-    })) : [{ name: '体育课', strategy: '按优先级从高到低执行，独立维护占位', targets: [] }],
+    })) : [defaultGroup('体育课')],
     activeGroupIndex: 0
   };
   persistSession();
@@ -738,15 +739,34 @@ function applyImportedConfig(config) {
 
 function activeGroup() {
   if (!state.draft.groups.length) {
-    state.draft.groups.push({ name: '体育课', strategy: '按优先级从高到低执行，独立维护占位', targets: [] });
+    state.draft.groups.push(defaultGroup('体育课'));
     state.draft.activeGroupIndex = 0;
   }
   return state.draft.groups[state.draft.activeGroupIndex] ?? state.draft.groups[0];
 }
 
+function defaultGroup(name) {
+  return { name, strategy: DEFAULT_GROUP_STRATEGY, targets: [] };
+}
+
+function normalizeDraftGroup(group) {
+  return {
+    name: group.name || '选课组',
+    strategy: normalizeDraftGroupStrategy(group.strategy),
+    targets: Array.isArray(group.targets) ? group.targets : []
+  };
+}
+
+function normalizeDraftGroupStrategy(value) {
+  const text = String(value || '').trim().toLowerCase();
+  if (text === 'equivalent' || text === 'equal' || text.includes('等价')) return 'equivalent';
+  return DEFAULT_GROUP_STRATEGY;
+}
+
 function sanitizeGroups(groups) {
   return groups.map((group) => ({
     name: group.name,
+    strategy: normalizeDraftGroupStrategy(group.strategy),
     targets: group.targets.map((target) => ({
       courseId: target.courseId,
       classId: target.classId,
@@ -865,7 +885,7 @@ function restoreDraft() {
     const saved = JSON.parse(localStorage.getItem(AUTO_SELECTION_DRAFT_STORAGE_KEY) || '{}');
     if (Array.isArray(saved.groups) && saved.groups.length) {
       state.draft = {
-        groups: saved.groups,
+        groups: saved.groups.map(normalizeDraftGroup),
         activeGroupIndex: Math.max(0, Math.min(Number(saved.activeGroupIndex) || 0, saved.groups.length - 1))
       };
     }

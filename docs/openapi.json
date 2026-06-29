@@ -1524,6 +1524,9 @@
           "name": {
             "type": "string"
           },
+          "strategy": {
+            "type": "string"
+          },
           "state": {
             "type": "string"
           },

@@ -315,3 +315,9 @@
 - **Status:** Completed
 - **Next Steps:** Open the standalone automatic-selection page from the main workspace after filling the main session form.
 - **Context:** The inherited password is only copied into the current page form; the standalone auto-selection session cache still does not save passwords.
+
+## [2026-06-29 23:13] Auto Selection Group Strategy Modes
+- **Changes:** Replaced the free-text group strategy field with a priority/equivalent mode dropdown, wired the strategy into auto-selection group config and snapshots, updated equivalent-mode scheduling semantics, refreshed docs, and added focused tests.
+- **Status:** Completed
+- **Next Steps:** Use `优先级模式` when lower-priority targets are backups, and `等价模式` when any target in the group is acceptable.
+- **Context:** Equivalent groups treat any selected active target as satisfying the group and do not attempt priority upgrades within that group.

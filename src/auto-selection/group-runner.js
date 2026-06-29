@@ -30,6 +30,9 @@ export function reconcileGroups(groups = [], snapshot) {
 export function isGroupSucceeded(group) {
   const activeTargets = group.targets.filter((target) => target.status !== 'skipped');
   if (!activeTargets.length || !group.currentPlacement) return false;
+  if (group.strategy === 'equivalent') {
+    return activeTargets.some((target) => sameTarget(group.currentPlacement, target));
+  }
   const [topTarget] = activeTargets.sort(byPriorityDescThenCreatedOrder);
   return sameTarget(group.currentPlacement, topTarget);
 }
@@ -38,7 +41,7 @@ export async function planGroupAction(task, group) {
   const observed = await observeGroupTargets(task, group);
   const available = observed
     .filter(({ target, teachingClass }) => target.status !== 'skipped' && isTeachingClassAvailable(teachingClass))
-    .sort((a, b) => byPriorityDescThenCreatedOrder(a.target, b.target));
+    .sort((a, b) => compareTargetsForGroup(group, a.target, b.target));
 
   if (!available.length) return { type: 'none' };
 
@@ -46,6 +49,7 @@ export async function planGroupAction(task, group) {
   if (!group.currentPlacement) {
     return { type: 'choose', target: next.target, teachingClass: next.teachingClass };
   }
+  if (group.strategy === 'equivalent') return { type: 'none' };
   if (sameTarget(group.currentPlacement, next.target)) return { type: 'none' };
   if (next.target.priority > group.currentPlacement.priority) {
     return {
@@ -56,6 +60,11 @@ export async function planGroupAction(task, group) {
     };
   }
   return { type: 'none' };
+}
+
+function compareTargetsForGroup(group, a, b) {
+  if (group.strategy === 'equivalent') return a.createdOrder - b.createdOrder;
+  return byPriorityDescThenCreatedOrder(a, b);
 }
 
 export async function observeGroupTargets(task, group) {
