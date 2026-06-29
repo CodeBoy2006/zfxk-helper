@@ -12,11 +12,11 @@ import {
 
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const DEFAULT_GROUP_STRATEGY = 'priority';
+const DEFAULT_GROUP_NAME = '默认';
 const elements = {
   autoEnabledSwitch: document.querySelector('#autoEnabledSwitch'),
   autoHelpBtn: document.querySelector('#autoHelpBtn'),
   autoHelpDialog: document.querySelector('#autoHelpDialog'),
-  autoCollapseBtn: document.querySelector('#autoCollapseBtn'),
   autoSessionSummary: document.querySelector('#autoSessionSummary'),
   autoSessionDetail: document.querySelector('#autoSessionDetail'),
   autoConfigLink: document.querySelector('#autoConfigLink'),
@@ -33,7 +33,7 @@ const elements = {
   autoGroupTabs: document.querySelector('#autoGroupTabs'),
   autoGroupNameInput: document.querySelector('#autoGroupNameInput'),
   autoGroupStrategyInput: document.querySelector('#autoGroupStrategyInput'),
-  autoClearGroupBtn: document.querySelector('#autoClearGroupBtn'),
+  autoDeleteGroupBtn: document.querySelector('#autoDeleteGroupBtn'),
   autoTargetList: document.querySelector('#autoTargetList'),
   autoIdTargetForm: document.querySelector('#autoIdTargetForm'),
   autoCourseIdInput: document.querySelector('#autoCourseIdInput'),
@@ -56,7 +56,7 @@ const state = {
   courseTypes: [],
   activeCourseTypeKey: '',
   draft: {
-    groups: [defaultGroup('体育课')],
+    groups: [defaultGroup(DEFAULT_GROUP_NAME)],
     activeGroupIndex: 0
   },
   tasks: [],
@@ -85,12 +85,11 @@ function bindEvents() {
   });
   elements.autoEnabledSwitch.addEventListener('change', () => renderAutoTaskStatus());
   elements.autoHelpBtn.addEventListener('click', () => showHelpDialog());
-  elements.autoCollapseBtn.addEventListener('click', () => toggleChromeCompactMode());
   elements.autoAddGroupBtn.addEventListener('click', () => addAutoSelectionGroup());
   elements.autoGroupTabs.addEventListener('click', (event) => selectAutoGroup(event));
   elements.autoGroupNameInput.addEventListener('input', () => updateActiveGroupInfo());
   elements.autoGroupStrategyInput.addEventListener('change', () => updateActiveGroupInfo());
-  elements.autoClearGroupBtn.addEventListener('click', () => clearActiveGroupTargets());
+  elements.autoDeleteGroupBtn.addEventListener('click', () => deleteActiveGroup());
   elements.autoTargetList.addEventListener('click', (event) => handleAutoTargetAction(event));
   elements.autoTargetList.addEventListener('input', (event) => updateAutoTargetField(event));
   elements.autoTargetList.addEventListener('dragstart', (event) => handleTargetDragStart(event));
@@ -182,14 +181,20 @@ function updateActiveGroupInfo() {
   renderGroupTabs();
 }
 
-function clearActiveGroupTargets() {
+function deleteActiveGroup() {
   const group = activeGroup();
-  if (!group.targets.length) return;
-  if (!window.confirm(`清空 ${group.name} 的全部目标？`)) return;
-  group.targets = [];
+  if (!window.confirm(`删除选课组「${group.name}」？组内目标也会一并删除。`)) return;
+  if (state.draft.groups.length <= 1) {
+    state.draft.groups = [defaultGroup(DEFAULT_GROUP_NAME)];
+    state.draft.activeGroupIndex = 0;
+  } else {
+    const deletedIndex = state.draft.activeGroupIndex;
+    state.draft.groups.splice(deletedIndex, 1);
+    state.draft.activeGroupIndex = Math.max(0, Math.min(deletedIndex, state.draft.groups.length - 1));
+  }
   persistDraft();
   renderAutoSelectionDraft();
-  log(`${group.name} 已清空。`);
+  log(`已删除选课组：${group.name}`);
 }
 
 async function addIdTargetToAutoSelection() {
@@ -615,7 +620,7 @@ function applyImportedConfig(config) {
       name: group.name,
       strategy: normalizeDraftGroupStrategy(group.strategy),
       targets: group.targets ?? []
-    })) : [defaultGroup('体育课')],
+    })) : [defaultGroup(DEFAULT_GROUP_NAME)],
     activeGroupIndex: 0
   };
   persistDraft();
@@ -624,7 +629,7 @@ function applyImportedConfig(config) {
 
 function activeGroup() {
   if (!state.draft.groups.length) {
-    state.draft.groups.push(defaultGroup('体育课'));
+    state.draft.groups.push(defaultGroup(DEFAULT_GROUP_NAME));
     state.draft.activeGroupIndex = 0;
   }
   return state.draft.groups[state.draft.activeGroupIndex] ?? state.draft.groups[0];
@@ -636,7 +641,7 @@ function defaultGroup(name) {
 
 function normalizeDraftGroup(group) {
   return {
-    name: group.name || '选课组',
+    name: group.name || DEFAULT_GROUP_NAME,
     strategy: normalizeDraftGroupStrategy(group.strategy),
     targets: Array.isArray(group.targets) ? group.targets : []
   };
@@ -699,7 +704,7 @@ async function runTask(label, operation) {
 
 function setButtonsDisabled(disabled) {
   document.querySelectorAll('button').forEach((button) => {
-    if (button.id === 'autoHelpBtn' || button.id === 'autoCollapseBtn') return;
+    if (button.id === 'autoHelpBtn') return;
     button.disabled = disabled;
   });
 }
@@ -721,11 +726,6 @@ function currentTask() {
 function showHelpDialog() {
   if (typeof elements.autoHelpDialog.showModal === 'function') elements.autoHelpDialog.showModal();
   else elements.autoHelpDialog.setAttribute('open', '');
-}
-
-function toggleChromeCompactMode() {
-  document.body.classList.toggle('auto-chrome-compact');
-  elements.autoCollapseBtn.textContent = document.body.classList.contains('auto-chrome-compact') ? '⌄' : '⌃';
 }
 
 function renderSessionOverview() {

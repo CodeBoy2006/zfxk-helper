@@ -216,7 +216,6 @@ textarea {
   gap: 8px;
 }
 
-.session-config-link,
 .setup-link-button {
   display: inline-grid;
   place-items: center;
@@ -765,8 +764,7 @@ body[data-page="setup"] {
 }
 
 .auto-page-tab,
-.auto-top-button,
-.auto-top-icon {
+.auto-top-button {
   min-height: 34px;
   border-color: #34445d;
   border-radius: 5px;
@@ -793,13 +791,6 @@ body[data-page="setup"] {
   min-width: 92px;
   padding: 0 12px;
   text-decoration: none;
-}
-
-.auto-top-icon {
-  width: 36px;
-  padding: 0;
-  font-size: 20px;
-  line-height: 1;
 }
 
 .auto-switch {
@@ -1187,10 +1178,6 @@ body[data-page="setup"] {
 .auto-help-dialog p {
   color: #4f617c;
   line-height: 1.65;
-}
-
-body.auto-chrome-compact .auto-page-title {
-  display: none;
 }
 
 .catalog-pane,

@@ -42,6 +42,7 @@ const WEEKDAYS = ['星期一', '星期二', '星期三', '星期四', '星期五
 const PERIODS = Array.from({ length: 12 }, (_, index) => index + 1);
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const DEFAULT_AUTO_GROUP_STRATEGY = 'priority';
+const DEFAULT_AUTO_GROUP_NAME = '默认';
 
 const state = {
   client: null,
@@ -689,7 +690,7 @@ function writeAutoSelectionDraft(draft) {
 function normalizeAutoSelectionDraft(draft) {
   const sourceGroups = Array.isArray(draft.groups) && draft.groups.length
     ? draft.groups
-    : [defaultAutoGroup('体育课')];
+    : [defaultAutoGroup(DEFAULT_AUTO_GROUP_NAME)];
   const groups = sourceGroups.map((group, index) => ({
     name: group.name || `选课组 ${index + 1}`,
     strategy: normalizeAutoGroupStrategy(group.strategy),

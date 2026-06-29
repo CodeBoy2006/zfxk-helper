@@ -357,3 +357,15 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; `/setup` now renders only the login configuration panel.
+
+## [2026-06-30 00:23] Deduplicate Main Config Link
+- **Changes:** Removed the duplicate `修改配置` link from the main session status panel, leaving the topbar `配置` button as the single entry to the setup page; updated CSS and tests.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; local smoke check confirms only `configLink` remains for `/setup?next=/`.
+
+## [2026-06-30 00:32] Auto Selection Control Cleanup
+- **Changes:** Restyled the auto-selection `修改配置` link as a secondary setup button, removed the topbar collapse arrow, changed new default group names to `默认`, and replaced `清空占位` with a delete-group action.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; deleting the only group resets the draft to a fresh `默认` group so the editor always has one active group.
