@@ -149,6 +149,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /meeting-location/);
   assert.match(css, /topbar-link-button/);
   assert.match(css, /auto-class-menu/);
+  assert.match(css, /\.class-card \.class-actions \.auto-class-button\s*\{[^}]*background:\s*#effaf5/s);
+  assert.match(css, /\.auto-class-menu\s*\{[^}]*max-height:\s*min\(240px,\s*48vh\)/s);
+  assert.match(css, /\.section-heading \.step-badge\s*\{[^}]*color:\s*#fff/s);
   assert.doesNotMatch(css, /auto-selection-workspace/);
   assert.match(css, /auto-config-pane/);
   assert.match(css, /auto-groups-pane/);
@@ -210,8 +213,9 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(html, /id="autoIdTargetForm"/);
   assert.match(html, /id="autoCourseIdInput"/);
   assert.match(html, /id="autoClassIdInput"/);
-  assert.match(html, /id="autoSubmitClassIdInput"/);
-  assert.match(html, /id="autoTargetLabelInput"/);
+  assert.match(html, /获取详情并加入当前组/);
+  assert.doesNotMatch(html, /id="autoSubmitClassIdInput"/);
+  assert.doesNotMatch(html, /id="autoTargetLabelInput"/);
   assert.doesNotMatch(html, /id="autoTeachingClassList"/);
   assert.doesNotMatch(html, /id="autoSearchForm"/);
   assert.doesNotMatch(html, /id="autoKeywordInput"/);
@@ -240,6 +244,11 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.doesNotMatch(app, /switchCourseType/);
   assert.doesNotMatch(app, /renderTeachingClasses/);
   assert.match(app, /addIdTargetToAutoSelection/);
+  assert.match(app, /resolveIdTeachingClass/);
+  assert.match(app, /state\.client\.catalog\.getTeachingClasses\(courseId\)/);
+  assert.match(app, /resolvedClassLabel/);
+  assert.doesNotMatch(app, /autoSubmitClassIdInput/);
+  assert.doesNotMatch(app, /autoTargetLabelInput/);
   assert.match(app, /reorderTarget/);
   assert.match(app, /normalizeDraftGroupStrategy/);
   assert.match(app, /strategy: normalizeDraftGroupStrategy/);

@@ -685,12 +685,14 @@ function toggleAutoClassMenu(wrapper, teachingClass) {
     });
     return option;
   }));
+  wrapper.classList.add('open');
   menu.hidden = false;
 }
 
 function closeAutoClassMenus() {
   document.querySelectorAll('.auto-class-menu:not([hidden])').forEach((menu) => {
     menu.hidden = true;
+    menu.closest('.auto-class-menu-wrap')?.classList.remove('open');
   });
 }
 

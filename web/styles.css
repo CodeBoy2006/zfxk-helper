@@ -407,9 +407,17 @@ textarea {
   height: 20px;
   margin-right: 8px;
   border-radius: 5px;
-  background: var(--accent);
+  background: #1f73d0;
   color: #fff;
   font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.section-heading .step-badge {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .auto-config-actions,
@@ -1126,12 +1134,17 @@ body.auto-chrome-compact .auto-page-title {
   grid-template-columns: minmax(0, 1fr) 96px;
   gap: 0;
   padding: 0;
-  overflow: hidden;
   box-shadow: none;
+}
+
+.class-card {
+  position: relative;
+  overflow: visible;
 }
 
 .chosen-card {
   grid-template-columns: minmax(0, 1fr) 96px;
+  overflow: hidden;
   cursor: grab;
 }
 
@@ -1493,6 +1506,23 @@ body.auto-chrome-compact .auto-page-title {
   font-weight: 850;
 }
 
+.class-card .class-actions .auto-class-button {
+  min-width: 78px;
+  min-height: 38px;
+  border-color: #91d3bc;
+  background: #effaf5;
+  color: #08734f;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.class-card .class-actions .auto-class-button:hover:not(:disabled) {
+  border-color: #54b98f;
+  background: #ddf5eb;
+  color: #055f41;
+}
+
 .class-card .class-actions {
   gap: 8px;
 }
@@ -1503,13 +1533,20 @@ body.auto-chrome-compact .auto-page-title {
   justify-items: center;
 }
 
+.auto-class-menu-wrap.open {
+  z-index: 20;
+}
+
 .auto-class-menu {
   position: absolute;
-  bottom: calc(100% + 6px);
+  top: calc(100% + 6px);
   right: 0;
   z-index: 8;
   display: grid;
   min-width: 132px;
+  max-width: min(220px, 70vw);
+  max-height: min(240px, 48vh);
+  overflow-y: auto;
   border: 1px solid #d7e4f2;
   border-radius: 7px;
   padding: 6px;
@@ -1531,6 +1568,7 @@ body.auto-chrome-compact .auto-page-title {
   font-size: 13px;
   font-weight: 850;
   text-align: left;
+  white-space: nowrap;
 }
 
 .auto-class-menu-item:hover:not(:disabled) {

@@ -327,3 +327,9 @@
 - **Status:** Completed
 - **Next Steps:** Use the main-page class-card `自动选课` button to add parsed classes to groups, or add manual targets by ID on `/auto-selection`.
 - **Context:** Main-page buttons update the standalone auto-selection draft only; background tasks still start from the standalone control page.
+
+## [2026-06-29 23:49] Auto Selection UI Fixes
+- **Changes:** Restyled the main-page `自动选课` class-card button and group menu, made the menu scroll instead of clipping extra groups, changed direct ID entry to resolve teaching-class name and submit ID through `getTeachingClasses`, removed manual submit/name inputs, and fixed the step badge number contrast.
+- **Status:** Completed
+- **Next Steps:** Verify direct ID lookup with a live school session, especially when the user enters `jxb_id` versus `do_jxb_id`.
+- **Context:** The direct ID form now requires an initialized session so the page can fetch authoritative teaching-class details before adding a target.

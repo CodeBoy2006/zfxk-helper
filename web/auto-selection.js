@@ -37,8 +37,6 @@ const elements = {
   autoIdTargetForm: document.querySelector('#autoIdTargetForm'),
   autoCourseIdInput: document.querySelector('#autoCourseIdInput'),
   autoClassIdInput: document.querySelector('#autoClassIdInput'),
-  autoSubmitClassIdInput: document.querySelector('#autoSubmitClassIdInput'),
-  autoTargetLabelInput: document.querySelector('#autoTargetLabelInput'),
   autoRefreshTasksBtn: document.querySelector('#autoRefreshTasksBtn'),
   autoTaskSummary: document.querySelector('#autoTaskSummary'),
   autoAuthRefreshBtn: document.querySelector('#autoAuthRefreshBtn'),
@@ -82,9 +80,9 @@ function bindEvents() {
   });
   elements.loginWithCaptchaBtn.addEventListener('click', () => loginWithCaptchaCookie());
   elements.solveCaptchaBtn.addEventListener('click', () => solveCaptchaCookie());
-  elements.autoIdTargetForm.addEventListener('submit', (event) => {
+  elements.autoIdTargetForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    addIdTargetToAutoSelection();
+    await addIdTargetToAutoSelection();
   });
   elements.autoEnabledSwitch.addEventListener('change', () => renderAutoTaskStatus());
   elements.autoHelpBtn.addEventListener('click', () => showHelpDialog());
@@ -135,7 +133,7 @@ async function initializeSession() {
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
     await state.client.bootstrap({ html: state.entryHtml, raw: activeType ? courseTypeRaw(activeType) : undefined });
-    log('会话已初始化，可按课程 ID 和班级 ID 加入目标。');
+    log('会话已初始化，可按课程 ID 和班级 ID 获取详情并加入目标。');
   });
 }
 
@@ -213,21 +211,50 @@ function clearActiveGroupTargets() {
   log(`${group.name} 已清空。`);
 }
 
-function addIdTargetToAutoSelection() {
-  const group = activeGroup();
+async function addIdTargetToAutoSelection() {
+  if (!state.client) {
+    log('请先初始化页面，以便读取教学班详情。');
+    return;
+  }
   const courseId = elements.autoCourseIdInput.value.trim();
   const classId = elements.autoClassIdInput.value.trim();
-  const submitClassId = elements.autoSubmitClassIdInput.value.trim();
-  const label = elements.autoTargetLabelInput.value.trim();
   if (!courseId || !classId) {
     log('请填写课程 ID 和班级 ID。');
     return;
   }
+  await runTask('按 ID 获取教学班', async () => {
+    const teachingClass = await resolveIdTeachingClass(courseId, classId);
+    if (!teachingClass) throw new Error(`课程 ${courseId} 下未找到班级 ${classId}`);
+    addResolvedClassToAutoSelection(teachingClass);
+    elements.autoClassIdInput.value = '';
+  });
+}
+
+async function resolveIdTeachingClass(courseId, classId) {
+  const classes = await state.client.catalog.getTeachingClasses(courseId);
+  return classes.find((item) => matchIdTeachingClass(item, courseId, classId));
+}
+
+function matchIdTeachingClass(item, courseId, classId) {
+  if (String(item.courseId) !== String(courseId)) return false;
+  return [item.classId, item.submitClassId]
+    .filter(Boolean)
+    .some((id) => String(id) === String(classId));
+}
+
+function addResolvedClassToAutoSelection(teachingClass) {
+  const group = activeGroup();
   const target = {
-    courseId,
-    classId,
-    submitClassId: submitClassId || undefined,
-    label: label || classId,
+    courseId: teachingClass.courseId,
+    classId: teachingClass.classId,
+    submitClassId: teachingClass.submitClassId,
+    label: resolvedClassLabel(teachingClass),
+    courseName: resolvedCourseName(teachingClass),
+    teachers: resolvedTeacherNames(teachingClass),
+    scheduleText: teachingClass.scheduleText,
+    locationText: teachingClass.locationText,
+    selectedCount: teachingClass.selectedCount,
+    capacity: teachingClass.capacity,
     priority: nextPriority(group),
     isBackup: group.strategy !== 'equivalent' && group.targets.length > 0,
     allowAutoDrop: group.strategy !== 'equivalent' && group.targets.length > 0,
@@ -245,9 +272,18 @@ function addIdTargetToAutoSelection() {
   sortTargets(group);
   persistDraft();
   renderAutoSelectionDraft();
-  elements.autoClassIdInput.value = '';
-  elements.autoSubmitClassIdInput.value = '';
-  elements.autoTargetLabelInput.value = '';
+}
+
+function resolvedClassLabel(item) {
+  return String(item.raw?.jxbmc || item.name || item.classId || item.submitClassId || '未命名教学班');
+}
+
+function resolvedCourseName(item) {
+  return String(item.raw?.kcmc || item.courseName || item.courseId || '');
+}
+
+function resolvedTeacherNames(item) {
+  return item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '';
 }
 
 function renderAutoSelectionDraft() {
