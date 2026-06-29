@@ -1,0 +1,167 @@
+export const AUTO_SELECTION_CONFIG_KIND = 'zfxk.autoSelectionTask';
+export const AUTO_SELECTION_CONFIG_VERSION = 1;
+export const DEFAULT_INTERVAL_MS = 1500;
+
+export function normalizeAutoSelectionConfig(input = {}, options = {}) {
+  const errors = [];
+  const config = {
+    baseUrl: trimTrailingSlash(input.baseUrl),
+    username: stringOrUndefined(input.username),
+    password: stringOrUndefined(input.password),
+    cookie: stringOrUndefined(input.cookie),
+    pagePath: String(input.pagePath || ''),
+    intervalMs: normalizePositiveInteger(input.intervalMs, DEFAULT_INTERVAL_MS),
+    maxAttempts: normalizeNullablePositiveInteger(input.maxAttempts),
+    deadlineAt: input.deadlineAt || null,
+    groups: asArray(input.groups).map((group, groupIndex) => normalizeGroup(group, groupIndex))
+  };
+
+  if (options.requireCredentials && !config.password && !config.cookie) {
+    errors.push('password or cookie is required');
+  }
+
+  return { ...config, errors };
+}
+
+export function validateAutoSelectionConfig(input = {}, options = {}) {
+  const config = normalizeAutoSelectionConfig(input, options);
+  const errors = [...config.errors];
+  if (!config.baseUrl) errors.push('baseUrl is required');
+  else if (!/^https?:\/\//i.test(config.baseUrl)) errors.push('baseUrl must start with http:// or https://');
+  if (!config.pagePath) errors.push('pagePath is required');
+  if (!config.groups.length) errors.push('at least one group is required');
+
+  config.groups.forEach((group, groupIndex) => {
+    if (!group.name) errors.push(`groups[${groupIndex}].name is required`);
+    if (!group.targets.length) errors.push(`groups[${groupIndex}].targets must contain at least one target`);
+    group.targets.forEach((target, targetIndex) => {
+      if (!target.courseId) errors.push(`groups[${groupIndex}].targets[${targetIndex}].courseId is required`);
+      if (!target.classId && !target.submitClassId) {
+        errors.push(`groups[${groupIndex}].targets[${targetIndex}].classId or submitClassId is required`);
+      }
+      if (!Number.isFinite(target.priority)) {
+        errors.push(`groups[${groupIndex}].targets[${targetIndex}].priority must be a finite number`);
+      }
+    });
+  });
+
+  return { valid: errors.length === 0, errors, config };
+}
+
+export function exportAutoSelectionConfig(config) {
+  const normalized = normalizeAutoSelectionConfig(config);
+  return {
+    version: AUTO_SELECTION_CONFIG_VERSION,
+    kind: AUTO_SELECTION_CONFIG_KIND,
+    baseUrl: normalized.baseUrl,
+    pagePath: normalized.pagePath,
+    username: normalized.username,
+    intervalMs: normalized.intervalMs,
+    maxAttempts: normalized.maxAttempts,
+    deadlineAt: normalized.deadlineAt,
+    groups: normalized.groups.map((group) => ({
+      groupId: group.groupId,
+      name: group.name,
+      targets: group.targets.map((target) => {
+        const {
+          status,
+          lastObservedRemaining,
+          lastMessage,
+          createdOrder,
+          ...exportedTarget
+        } = target;
+        return exportedTarget;
+      })
+    }))
+  };
+}
+
+export function importAutoSelectionConfig(input = {}) {
+  const errors = [];
+  if (input.kind !== AUTO_SELECTION_CONFIG_KIND) errors.push('kind must be zfxk.autoSelectionTask');
+  if (input.version !== AUTO_SELECTION_CONFIG_VERSION) errors.push('version must be 1');
+
+  const config = normalizeAutoSelectionConfig({
+    ...input,
+    password: undefined,
+    cookie: undefined
+  });
+  const validation = validateAutoSelectionConfig(config);
+  return {
+    valid: errors.length === 0 && validation.valid,
+    errors: [...errors, ...validation.errors],
+    config
+  };
+}
+
+export function maskUsername(username = '') {
+  const text = String(username || '');
+  if (!text) return '';
+  return `${'*'.repeat(Math.max(0, text.length - 4))}${text.slice(-4)}`;
+}
+
+export function byPriorityDescThenCreatedOrder(a, b) {
+  return b.priority - a.priority || a.createdOrder - b.createdOrder;
+}
+
+function normalizeGroup(group = {}, groupIndex = 0) {
+  const targets = asArray(group.targets)
+    .map((target, targetIndex) => normalizeTarget(target, targetIndex))
+    .sort(byPriorityDescThenCreatedOrder);
+
+  return {
+    groupId: group.groupId || `group_${groupIndex + 1}`,
+    name: String(group.name || ''),
+    state: group.state || 'WATCHING',
+    currentPlacement: null,
+    isTopTargetSelected: false,
+    pauseScope: undefined,
+    lastMessage: '',
+    targets
+  };
+}
+
+function normalizeTarget(target = {}, createdOrder = 0) {
+  const courseId = String(target.courseId || '');
+  const submitClassId = target.submitClassId ? String(target.submitClassId) : undefined;
+  const classId = String(target.classId || submitClassId || '');
+  return {
+    targetId: target.targetId || `${courseId}:${classId || submitClassId || 'target'}:${createdOrder}`,
+    courseId,
+    classId,
+    submitClassId,
+    label: stringOrUndefined(target.label),
+    priority: Number(target.priority),
+    isBackup: Boolean(target.isBackup),
+    allowAutoDrop: target.allowAutoDrop === undefined ? Boolean(target.isBackup) : Boolean(target.allowAutoDrop),
+    recoverOnUpgradeFailure: target.recoverOnUpgradeFailure === undefined ? true : Boolean(target.recoverOnUpgradeFailure),
+    skipAfterNonCapacityFailure: target.skipAfterNonCapacityFailure === undefined ? true : Boolean(target.skipAfterNonCapacityFailure),
+    status: target.status || 'watching',
+    lastObservedRemaining: target.lastObservedRemaining,
+    lastMessage: target.lastMessage || '',
+    createdOrder
+  };
+}
+
+function trimTrailingSlash(value) {
+  return String(value || '').replace(/\/$/, '');
+}
+
+function normalizePositiveInteger(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? Math.trunc(number) : fallback;
+}
+
+function normalizeNullablePositiveInteger(value) {
+  if (value === undefined || value === null || value === '') return null;
+  return normalizePositiveInteger(value, null);
+}
+
+function stringOrUndefined(value) {
+  const text = String(value ?? '').trim();
+  return text ? text : undefined;
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
