@@ -230,6 +230,12 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and confirm both export actions appear in their corresponding columns.
 - **Context:** The topbar now only keeps global actions such as refresh and log clearing.
+
+## [2026-06-29 21:43] Export Schedule Completion
+- **Changes:** Updated Web course export to fetch teaching-class details before writing JSON, embedded teaching-class time/location under each course, and enriched selected-course export from teaching-class details when snapshot rows omit time/location.
+- **Status:** Completed
+- **Next Steps:** Re-export courses from an initialized session; large course lists may take longer because the export now queries teaching-class details.
+- **Context:** Course search rows do not reliably include `sksj`/`jxdd`; those fields usually live on the teaching-class detail endpoint.
 - **Context:** The shared pane height now caps at `100vh`; narrow layouts still switch back to auto pane height.
 
 ## [2026-06-29 20:40] Full-Height Workspace Panes

@@ -37,6 +37,24 @@ const SELECTED_CLASS_FIELDS = [
   ['ownershipName', '课程归属名称']
 ];
 
+const TEACHING_CLASS_FIELDS = [
+  ['classId', '教学班ID'],
+  ['submitClassId', '提交教学班ID'],
+  ['courseId', '课程ID'],
+  ['name', '教学班名称'],
+  ['childClassCount', '子班数量'],
+  ['credit', '学分'],
+  ['selectedCount', '已选人数'],
+  ['capacity', '容量'],
+  ['scheduleText', '上课时间'],
+  ['locationText', '上课地点'],
+  ['examText', '考试时间'],
+  ['campusId', '校区ID'],
+  ['collegeName', '开课学院'],
+  ['ownershipCode', '课程归属代码'],
+  ['ownershipName', '课程归属名称']
+];
+
 const TEACHER_FIELDS = [
   ['id', '教师工号'],
   ['name', '姓名'],
@@ -49,6 +67,16 @@ const SELECTED_CLASS_FLAG_FIELDS = [
   ['selfSelected', '是否自选'],
   ['canDrop', '是否可退'],
   ['dropRestriction', '不可退原因']
+];
+
+const TEACHING_CLASS_FLAG_FIELDS = [
+  ['selected', '是否已选'],
+  ['full', '是否已满'],
+  ['canSelect', '是否可选'],
+  ['canDrop', '是否可退'],
+  ['hasTextbook', '是否有教材'],
+  ['retake', '是否重修'],
+  ['auxiliary', '是否辅修']
 ];
 
 const RAW_FIELD_LABELS = {
@@ -173,7 +201,11 @@ export function downloadJson(filename, payload, env = {}) {
 }
 
 function formatCourse(course = {}) {
-  return formatRecord(course, COURSE_FIELDS);
+  const record = formatRecord(course, COURSE_FIELDS);
+  if (course.teachingClassLoadError) record.教学班加载错误 = course.teachingClassLoadError;
+  const teachingClasses = course.teachingClasses ?? course.classes;
+  if (teachingClasses?.length) record.教学班 = teachingClasses.map(formatTeachingClass);
+  return record;
 }
 
 function formatSelectedCourse(course = {}) {
@@ -191,6 +223,15 @@ function formatSelectedClass(item = {}) {
 
 function formatTeacher(teacher = {}) {
   return labeledFields(teacher, TEACHER_FIELDS);
+}
+
+function formatTeachingClass(item = {}) {
+  const record = formatRecord(item, TEACHING_CLASS_FIELDS);
+  if (item.currentRound?.capacity !== undefined) record.本轮容量 = normalizeJsonValue(item.currentRound.capacity);
+  if (item.currentRound?.selected !== undefined) record.本轮已选人数 = normalizeJsonValue(item.currentRound.selected);
+  if (item.teachers?.length) record.教师 = item.teachers.map(formatTeacher);
+  if (item.flags) record.标志 = labeledFields(item.flags, TEACHING_CLASS_FLAG_FIELDS);
+  return record;
 }
 
 function formatRecord(item, fields) {

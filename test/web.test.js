@@ -41,6 +41,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /createZfxkClient/);
   assert.match(app, /buildCourseExport/);
   assert.match(app, /buildSelectedCoursesExport/);
+  assert.match(app, /buildCoursesForExport/);
   assert.match(app, /downloadJson/);
   assert.match(app, /parseCourseTypeOptions/);
   assert.doesNotMatch(app, /from '..\/src\/index\.js'/);
@@ -141,6 +142,28 @@ test('course export uses readable mapped fields and preserves unmapped raw detai
       retake: false,
       hasPrerequisiteHint: true,
       recommended: true,
+      teachingClasses: [{
+        classId: 'JXB1',
+        submitClassId: 'DO1',
+        courseId: 'KC1',
+        name: '数据库-0001',
+        childClassCount: 1,
+        credit: 3,
+        selectedCount: 18,
+        capacity: 30,
+        currentRound: { capacity: 20, selected: 12 },
+        teachers: [{ name: '李老师', raw: '李老师' }],
+        scheduleText: '星期一第1-2节{1-16周}',
+        locationText: 'A101',
+        examText: '第18周',
+        flags: { selected: false, full: false, canSelect: true },
+        raw: {
+          jxb_id: 'JXB1',
+          do_jxb_id: 'DO1',
+          sksj: '星期一第1-2节{1-16周}',
+          jxdd: 'A101'
+        }
+      }],
       raw: {
         kch_id: 'KC1',
         kch: 'CS101',
@@ -163,6 +186,10 @@ test('course export uses readable mapped fields and preserves unmapped raw detai
   assert.equal(exportData.课程[0].课程号, 'CS101');
   assert.equal(exportData.课程[0].课程名称, '数据库');
   assert.equal(exportData.课程[0].教学班名称, '数据库-0001');
+  assert.equal(exportData.课程[0].教学班[0].上课时间, '星期一第1-2节{1-16周}');
+  assert.equal(exportData.课程[0].教学班[0].上课地点, 'A101');
+  assert.equal(exportData.课程[0].教学班[0].本轮容量, 20);
+  assert.equal(exportData.课程[0].教学班[0].标志.是否可选, true);
   assert.equal(exportData.课程[0].源序号, '1');
   assert.equal(exportData.课程[0].额外原始字段.custom_raw_flag, 'keep');
   assert.doesNotMatch(JSON.stringify(exportData.课程[0]), /"kch_id"|"kch"|"kcmc"|"jxbmc"/);
