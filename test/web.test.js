@@ -41,6 +41,13 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /<aside id="chosenPanel"[\s\S]*id="exportSelectedBtn"/);
   assert.doesNotMatch(html.match(/<div class="topbar-actions">([\s\S]*?)<\/div>/)?.[1] ?? '', /exportCoursesBtn|exportSelectedBtn/);
   assert.match(html, /id="activityLog"/);
+  assert.match(html, /id="autoSelectionPanel"/);
+  assert.match(html, /id="autoGroupTabs"/);
+  assert.match(html, /id="autoTargetList"/);
+  assert.match(html, /id="autoTaskStatusPanel"/);
+  assert.match(html, /id="autoEventLog"/);
+  assert.match(html, /id="autoExportConfigBtn"/);
+  assert.match(html, /id="autoImportConfigInput"/);
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(server, /AutoSelectionTaskManager/);
   assert.match(server, /\/api\/auto-selection\/tasks/);
@@ -48,6 +55,12 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(server, /\/api\/auto-selection\/config\/import/);
   assert.match(server, /handleAutoSelection/);
   assert.match(app, /createZfxkClient/);
+  assert.match(app, /autoSelectionDraft/);
+  assert.match(app, /addClassToAutoSelection/);
+  assert.match(app, /pollAutoSelectionTasks/);
+  assert.match(app, /\/api\/auto-selection\/tasks/);
+  assert.match(app, /\/api\/auto-selection\/config\/import/);
+  assert.match(app, /加入自动选课/);
   assert.match(app, /buildCourseExport/);
   assert.match(app, /buildSelectedCoursesExport/);
   assert.match(app, /buildCoursesForExport/);
