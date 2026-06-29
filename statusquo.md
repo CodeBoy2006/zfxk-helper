@@ -165,3 +165,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and confirm populated teaching-class cards match the requested order.
 - **Context:** Selected-course cards still keep the teaching-class name in their existing title row to avoid duplicate labels.
+
+## [2026-06-29 19:45] Teaching-Class jxbmc Source
+- **Changes:** Changed the Web teaching-class label to read only `raw.jxbmc` and added a regression assertion preventing the old placeholder from returning.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and reload teaching classes so the updated script displays backend `jxbmc` values.
+- **Context:** The previous `item.name` fallback could show `教学班待定` even when the backend field to display is `jxbmc`.

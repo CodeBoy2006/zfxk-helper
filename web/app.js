@@ -792,7 +792,7 @@ function renderTeacherLine(item) {
 }
 
 function renderClassSummaryLine(item) {
-  const className = item.name?.trim() || '教学班待定';
+  const className = String(item.raw?.jxbmc ?? '').trim();
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
     <div class="class-detail-line">
