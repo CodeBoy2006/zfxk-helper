@@ -30,12 +30,16 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /href="\/setup\?next=\/"/);
   assert.doesNotMatch(html, /session-config-link/);
   assert.doesNotMatch(html, />修改配置</);
+  assert.match(html, /当前配置/);
+  assert.doesNotMatch(html, /保存配置/);
+  assert.doesNotMatch(html, /主页面会自动使用保存的 Base URL/);
   assert.match(html, /id="sessionConfigSummary"/);
   assert.match(html, /id="reinitializeSessionBtn"/);
   assert.match(html, /id="filterPanel"/);
   assert.match(html, /id="filterRows"/);
   assert.match(html, /id="courseTypeTabs"/);
   assert.match(html, /当前显示/);
+  assert.doesNotMatch(html, /初始化后显示可切换类型/);
   assert.match(html, /id="resetFiltersBtn"/);
   assert.match(html, /id="courseList"/);
   assert.match(html, /id="courseTotalBadge"/);
@@ -101,6 +105,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(app, /solveCaptchaCookie/);
   assert.doesNotMatch(app, /restoreSessionCache/);
   assert.doesNotMatch(app, /persistSessionCache/);
+  assert.doesNotMatch(app, /course-type-placeholder/);
+  assert.doesNotMatch(app, /初始化后显示可切换类型/);
   assert.match(sessionConfig, /SESSION_STORAGE_KEY/);
   assert.match(sessionConfig, /zfxk\.web\.session\.v1/);
   assert.match(sessionConfig, /requireSessionConfig/);
@@ -160,6 +166,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(app, /createDemoClient/);
   assert.match(css, /grid-template-columns/);
   assert.match(css, /course-type-tabs/);
+  assert.doesNotMatch(css, /course-type-placeholder/);
   assert.match(css, /class-card-main/);
   assert.match(css, /class-card-action/);
   assert.match(css, /schedule-grid/);
@@ -222,8 +229,11 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.doesNotMatch(html, /id="passwordInput"/);
   assert.doesNotMatch(html, /id="pagePathInput"/);
   assert.doesNotMatch(html, /id="cookieInput"/);
+  assert.match(html, /当前配置/);
+  assert.doesNotMatch(html, /保存配置/);
+  assert.doesNotMatch(html, /自动选课会复用初始化配置/);
   assert.match(html, /id="autoSessionSummary"/);
-  assert.match(html, /id="autoSessionDetail"/);
+  assert.doesNotMatch(html, /id="autoSessionDetail"/);
   assert.match(html, /id="autoConfigLink"/);
   assert.match(html, /<a id="autoConfigLink" class="setup-link-button"/);
   assert.match(html, /href="\/setup\?next=\/auto-selection"/);

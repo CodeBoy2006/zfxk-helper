@@ -201,14 +201,6 @@ textarea {
   overflow-wrap: anywhere;
 }
 
-.session-status-card p,
-.auto-session-summary p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
 .session-status-actions {
   display: flex;
   flex: 0 0 auto;
@@ -262,11 +254,6 @@ textarea {
   border-color: var(--accent);
   background: var(--accent);
   color: #fff;
-}
-
-.course-type-placeholder {
-  color: var(--muted);
-  font-size: 13px;
 }
 
 .filter-panel {

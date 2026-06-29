@@ -405,3 +405,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm run docs` regenerated OpenAPI and TypeDoc output; `npm test` passes. Technical identifiers such as npm package name, imports, localStorage keys, and export config kind remain `zfxk` for compatibility.
+
+## [2026-06-30 01:01] Simplify Current Config Panels
+- **Changes:** Renamed the main and auto-selection config card labels from `保存配置` to `当前配置`, removed the explanatory copy under those cards, and removed the main-page course-type placeholder text shown before initialization.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; the current configuration summaries still render host, username, and Cookie state.

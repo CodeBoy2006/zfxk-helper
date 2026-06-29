@@ -17,7 +17,6 @@ const elements = {
   autoHelpBtn: document.querySelector('#autoHelpBtn'),
   autoHelpDialog: document.querySelector('#autoHelpDialog'),
   autoSessionSummary: document.querySelector('#autoSessionSummary'),
-  autoSessionDetail: document.querySelector('#autoSessionDetail'),
   autoConfigLink: document.querySelector('#autoConfigLink'),
   autoInitBtn: document.querySelector('#autoInitBtn'),
   autoIntervalInput: document.querySelector('#autoIntervalInput'),
@@ -714,11 +713,9 @@ function showHelpDialog() {
 function renderSessionOverview() {
   if (!state.sessionConfig) {
     elements.autoSessionSummary.textContent = '未保存配置';
-    elements.autoSessionDetail.textContent = '请先进入配置页面完成登录。';
     return;
   }
   elements.autoSessionSummary.textContent = `${sessionHost(state.sessionConfig)} · ${state.sessionConfig.username || '未保存用户名'}`;
-  elements.autoSessionDetail.textContent = `入口：${state.sessionConfig.pagePath || DEFAULT_PAGE_PATH} · Cookie ${state.sessionConfig.cookie ? '已保存' : '未保存'}`;
 }
 
 function restoreDraft() {

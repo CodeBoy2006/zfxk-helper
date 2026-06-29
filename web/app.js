@@ -1030,10 +1030,6 @@ function formatScheduleTitle(entry) {
 function renderCourseTypeTabs() {
   elements.courseTypeTabs.replaceChildren();
   if (!state.courseTypes.length) {
-    const placeholder = document.createElement('span');
-    placeholder.className = 'course-type-placeholder';
-    placeholder.textContent = '初始化后显示可切换类型';
-    elements.courseTypeTabs.append(placeholder);
     return;
   }
 
