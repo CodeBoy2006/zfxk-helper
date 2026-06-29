@@ -129,3 +129,9 @@
 - **Status:** Completed
 - **Next Steps:** Avoid using the Web frontend on shared devices when credentials are cached.
 - **Context:** Persistence is browser-local only and gracefully no-ops if `localStorage` is unavailable.
+
+## [2026-06-29 19:08] Compact Selected Pane Layout
+- **Changes:** Tightened Web workspace spacing, widened the usable shell, reduced teaching/meeting card padding, and gave selected-course cards narrower action columns with stacked metadata to prevent right-pane overflow.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and verify against live selected-course data with long course names or classroom labels.
+- **Context:** CSS-only layout change; SDK requests and selection/drop behavior are unchanged.

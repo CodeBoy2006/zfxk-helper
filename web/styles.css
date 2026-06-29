@@ -68,8 +68,8 @@ textarea {
 }
 
 .app-shell {
-  width: min(1500px, calc(100vw - 32px));
-  margin: 16px auto 28px;
+  width: min(1660px, calc(100vw - 20px));
+  margin: 10px auto 20px;
 }
 
 .topbar,
@@ -352,17 +352,17 @@ textarea {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(340px, 1.1fr) minmax(420px, 1.35fr) minmax(310px, 0.9fr);
-  gap: 12px;
-  margin-top: 12px;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(400px, 1.32fr) minmax(340px, 0.9fr);
+  gap: 10px;
+  margin-top: 10px;
   align-items: start;
 }
 
 .catalog-pane,
 .detail-pane,
 .chosen-pane {
-  min-height: 520px;
-  padding: 14px;
+  min-height: 480px;
+  padding: 10px;
 }
 
 .search-bar {
@@ -378,7 +378,7 @@ textarea {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .section-heading h2 {
@@ -395,7 +395,7 @@ textarea {
 .class-list,
 .chosen-list {
   display: grid;
-  gap: 7px;
+  gap: 6px;
 }
 
 .course-card,
@@ -404,13 +404,13 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
-  padding: 12px;
+  padding: 10px;
 }
 
 .class-card,
 .chosen-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 124px;
+  grid-template-columns: minmax(0, 1fr) 104px;
   gap: 0;
   padding: 0;
   border-color: #d6e2f0;
@@ -420,16 +420,16 @@ textarea {
 
 .class-card-main {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
-  padding: 18px;
+  padding: 12px;
 }
 
 .class-card-action {
   display: grid;
   place-items: center;
   border-left: 1px solid #dbe7f4;
-  padding: 18px;
+  padding: 12px;
 }
 
 .course-card {
@@ -484,7 +484,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -493,7 +493,7 @@ textarea {
   flex: 0 0 auto;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
 }
 
 .meta,
@@ -508,9 +508,9 @@ textarea {
 .class-detail-line {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   color: var(--muted);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.35;
   margin-bottom: 0;
   min-width: 0;
@@ -519,13 +519,13 @@ textarea {
 .detail-label {
   flex: 0 0 auto;
   color: var(--text);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .meeting-list {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 0;
 }
 
@@ -533,19 +533,19 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  min-height: 54px;
-  padding: 10px 14px;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 10px;
   border: 1px solid #cfe3f7;
   border-radius: 8px;
   background: #f7fbff;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .meeting-time {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
   align-items: center;
 }
@@ -569,11 +569,11 @@ textarea {
 }
 
 .meeting-location {
-  max-width: 180px;
+  max-width: 150px;
   overflow-wrap: anywhere;
   border: 1px solid rgba(13, 138, 114, 0.2);
   border-radius: 999px;
-  padding: 5px 14px;
+  padding: 3px 10px;
   background: #edfdf5;
   color: #047857;
   font-weight: 700;
@@ -583,10 +583,10 @@ textarea {
 .capacity-pill {
   flex: 0 0 auto;
   border-radius: 999px;
-  padding: 5px 14px;
+  padding: 4px 12px;
   background: #f1f3f8;
   color: #172033;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   line-height: 1.2;
 }
@@ -594,9 +594,9 @@ textarea {
 .tag {
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 3px 8px;
   background: #f8fafc;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.25;
 }
@@ -622,7 +622,50 @@ textarea {
   margin-top: 0;
   place-items: center;
   border-left: 1px solid #dbe7f4;
-  padding: 18px;
+  padding: 8px;
+}
+
+.chosen-card {
+  grid-template-columns: minmax(0, 1fr) 86px;
+}
+
+.chosen-card .class-card-main {
+  gap: 8px;
+  padding: 10px;
+}
+
+.chosen-card .card-title {
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.chosen-card .card-title span {
+  padding-inline: 7px;
+  font-size: 12px;
+}
+
+.chosen-card .class-card-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+  align-items: start;
+  gap: 5px;
+}
+
+.chosen-card .class-card-badges {
+  justify-content: flex-start;
+}
+
+.chosen-card .meeting-item {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 5px;
+  min-height: 0;
+}
+
+.chosen-card .meeting-location {
+  width: fit-content;
+  max-width: 100%;
 }
 
 .class-card .flags,
@@ -633,18 +676,21 @@ textarea {
 
 .class-card .class-actions button,
 .chosen-card .chosen-actions button {
-  min-width: 88px;
-  min-height: 54px;
-  padding: 0 18px;
+  min-width: 76px;
+  min-height: 46px;
+  padding: 0 12px;
   border-radius: 8px;
   background: #176db6;
   border-color: #176db6;
   box-shadow: 0 8px 16px rgba(23, 105, 170, 0.18);
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 800;
 }
 
 .chosen-card .chosen-actions button {
+  min-width: 62px;
+  min-height: 40px;
+  padding: 0 10px;
   background: var(--danger);
   border-color: var(--danger);
   box-shadow: 0 8px 16px rgba(180, 35, 24, 0.16);
