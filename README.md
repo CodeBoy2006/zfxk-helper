@@ -96,3 +96,22 @@ You can also run each generator separately:
 npm run openapi
 npm run docs:api
 ```
+
+## Web Frontend
+
+Run the restored course-selection workspace:
+
+```bash
+npm run web
+```
+
+Open:
+
+```text
+http://127.0.0.1:4173/
+```
+
+The Web frontend has two modes:
+
+- `Demo 回放`: uses in-memory fixtures and exercises search, teaching-class expansion, choose, drop, snapshot refresh, and order save without a school system.
+- `浏览器会话`: uses `fetch(..., { credentials: 'include' })` and the current browser's same-origin cookies. For a real school deployment, serve this frontend from the same origin as `jwglxt` or put it behind a local same-origin proxy. Browsers do not allow JavaScript to set a raw `Cookie` header for cross-origin school domains.

@@ -14,6 +14,7 @@
   "files": [
     "src",
     "scripts",
+    "web",
     "docs/openapi.json",
     "README.md",
     "typedoc.json"
@@ -22,7 +23,8 @@
     "openapi": "node scripts/generate-openapi.js",
     "docs:api": "typedoc",
     "docs": "npm run openapi && npm run docs:api",
-    "test": "node --test"
+    "test": "node --test",
+    "web": "node scripts/serve-web.js"
   },
   "devDependencies": {
     "typedoc": "^0.28.19"

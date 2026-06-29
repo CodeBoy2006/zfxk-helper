@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>zfxk 选课工作台</title>
+    <link rel="stylesheet" href="/web/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>zfxk 选课工作台</h1>
+          <p id="sessionSummary">未初始化会话</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="refreshSnapshotBtn" type="button" title="刷新已选">刷新</button>
+          <button id="clearLogBtn" type="button" title="清空日志">清空日志</button>
+        </div>
+      </header>
+
+      <section class="session-panel" aria-label="会话配置">
+        <form id="sessionForm">
+          <fieldset class="mode-group">
+            <legend>运行模式</legend>
+            <label><input type="radio" name="mode" value="demo" checked> Demo 回放</label>
+            <label><input type="radio" name="mode" value="browser"> 浏览器会话</label>
+          </fieldset>
+          <label>
+            教务系统 Base URL
+            <input id="baseUrlInput" name="baseUrl" value="https://example.edu.cn/jwglxt" autocomplete="off">
+          </label>
+          <label>
+            选课入口 Path
+            <input id="pagePathInput" name="pagePath" value="/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512" autocomplete="off">
+          </label>
+          <button type="submit">初始化</button>
+        </form>
+        <p class="mode-note">浏览器会话模式使用当前浏览器同源 Cookie；跨域访问学校站点通常需要同源部署或本地代理。</p>
+      </section>
+
+      <section class="workspace">
+        <aside class="catalog-pane" aria-label="课程候选">
+          <form id="searchForm" class="search-bar">
+            <input id="keywordInput" name="keyword" placeholder="课程号 / 课程名 / 教师" autocomplete="off">
+            <label class="checkbox"><input id="hasCapacityInput" type="checkbox"> 有余量</label>
+            <button type="submit">搜索</button>
+          </form>
+          <div id="courseList" class="course-list" aria-live="polite"></div>
+        </aside>
+
+        <section class="detail-pane" aria-label="教学班详情">
+          <div class="section-heading">
+            <h2>教学班</h2>
+            <span id="classCountBadge">0 个</span>
+          </div>
+          <div id="classList" class="class-list"></div>
+        </section>
+
+        <aside id="chosenPanel" class="chosen-pane" aria-label="已选课程">
+          <div class="section-heading">
+            <h2>已选</h2>
+            <span id="chosenTotals">0 门 / 0 学分</span>
+          </div>
+          <div id="chosenList" class="chosen-list"></div>
+          <button id="saveOrderBtn" type="button">保存排序</button>
+        </aside>
+      </section>
+
+      <section class="activity-panel" aria-label="操作日志">
+        <div class="section-heading">
+          <h2>操作日志</h2>
+          <span id="statusBadge">idle</span>
+        </div>
+        <ol id="activityLog"></ol>
+      </section>
+    </main>
+    <script type="module" src="/web/app.js"></script>
+  </body>
+</html>

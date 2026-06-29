@@ -15,3 +15,9 @@
 - **Status:** Completed
 - **Next Steps:** Verify the default entry path against a real school deployment before hard-coding any convenience alias.
 - **Context:** The method intentionally requires callers to pass the page path because selection entry URLs vary by school/menu code.
+
+## [2026-06-29 16:01] Web Selection Workspace
+- **Changes:** Added a static Web frontend with Demo and browser-session modes, course search, teaching-class display, choose/drop/order actions, activity log, local static server, README usage notes, and frontend contract tests.
+- **Status:** Completed
+- **Next Steps:** Add a local same-origin proxy if the frontend must drive a real cross-origin school deployment from localhost.
+- **Context:** Browser-session mode relies on existing browser cookies via `credentials: include`; raw Cookie headers cannot be set from browser JavaScript.
