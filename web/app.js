@@ -6,17 +6,12 @@ import { loadAllCoursePages } from './course-pages.js';
 import { buildCoursesForExport, buildSelectedSnapshotForExport } from './export-builders.js';
 import { buildCourseExport, buildSelectedCoursesExport, downloadJson } from './export-data.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from './schedule-layout.js';
+import { requireSessionConfig, sessionHost } from './session-config.js';
 
 const elements = {
-  sessionForm: document.querySelector('#sessionForm'),
   searchForm: document.querySelector('#searchForm'),
-  baseUrlInput: document.querySelector('#baseUrlInput'),
-  cookieInput: document.querySelector('#cookieInput'),
-  pagePathInput: document.querySelector('#pagePathInput'),
-  usernameInput: document.querySelector('#usernameInput'),
-  passwordInput: document.querySelector('#passwordInput'),
-  loginWithCaptchaBtn: document.querySelector('#loginWithCaptchaBtn'),
-  solveCaptchaBtn: document.querySelector('#solveCaptchaBtn'),
+  sessionConfigSummary: document.querySelector('#sessionConfigSummary'),
+  reinitializeSessionBtn: document.querySelector('#reinitializeSessionBtn'),
   keywordInput: document.querySelector('#keywordInput'),
   courseTypeTabs: document.querySelector('#courseTypeTabs'),
   filterPanel: document.querySelector('#filterPanel'),
@@ -45,20 +40,13 @@ const elements = {
 
 const WEEKDAYS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
 const PERIODS = Array.from({ length: 12 }, (_, index) => index + 1);
-const SESSION_STORAGE_KEY = 'zfxk.web.session.v1';
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const DEFAULT_AUTO_GROUP_STRATEGY = 'priority';
-const SESSION_CACHE_FIELDS = [
-  ['baseUrl', elements.baseUrlInput],
-  ['cookie', elements.cookieInput],
-  ['pagePath', elements.pagePathInput],
-  ['username', elements.usernameInput],
-  ['password', elements.passwordInput]
-];
 
 const state = {
   client: null,
   transport: null,
+  sessionConfig: requireSessionConfig('/'),
   sourceCourses: [],
   sourceCoursesLoaded: false,
   courses: [],
@@ -77,20 +65,7 @@ const state = {
   busy: false
 };
 
-restoreSessionCache();
-
-for (const [, element] of SESSION_CACHE_FIELDS) {
-  element.addEventListener('input', persistSessionCache);
-  element.addEventListener('change', persistSessionCache);
-}
-
-elements.sessionForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  await initialize();
-});
-
-elements.loginWithCaptchaBtn.addEventListener('click', () => loginWithCaptchaCookie());
-elements.solveCaptchaBtn.addEventListener('click', () => solveCaptchaCookie());
+elements.reinitializeSessionBtn.addEventListener('click', () => initialize());
 
 elements.searchForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -177,16 +152,13 @@ renderClasses();
 renderChosen();
 renderCourseTypeTabs();
 renderFilterPanel();
+renderSessionConfigSummary();
+if (state.sessionConfig) initialize();
 
 async function initialize() {
   await runTask('初始化会话', async () => {
-    const baseUrl = elements.baseUrlInput.value.trim();
-    const cookie = elements.cookieInput.value.trim();
-    const path = elements.pagePathInput.value.trim();
-    if (!baseUrl) throw new Error('请填写教务系统 Base URL。');
-    if (!cookie) throw new Error('请填写 Cookie。');
-    if (!path) throw new Error('请填写选课入口 Path。');
-    persistSessionCache();
+    const { baseUrl, cookie, pagePath } = state.sessionConfig ?? {};
+    if (!baseUrl || !cookie || !pagePath) throw new Error('保存配置不完整，请先进入配置页面登录。');
 
     const transport = new ProxyTransport({ baseUrl, cookie });
     state.client = createZfxkClient({
@@ -195,7 +167,7 @@ async function initialize() {
       transport
     });
     state.transport = transport;
-    const html = await transport.get(path);
+    const html = await transport.get(pagePath);
     state.entryHtml = typeof html === 'string' ? html : '';
     state.courseTypes = parseCourseTypeOptions(state.entryHtml);
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
@@ -214,47 +186,6 @@ async function initialize() {
     updateSessionSummary();
     await searchCoursesCore();
     await refreshSnapshotCore();
-  });
-}
-
-async function solveCaptchaCookie() {
-  await runTask('获取验证码 Cookie', async () => {
-    const baseUrl = elements.baseUrlInput.value.trim();
-    if (!baseUrl) throw new Error('请填写教务系统 Base URL。');
-
-    const response = await fetch('/api/captcha/solve', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json; charset=UTF-8' },
-      body: JSON.stringify({ baseUrl })
-    });
-    const result = await readResponse(response, '/api/captcha/solve');
-    if (!result.cookie) throw new Error('验证码接口未返回 Cookie。');
-    elements.cookieInput.value = result.cookie;
-    persistSessionCache();
-    log('验证码 Cookie 已填入。');
-  });
-}
-
-async function loginWithCaptchaCookie() {
-  await runTask('登录获取 Cookie', async () => {
-    const baseUrl = elements.baseUrlInput.value.trim();
-    const username = elements.usernameInput.value.trim();
-    const password = elements.passwordInput.value;
-    if (!baseUrl) throw new Error('请填写教务系统 Base URL。');
-    if (!username) throw new Error('请填写用户名。');
-    if (!password) throw new Error('请填写密码。');
-    persistSessionCache();
-
-    const response = await fetch('/api/login/zfcaptcha', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json; charset=UTF-8' },
-      body: JSON.stringify({ baseUrl, username, password, maxCaptchaAttempts: 3 })
-    });
-    const result = await readResponse(response, '/api/login/zfcaptcha');
-    if (!result.cookie) throw new Error('登录接口未返回 Cookie。');
-    elements.cookieInput.value = result.cookie;
-    persistSessionCache();
-    log(`登录 Cookie 已填入，验证码尝试 ${result.attempts || 1} 次。`);
   });
 }
 
@@ -1281,11 +1212,22 @@ function normalizePeriod(period) {
 function updateSessionSummary() {
   const context = state.client?.context;
   if (!context) {
-    elements.sessionSummary.textContent = '未初始化会话';
+    elements.sessionSummary.textContent = state.sessionConfig
+      ? `等待初始化 · ${sessionHost(state.sessionConfig)}`
+      : '未保存配置';
     return;
   }
   const typeName = context.current.kklxmc || state.courseTypes.find((option) => courseTypeKey(option) === state.activeCourseTypeKey)?.label || context.current.kklxdm;
   elements.sessionSummary.textContent = `代理会话 · ${context.term.xkxnm}-${context.term.xkxqm} · ${typeName} · ${context.current.kklxdm} · ${context.current.xkkzId}`;
+}
+
+function renderSessionConfigSummary() {
+  if (!state.sessionConfig) {
+    elements.sessionConfigSummary.textContent = '未保存配置';
+    return;
+  }
+  const username = state.sessionConfig.username || '未保存用户名';
+  elements.sessionConfigSummary.textContent = `${sessionHost(state.sessionConfig)} · ${username} · Cookie 已保存`;
 }
 
 function currentExportMetadata() {
@@ -1333,7 +1275,7 @@ async function runTask(label, task) {
 }
 
 function setButtonsDisabled(disabled) {
-  for (const button of document.querySelectorAll('.topbar-actions button, #sessionForm button, #courseTypeTabs button, #searchForm button, #saveOrderBtn, #catalogSearchBtn, #classSortBtn, #exportCoursesBtn, #exportSelectedBtn')) {
+  for (const button of document.querySelectorAll('.topbar-actions button, #reinitializeSessionBtn, #courseTypeTabs button, #searchForm button, #saveOrderBtn, #catalogSearchBtn, #classSortBtn, #exportCoursesBtn, #exportSelectedBtn')) {
     button.disabled = disabled;
   }
 }
@@ -1346,38 +1288,6 @@ function log(message) {
   const item = document.createElement('li');
   item.textContent = `${new Date().toLocaleTimeString()} ${message}`;
   elements.activityLog.prepend(item);
-}
-
-function restoreSessionCache() {
-  const cache = readSessionCache();
-  if (!cache) return;
-  for (const [key, element] of SESSION_CACHE_FIELDS) {
-    if (typeof cache[key] === 'string') element.value = cache[key];
-  }
-}
-
-function persistSessionCache() {
-  writeSessionCache(Object.fromEntries(SESSION_CACHE_FIELDS.map(([key, element]) => [
-    key,
-    key === 'password' ? element.value : element.value.trim()
-  ])));
-}
-
-function readSessionCache() {
-  try {
-    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeSessionCache(cache) {
-  try {
-    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(cache));
-  } catch {
-    // Some privacy modes disable localStorage; the form still works without persistence.
-  }
 }
 
 function empty(text) {

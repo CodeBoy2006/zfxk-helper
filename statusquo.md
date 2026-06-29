@@ -345,3 +345,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** The standalone page route remains `/auto-selection`; only the main-page navigation label changed.
+
+## [2026-06-30 00:16] Initialize Saved Web Configuration
+- **Changes:** Added shared saved-session config utilities and a `/setup` initialization page; updated main and auto-selection pages to redirect when config is missing, reuse saved Base URL/Cookie/Path, and expose config edit links instead of duplicate account forms; refreshed CSS, README, static server routing, and web tests.
+- **Status:** Completed
+- **Next Steps:** Use `/setup` to save real school configuration before using the main or auto-selection pages.
+- **Context:** `npm test` passes; local smoke checks used `http://127.0.0.1:4176/` because ports 4173-4175 were already occupied.

@@ -31,33 +31,17 @@
             <h2><span class="step-badge">1</span>任务配置</h2>
           </div>
 
-          <form id="sessionForm" class="auto-session-form">
-            <label>
-              Base URL
-              <input id="baseUrlInput" name="baseUrl" placeholder="https://xkxt.example.edu.cn" autocomplete="off">
-            </label>
-            <label>
-              用户名
-              <input id="usernameInput" name="username" placeholder="2023123456" autocomplete="username">
-            </label>
-            <label>
-              密码
-              <input id="passwordInput" name="password" type="password" autocomplete="current-password">
-            </label>
-            <label>
-              Path <small>选填</small>
-              <input id="pagePathInput" name="pagePath" value="/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512" autocomplete="off">
-            </label>
-            <label>
-              Cookie <small>用于手动操作</small>
-              <textarea id="cookieInput" name="cookie" rows="2" placeholder="可选，仅手动操作时使用" autocomplete="off"></textarea>
-            </label>
-            <div class="auto-inline-actions">
-              <button id="loginWithCaptchaBtn" type="button" class="secondary">登录获取 Cookie</button>
-              <button id="solveCaptchaBtn" type="button" class="secondary">仅验证验证码</button>
-              <button id="autoInitBtn" type="submit">初始化页面</button>
+          <section class="auto-session-summary" aria-label="保存配置">
+            <div>
+              <span>保存配置</span>
+              <strong id="autoSessionSummary">读取本地配置中...</strong>
+              <p id="autoSessionDetail">自动选课会复用初始化配置中的 Base URL、Cookie、账号和选课入口。</p>
             </div>
-          </form>
+            <div class="auto-session-actions">
+              <button id="autoInitBtn" type="button" class="secondary">重新初始化</button>
+              <a id="autoConfigLink" class="auto-top-button" href="/setup?next=/auto-selection">修改配置</a>
+            </div>
+          </section>
 
           <div class="auto-divider"></div>
 

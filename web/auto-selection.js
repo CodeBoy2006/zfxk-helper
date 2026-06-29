@@ -1,10 +1,15 @@
 import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
 import { downloadJson } from './export-data.js';
+import {
+  DEFAULT_PAGE_PATH,
+  normalizeSessionConfig,
+  requireSessionConfig,
+  sessionHost,
+  setupUrl,
+  writeSessionConfig
+} from './session-config.js';
 
-const DEFAULT_PAGE_PATH = '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512';
-const MAIN_SESSION_STORAGE_KEY = 'zfxk.web.session.v1';
-const AUTO_SESSION_STORAGE_KEY = 'zfxk.autoSelection.session.v1';
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const DEFAULT_GROUP_STRATEGY = 'priority';
 const elements = {
@@ -12,14 +17,10 @@ const elements = {
   autoHelpBtn: document.querySelector('#autoHelpBtn'),
   autoHelpDialog: document.querySelector('#autoHelpDialog'),
   autoCollapseBtn: document.querySelector('#autoCollapseBtn'),
-  sessionForm: document.querySelector('#sessionForm'),
-  baseUrlInput: document.querySelector('#baseUrlInput'),
-  usernameInput: document.querySelector('#usernameInput'),
-  passwordInput: document.querySelector('#passwordInput'),
-  pagePathInput: document.querySelector('#pagePathInput'),
-  cookieInput: document.querySelector('#cookieInput'),
-  loginWithCaptchaBtn: document.querySelector('#loginWithCaptchaBtn'),
-  solveCaptchaBtn: document.querySelector('#solveCaptchaBtn'),
+  autoSessionSummary: document.querySelector('#autoSessionSummary'),
+  autoSessionDetail: document.querySelector('#autoSessionDetail'),
+  autoConfigLink: document.querySelector('#autoConfigLink'),
+  autoInitBtn: document.querySelector('#autoInitBtn'),
   autoIntervalInput: document.querySelector('#autoIntervalInput'),
   autoMaxAttemptsInput: document.querySelector('#autoMaxAttemptsInput'),
   autoDeadlineInput: document.querySelector('#autoDeadlineInput'),
@@ -50,6 +51,7 @@ const elements = {
 const state = {
   client: null,
   transport: null,
+  sessionConfig: requireSessionConfig('/auto-selection'),
   entryHtml: '',
   courseTypes: [],
   activeCourseTypeKey: '',
@@ -66,20 +68,17 @@ const state = {
   busy: false
 };
 
-restoreSession();
 restoreDraft();
 bindEvents();
+renderSessionOverview();
 renderAutoSelectionDraft();
 renderAutoTaskStatus();
+if (state.sessionConfig) initializeSession();
 pollAutoSelectionTasks();
 
 function bindEvents() {
-  elements.sessionForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    await initializeSession();
-  });
-  elements.loginWithCaptchaBtn.addEventListener('click', () => loginWithCaptchaCookie());
-  elements.solveCaptchaBtn.addEventListener('click', () => solveCaptchaCookie());
+  elements.autoInitBtn.addEventListener('click', () => initializeSession());
+  elements.autoConfigLink.href = setupUrl('/auto-selection');
   elements.autoIdTargetForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     await addIdTargetToAutoSelection();
@@ -107,26 +106,21 @@ function bindEvents() {
   elements.autoExportConfigBtn.addEventListener('click', () => exportAutoSelectionDraft());
   elements.autoImportConfigInput.addEventListener('change', () => importAutoSelectionDraft());
 
-  for (const input of [elements.baseUrlInput, elements.usernameInput, elements.pagePathInput, elements.cookieInput]) {
-    input.addEventListener('input', persistSession);
-    input.addEventListener('change', persistSession);
-  }
 }
 
 async function initializeSession() {
   await runTask('初始化页面', async () => {
-    const baseUrl = elements.baseUrlInput.value.trim();
-    const pagePath = elements.pagePathInput.value.trim() || DEFAULT_PAGE_PATH;
-    let cookie = elements.cookieInput.value.trim();
-    if (!baseUrl) throw new Error('请填写 Base URL。');
-    if (!cookie && elements.usernameInput.value.trim() && elements.passwordInput.value) {
+    const config = state.sessionConfig;
+    if (!config?.baseUrl) throw new Error('保存配置缺少 Base URL。');
+    const pagePath = config.pagePath || DEFAULT_PAGE_PATH;
+    let cookie = config.cookie;
+    if (!cookie && config.username && config.password) {
       cookie = await loginWithCaptchaCookie({ silent: true });
     }
-    if (!cookie) throw new Error('请填写 Cookie，或填写用户名密码后登录。');
+    if (!cookie) throw new Error('保存配置缺少 Cookie，请先进入配置页面登录。');
 
-    persistSession();
-    const transport = new ProxyTransport({ baseUrl, cookie });
-    state.client = createZfxkClient({ baseUrl, mode: 'commit', transport });
+    const transport = new ProxyTransport({ baseUrl: config.baseUrl, cookie });
+    state.client = createZfxkClient({ baseUrl: config.baseUrl, mode: 'commit', transport });
     state.transport = transport;
     state.entryHtml = String(await transport.get(pagePath) || '');
     state.courseTypes = parseCourseTypeOptions(state.entryHtml);
@@ -134,44 +128,31 @@ async function initializeSession() {
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
     await state.client.bootstrap({ html: state.entryHtml, raw: activeType ? courseTypeRaw(activeType) : undefined });
     log('会话已初始化，可按课程 ID 和班级 ID 获取详情并加入目标。');
-  });
-}
-
-async function solveCaptchaCookie() {
-  await runTask('获取验证码 Cookie', async () => {
-    const baseUrl = elements.baseUrlInput.value.trim();
-    if (!baseUrl) throw new Error('请填写 Base URL。');
-    const response = await fetch('/api/captcha/solve', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json; charset=UTF-8' },
-      body: JSON.stringify({ baseUrl })
-    });
-    const result = await readResponse(response, '/api/captcha/solve');
-    if (!result.cookie) throw new Error('验证码接口未返回 Cookie。');
-    elements.cookieInput.value = result.cookie;
-    persistSession();
-    log('验证码 Cookie 已填入。');
-    return result.cookie;
+    renderSessionOverview();
   });
 }
 
 async function loginWithCaptchaCookie(options = {}) {
   const operation = async () => {
-    const baseUrl = elements.baseUrlInput.value.trim();
-    const username = elements.usernameInput.value.trim();
-    const password = elements.passwordInput.value;
-    if (!baseUrl) throw new Error('请填写 Base URL。');
-    if (!username) throw new Error('请填写用户名。');
-    if (!password) throw new Error('请填写密码。');
+    const config = state.sessionConfig;
+    if (!config?.baseUrl) throw new Error('保存配置缺少 Base URL。');
+    if (!config.username) throw new Error('保存配置缺少用户名。');
+    if (!config.password) throw new Error('保存配置缺少密码。');
     const response = await fetch('/api/login/zfcaptcha', {
       method: 'POST',
       headers: { 'content-type': 'application/json; charset=UTF-8' },
-      body: JSON.stringify({ baseUrl, username, password, maxCaptchaAttempts: 3 })
+      body: JSON.stringify({
+        baseUrl: config.baseUrl,
+        username: config.username,
+        password: config.password,
+        maxCaptchaAttempts: 3
+      })
     });
     const result = await readResponse(response, '/api/login/zfcaptcha');
     if (!result.cookie) throw new Error('登录接口未返回 Cookie。');
-    elements.cookieInput.value = result.cookie;
-    persistSession();
+    state.sessionConfig = normalizeSessionConfig({ ...config, cookie: result.cookie });
+    writeSessionConfig(state.sessionConfig);
+    renderSessionOverview();
     if (!options.silent) log(`登录 Cookie 已填入，验证码尝试 ${result.attempts || 1} 次。`);
     return result.cookie;
   };
@@ -477,16 +458,17 @@ async function cancelCurrentAutoTask() {
 
 async function refreshAuthFromStatusPanel() {
   await loginWithCaptchaCookie();
-  if (!state.client && elements.cookieInput.value.trim()) await initializeSession();
+  if (!state.client && state.sessionConfig?.cookie) await initializeSession();
 }
 
 function buildAutoSelectionPayload(includeSecrets = false) {
+  const config = state.sessionConfig ?? {};
   return {
-    baseUrl: elements.baseUrlInput.value.trim(),
-    username: elements.usernameInput.value.trim(),
-    password: includeSecrets ? elements.passwordInput.value : undefined,
-    cookie: includeSecrets ? elements.cookieInput.value.trim() : undefined,
-    pagePath: elements.pagePathInput.value.trim() || DEFAULT_PAGE_PATH,
+    baseUrl: config.baseUrl,
+    username: config.username,
+    password: includeSecrets ? config.password : undefined,
+    cookie: includeSecrets ? config.cookie : undefined,
+    pagePath: config.pagePath || DEFAULT_PAGE_PATH,
     intervalMs: Number(elements.autoIntervalInput.value) || 1500,
     maxAttempts: elements.autoMaxAttemptsInput.value ? Number(elements.autoMaxAttemptsInput.value) : null,
     deadlineAt: elements.autoDeadlineInput.value || null,
@@ -617,9 +599,14 @@ async function importAutoSelectionDraft() {
 }
 
 function applyImportedConfig(config) {
-  elements.baseUrlInput.value = config.baseUrl || elements.baseUrlInput.value;
-  elements.usernameInput.value = config.username || elements.usernameInput.value;
-  elements.pagePathInput.value = config.pagePath || elements.pagePathInput.value || DEFAULT_PAGE_PATH;
+  state.sessionConfig = normalizeSessionConfig({
+    ...state.sessionConfig,
+    baseUrl: config.baseUrl || state.sessionConfig?.baseUrl,
+    username: config.username || state.sessionConfig?.username,
+    pagePath: config.pagePath || state.sessionConfig?.pagePath || DEFAULT_PAGE_PATH
+  });
+  writeSessionConfig(state.sessionConfig);
+  renderSessionOverview();
   elements.autoIntervalInput.value = config.intervalMs || 1500;
   elements.autoMaxAttemptsInput.value = config.maxAttempts ?? '';
   elements.autoDeadlineInput.value = config.deadlineAt || '';
@@ -631,7 +618,6 @@ function applyImportedConfig(config) {
     })) : [defaultGroup('体育课')],
     activeGroupIndex: 0
   };
-  persistSession();
   persistDraft();
   renderAutoSelectionDraft();
 }
@@ -742,42 +728,14 @@ function toggleChromeCompactMode() {
   elements.autoCollapseBtn.textContent = document.body.classList.contains('auto-chrome-compact') ? '⌄' : '⌃';
 }
 
-function restoreSession() {
-  const saved = readStoredSession(AUTO_SESSION_STORAGE_KEY);
-  const inherited = readStoredSession(MAIN_SESSION_STORAGE_KEY);
-  elements.baseUrlInput.value = sessionValue(inherited.baseUrl, saved.baseUrl);
-  elements.usernameInput.value = sessionValue(inherited.username, saved.username);
-  elements.passwordInput.value = sessionValue(inherited.password);
-  elements.pagePathInput.value = sessionValue(inherited.pagePath, saved.pagePath, DEFAULT_PAGE_PATH);
-  elements.cookieInput.value = sessionValue(inherited.cookie, saved.cookie);
-}
-
-function persistSession() {
-  try {
-    localStorage.setItem(AUTO_SESSION_STORAGE_KEY, JSON.stringify({
-      baseUrl: elements.baseUrlInput.value.trim(),
-      username: elements.usernameInput.value.trim(),
-      pagePath: elements.pagePathInput.value.trim() || DEFAULT_PAGE_PATH,
-      cookie: elements.cookieInput.value.trim()
-    }));
-  } catch {
-    // Storage can be unavailable in private contexts; inherited form values still work for the current page.
+function renderSessionOverview() {
+  if (!state.sessionConfig) {
+    elements.autoSessionSummary.textContent = '未保存配置';
+    elements.autoSessionDetail.textContent = '请先进入配置页面完成登录。';
+    return;
   }
-}
-
-function readStoredSession(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key) || '{}');
-  } catch {
-    return {};
-  }
-}
-
-function sessionValue(...values) {
-  for (const value of values) {
-    if (typeof value === 'string' && value.trim()) return value;
-  }
-  return '';
+  elements.autoSessionSummary.textContent = `${sessionHost(state.sessionConfig)} · ${state.sessionConfig.username || '未保存用户名'}`;
+  elements.autoSessionDetail.textContent = `入口：${state.sessionConfig.pagePath || DEFAULT_PAGE_PATH} · Cookie ${state.sessionConfig.cookie ? '已保存' : '未保存'}`;
 }
 
 function restoreDraft() {

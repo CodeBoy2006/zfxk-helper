@@ -46,6 +46,8 @@ const server = createServer(async (request, response) => {
     ? '/web/index.html'
     : url.pathname === '/auto-selection'
       ? '/web/auto-selection.html'
+      : url.pathname === '/setup'
+        ? '/web/setup.html'
       : url.pathname;
   const requestPath = normalize(pathname).replace(/^[/\\]+/, '').replace(/^(\.\.[/\\])+/, '');
   const filePath = resolve(root, requestPath);

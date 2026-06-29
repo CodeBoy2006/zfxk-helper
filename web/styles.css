@@ -139,23 +139,21 @@ textarea {
   background: #0b8d62;
 }
 
+.config-link-button {
+  border-color: #d4dfec;
+  background: #ffffff;
+  color: #1f2a44;
+  box-shadow: none;
+}
+
+.config-link-button:hover {
+  border-color: #aebfd4;
+  background: #f5f8fc;
+}
+
 .session-panel {
   margin-top: 12px;
   padding: 14px;
-}
-
-#sessionForm {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(240px, 1.15fr) minmax(240px, 1fr) minmax(120px, 0.7fr) minmax(120px, 0.7fr) minmax(220px, auto);
-  align-items: end;
-  gap: 12px;
-}
-
-.session-actions {
-  display: flex;
-  align-items: end;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .checkbox {
@@ -170,15 +168,67 @@ textarea {
   min-height: auto;
 }
 
-.session-panel label {
+.session-status-panel {
   display: grid;
-  gap: 5px;
-  color: var(--muted);
+  gap: 12px;
 }
 
-.mode-note {
-  margin: 10px 0 0;
+.session-status-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.session-status-card span,
+.auto-session-summary span {
+  display: block;
+  margin-bottom: 4px;
   color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.session-status-card strong,
+.auto-session-summary strong {
+  display: block;
+  color: #172033;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.session-status-card p,
+.auto-session-summary p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.session-status-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-config-link,
+.setup-link-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+  background: #fff;
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .course-type-switch {
@@ -186,9 +236,6 @@ textarea {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 12px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
 }
 
 .course-type-switch > span {
@@ -569,6 +616,192 @@ body[data-page="auto-selection"] {
   background: #eef3f8;
 }
 
+body[data-page="setup"] {
+  min-height: 100vh;
+  background:
+    linear-gradient(135deg, rgba(31, 115, 208, 0.08), transparent 34%),
+    linear-gradient(315deg, rgba(18, 148, 104, 0.1), transparent 38%),
+    #f4f7fb;
+}
+
+.setup-shell {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.78fr) minmax(420px, 1fr);
+  gap: 22px;
+  width: min(1120px, calc(100vw - 28px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 34px 0;
+  align-items: center;
+}
+
+.setup-hero,
+.setup-panel {
+  min-width: 0;
+  border: 1px solid #dbe5f1;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 50px rgba(31, 48, 78, 0.1);
+}
+
+.setup-hero {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  min-height: 560px;
+  padding: 34px;
+}
+
+.setup-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setup-brand span {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: #123d67;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.setup-brand strong {
+  color: #1d2a42;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.setup-hero h1 {
+  max-width: 520px;
+  margin: 0;
+  color: #132239;
+  font-size: 36px;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.setup-hero p {
+  max-width: 520px;
+  margin: 0;
+  color: #52627a;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.setup-status-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.setup-status-grid div {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #e0e8f2;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.setup-status-grid span {
+  color: #73829a;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.setup-status-grid strong {
+  min-width: 0;
+  color: #1e2a42;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.setup-panel {
+  padding: 24px;
+}
+
+.setup-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.setup-panel-heading h2 {
+  margin: 0;
+  color: #15233b;
+  font-size: 24px;
+}
+
+.setup-panel-heading p {
+  margin: 6px 0 0;
+  color: #65748c;
+  line-height: 1.55;
+}
+
+.setup-form {
+  display: grid;
+  gap: 14px;
+}
+
+.setup-form label {
+  display: grid;
+  gap: 7px;
+  color: #52627a;
+  font-weight: 850;
+}
+
+.setup-two-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.setup-form input,
+.setup-form textarea {
+  border-color: #cfdbea;
+  background: #fbfdff;
+}
+
+.setup-form textarea {
+  min-height: 104px;
+}
+
+.setup-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.setup-actions button {
+  min-height: 42px;
+  font-weight: 900;
+}
+
+.setup-message {
+  margin-top: 16px;
+  border: 1px solid #cfe0f2;
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: #f5faff;
+  color: #27577e;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.setup-message.error {
+  border-color: #f0c0bd;
+  background: #fff5f4;
+  color: var(--danger);
+}
+
 .auto-page-shell {
   width: min(1900px, calc(100vw - 16px));
   margin: 0 auto;
@@ -727,14 +960,25 @@ body[data-page="auto-selection"] {
   min-height: calc(100vh - 86px);
 }
 
-body[data-page="auto-selection"] #sessionForm {
+.auto-session-summary {
   display: grid;
-  grid-template-columns: 1fr;
-  align-items: stretch;
-  gap: 0;
+  gap: 12px;
+  border: 1px solid #e0e8f2;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fbff;
 }
 
-.auto-session-form label,
+.auto-session-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.auto-session-actions a {
+  text-decoration: none;
+}
+
 .auto-setting-grid label {
   display: grid;
   gap: 4px;
@@ -744,7 +988,6 @@ body[data-page="auto-selection"] #sessionForm {
   font-weight: 850;
 }
 
-.auto-session-form small,
 .auto-setting-grid small {
   display: none;
 }
@@ -754,30 +997,16 @@ body[data-page="auto-selection"] #sessionForm {
   font-weight: 750;
 }
 
-.auto-inline-actions,
 .auto-primary-actions {
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
 }
 
-.auto-inline-actions {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.auto-inline-actions #autoInitBtn {
-  grid-column: auto;
-}
-
 .auto-divider {
   height: 1px;
   margin: 10px 0;
   background: var(--line);
-}
-
-.auto-session-form textarea {
-  min-height: 36px;
-  max-height: 42px;
 }
 
 .auto-input-with-unit {
@@ -1816,10 +2045,18 @@ body.auto-chrome-compact .auto-page-title {
 }
 
 @media (max-width: 1120px) {
-  #sessionForm,
+  .setup-shell,
   .auto-page-workspace,
   .workspace {
     grid-template-columns: 1fr;
+  }
+
+  .setup-shell {
+    align-items: stretch;
+  }
+
+  .setup-hero {
+    min-height: auto;
   }
 
   .catalog-pane,
@@ -1842,6 +2079,7 @@ body.auto-chrome-compact .auto-page-title {
   }
 
   .auto-group-fields,
+  .auto-session-actions,
   .auto-id-target-form {
     grid-template-columns: 1fr;
   }
@@ -1889,12 +2127,28 @@ body.auto-chrome-compact .auto-page-title {
     margin-top: 8px;
   }
 
+  .setup-shell {
+    width: calc(100vw - 16px);
+    padding: 8px 0;
+  }
+
+  .setup-hero,
+  .setup-panel {
+    padding: 18px;
+  }
+
+  .setup-hero h1 {
+    font-size: 28px;
+  }
+
   .auto-page-shell {
     width: calc(100vw - 8px);
   }
 
   .topbar,
   .auto-page-topbar,
+  .session-status-card,
+  .setup-panel-heading,
   .search-bar,
   .course-type-switch,
   .filter-search-row,
@@ -1906,6 +2160,14 @@ body.auto-chrome-compact .auto-page-title {
     display: grid;
   }
 
+  .session-status-actions,
+  .setup-actions,
+  .setup-two-cols {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
   .auto-page-topbar {
     position: static;
     display: grid;
@@ -1915,7 +2177,7 @@ body.auto-chrome-compact .auto-page-title {
   .auto-page-home,
   .auto-page-actions,
   .auto-page-tab-list,
-  .auto-inline-actions,
+  .auto-session-actions,
   .auto-primary-actions {
     display: grid;
     grid-template-columns: 1fr;

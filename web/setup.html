@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>zfxk 初始化配置</title>
+    <link rel="stylesheet" href="/web/styles.css">
+  </head>
+  <body data-page="setup">
+    <main class="setup-shell">
+      <section class="setup-hero" aria-label="配置说明">
+        <div class="setup-brand">
+          <span>zfxk</span>
+          <strong>初始化配置</strong>
+        </div>
+        <h1>先保存教务会话，再进入选课工作台</h1>
+        <p>账号、入口路径和 Cookie 统一保存在本机浏览器中。主页面和自动选课页面会直接读取这份配置，不再重复填写。</p>
+        <div class="setup-status-grid" aria-label="配置状态">
+          <div>
+            <span>Base URL</span>
+            <strong id="setupBasePreview">待填写</strong>
+          </div>
+          <div>
+            <span>Cookie</span>
+            <strong id="setupCookiePreview">未保存</strong>
+          </div>
+          <div>
+            <span>进入页面</span>
+            <strong id="setupNextPreview">主页面</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="setup-panel" aria-label="登录配置">
+        <div class="setup-panel-heading">
+          <div>
+            <h2>登录配置</h2>
+            <p>推荐填写账号密码后点击登录获取 Cookie，也可以手动粘贴已登录 Cookie。</p>
+          </div>
+          <a id="setupReturnLink" class="setup-link-button" href="/">返回</a>
+        </div>
+
+        <form id="setupForm" class="setup-form">
+          <label>
+            教务系统 Base URL
+            <input id="setupBaseUrlInput" name="baseUrl" placeholder="https://example.edu.cn/jwglxt" autocomplete="off">
+          </label>
+          <div class="setup-two-cols">
+            <label>
+              用户名
+              <input id="setupUsernameInput" name="username" autocomplete="username">
+            </label>
+            <label>
+              密码
+              <input id="setupPasswordInput" name="password" type="password" autocomplete="current-password">
+            </label>
+          </div>
+          <label>
+            选课入口 Path
+            <input id="setupPagePathInput" name="pagePath" autocomplete="off">
+          </label>
+          <label>
+            Cookie
+            <textarea id="setupCookieInput" name="cookie" rows="4" placeholder="JSESSIONID=...; route=..." autocomplete="off"></textarea>
+          </label>
+
+          <div class="setup-actions">
+            <button id="setupLoginBtn" type="button" class="secondary">登录获取 Cookie</button>
+            <button id="setupSolveCaptchaBtn" type="button" class="secondary">仅验证验证码</button>
+            <button id="setupSubmitBtn" type="submit">保存并继续</button>
+          </div>
+        </form>
+
+        <div id="setupMessage" class="setup-message" role="status" aria-live="polite">等待配置。</div>
+      </section>
+    </main>
+    <script type="module" src="/web/setup.js"></script>
+  </body>
+</html>
