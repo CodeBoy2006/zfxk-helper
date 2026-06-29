@@ -292,6 +292,12 @@
 - **Next Steps:** Validate the standalone page with a real school account and live selectable teaching classes.
 - **Context:** Browser QA used a seeded local draft for visual parity with the reference image; no password or Cookie is saved in exported task configs.
 
+## [2026-06-29 22:50] Auto Selection Return Button
+- **Changes:** Removed the standalone auto-selection page's top course-type navigation, added a `返回主页面` button linking to `/`, cleaned unused navigation bindings, updated focused Web tests, and refreshed design QA notes.
+- **Status:** Completed
+- **Next Steps:** Reopen `/auto-selection` and use `返回主页面` when switching back to the main course-selection workspace.
+- **Context:** Course type parsing still happens during initialization so the SDK can bootstrap the active school selection context; the standalone page no longer exposes top-level course-type switching.
+
 ## [2026-06-29 22:27] Local Course Filtering
 - **Changes:** Added Web course-filter helpers, split filter execution into local/hybrid/remote modes, cached remote course result sets, and documented which filters stay local.
 - **Status:** Completed

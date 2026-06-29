@@ -167,7 +167,11 @@ test('standalone auto-selection page implements the reference workflow surface',
 
   assert.match(html, /<body[^>]*data-page="auto-selection"/);
   assert.match(html, /自动选课控制台/);
-  assert.match(html, /id="autoCourseTypeTabs"/);
+  assert.match(html, /id="autoReturnHomeBtn"/);
+  assert.match(html, /href="\/"/);
+  assert.match(html, /返回主页面/);
+  assert.doesNotMatch(html, /id="autoCourseTypeTabs"/);
+  assert.doesNotMatch(html, /当前显示/);
   assert.match(html, /id="autoEnabledSwitch"/);
   assert.match(html, /id="autoHelpBtn"/);
   assert.match(html, /id="autoHelpDialog"/);
@@ -212,7 +216,8 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /parseCourseTypeOptions/);
   assert.match(app, /loadAllCoursePages/);
   assert.match(app, /AUTO_SELECTION_DRAFT_STORAGE_KEY/);
-  assert.match(app, /renderCourseTypeTabs/);
+  assert.doesNotMatch(app, /renderCourseTypeTabs/);
+  assert.doesNotMatch(app, /switchCourseType/);
   assert.match(app, /renderTeachingClasses/);
   assert.match(app, /addClassToAutoSelection/);
   assert.match(app, /reorderTarget/);

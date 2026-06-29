@@ -7,10 +7,7 @@ import { downloadJson } from './export-data.js';
 const DEFAULT_PAGE_PATH = '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512';
 const AUTO_SESSION_STORAGE_KEY = 'zfxk.autoSelection.session.v1';
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
-const DEFAULT_COURSE_TABS = ['主修课程', '跨专业个性化课程', '通识选修课', '体育分项'];
-
 const elements = {
-  autoCourseTypeTabs: document.querySelector('#autoCourseTypeTabs'),
   autoEnabledSwitch: document.querySelector('#autoEnabledSwitch'),
   autoHelpBtn: document.querySelector('#autoHelpBtn'),
   autoHelpDialog: document.querySelector('#autoHelpDialog'),
@@ -78,7 +75,6 @@ const state = {
 restoreSession();
 restoreDraft();
 bindEvents();
-renderCourseTypeTabs();
 renderAutoSelectionDraft();
 renderTeachingFilters();
 renderTeachingClasses();
@@ -92,7 +88,6 @@ function bindEvents() {
   });
   elements.loginWithCaptchaBtn.addEventListener('click', () => loginWithCaptchaCookie());
   elements.solveCaptchaBtn.addEventListener('click', () => solveCaptchaCookie());
-  elements.autoCourseTypeTabs.addEventListener('click', (event) => switchCourseTypeFromClick(event));
   elements.autoSearchForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     await searchCourses();
@@ -151,7 +146,6 @@ async function initializeSession() {
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
     await state.client.bootstrap({ html: state.entryHtml, raw: activeType ? courseTypeRaw(activeType) : undefined });
-    renderCourseTypeTabs();
     await searchCoursesCore();
     log('会话已初始化，可从教学班列表加入目标。');
   });
@@ -196,28 +190,6 @@ async function loginWithCaptchaCookie(options = {}) {
     return result.cookie;
   };
   return options.silent ? operation() : runTask('登录获取 Cookie', operation);
-}
-
-async function switchCourseTypeFromClick(event) {
-  const button = event.target.closest('[data-course-type-key]');
-  if (!button || button.disabled) return;
-  await switchCourseType(button.dataset.courseTypeKey);
-}
-
-async function switchCourseType(key) {
-  if (!state.client || !key || key === state.activeCourseTypeKey) return;
-  const courseType = state.courseTypes.find((option) => courseTypeKey(option) === key);
-  if (!courseType) return;
-  await runTask(`切换到${courseType.label}`, async () => {
-    state.activeCourseTypeKey = key;
-    state.courses = [];
-    state.classes = [];
-    state.selectedCourseKey = '';
-    await state.client.refreshContext({ html: state.entryHtml, raw: courseTypeRaw(courseType) });
-    renderCourseTypeTabs();
-    await searchCoursesCore();
-    log(`当前显示：${courseType.label}`);
-  });
 }
 
 async function searchCourses() {
@@ -267,32 +239,6 @@ async function loadClassesCore(courseKey) {
   renderTeachingFilters();
   elements.autoCourseFilter.value = courseKey;
   renderTeachingClasses();
-}
-
-function renderCourseTypeTabs() {
-  elements.autoCourseTypeTabs.replaceChildren();
-  if (!state.courseTypes.length) {
-    for (const label of DEFAULT_COURSE_TABS) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'auto-page-tab';
-      button.disabled = true;
-      button.textContent = label;
-      elements.autoCourseTypeTabs.append(button);
-    }
-    return;
-  }
-
-  for (const option of state.courseTypes) {
-    const key = courseTypeKey(option);
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `auto-page-tab ${key === state.activeCourseTypeKey ? 'active' : ''}`;
-    button.dataset.courseTypeKey = key;
-    button.textContent = option.label;
-    button.title = `${option.kklxdm} · ${option.xkkzId}`;
-    elements.autoCourseTypeTabs.append(button);
-  }
 }
 
 function renderTeachingFilters() {
