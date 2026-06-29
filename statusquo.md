@@ -99,3 +99,9 @@
 - **Status:** Completed
 - **Next Steps:** Validate the full login flow against the live deployment, especially deployments that require SMS or identity-confirmation dialogs.
 - **Context:** Non-interactive blockers are surfaced as explicit error codes such as `SMS_LOGIN_REQUIRED` and `IDENTITY_CONFIRMATION_REQUIRED`.
+
+## [2026-06-29 18:42] Browser-Safe Web Imports
+- **Changes:** Updated the Web frontend to import browser-safe SDK modules directly instead of the Node package root, and added regression coverage preventing `node:` imports from the browser script.
+- **Status:** Completed
+- **Next Steps:** Hard-refresh the Web frontend if the browser cached the old module graph.
+- **Context:** `loginWithZfCaptcha()` remains available through the local Node endpoint; browser code must not load `src/auth/login.js` because it imports `node:crypto`.

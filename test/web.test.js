@@ -29,6 +29,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(app, /createZfxkClient/);
   assert.match(app, /parseCourseTypeOptions/);
+  assert.doesNotMatch(app, /from '..\/src\/index\.js'/);
+  assert.doesNotMatch(app, /node:/);
   assert.match(app, /groupCoursesForDisplay/);
   assert.match(app, /courseIdsForDisplayKey/);
   assert.match(app, /groupCoursesForDisplay\(state\.courses\)/);

@@ -1,4 +1,5 @@
-import { createZfxkClient, parseCourseTypeOptions } from '../src/index.js';
+import { createZfxkClient } from '../src/client.js';
+import { parseCourseTypeOptions } from '../src/course-types.js';
 import { courseIdsForDisplayKey, groupCoursesForDisplay } from './course-groups.js';
 
 const elements = {
