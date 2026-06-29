@@ -13,14 +13,19 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /id="cookieInput"/);
   assert.match(html, /id="filterPanel"/);
   assert.match(html, /id="filterRows"/);
+  assert.match(html, /id="courseTypeTabs"/);
+  assert.match(html, /当前显示/);
   assert.match(html, /id="resetFiltersBtn"/);
   assert.match(html, /id="courseList"/);
   assert.match(html, /id="chosenPanel"/);
   assert.match(html, /id="activityLog"/);
   assert.doesNotMatch(html, /Demo 回放/);
   assert.match(app, /createZfxkClient/);
-  assert.match(app, /bootstrap\(\{ html \}\)/);
+  assert.match(app, /parseCourseTypeOptions/);
+  assert.match(app, /bootstrap\(\{ html: state\.entryHtml, raw:/);
   assert.match(app, /ProxyTransport/);
+  assert.match(app, /switchCourseType/);
+  assert.match(app, /renderCourseTypeTabs/);
   assert.match(app, /\/api\/proxy\/post/);
   assert.match(app, /loadFilterGroups/);
   assert.match(app, /renderMeetingList/);
@@ -39,6 +44,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(app, /MemoryTransport/);
   assert.doesNotMatch(app, /createDemoClient/);
   assert.match(css, /grid-template-columns/);
+  assert.match(css, /course-type-tabs/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
 });

@@ -148,6 +148,48 @@ textarea {
   color: var(--muted);
 }
 
+.course-type-switch {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.course-type-switch > span {
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.course-type-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 36px;
+  align-items: center;
+}
+
+.course-type-tab {
+  border-color: #b8d4ee;
+  background: #f5faff;
+  color: #155fa0;
+  font-weight: 700;
+}
+
+.course-type-tab.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.course-type-placeholder {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .filter-panel {
   position: relative;
   margin-top: 12px;
@@ -541,6 +583,7 @@ textarea {
 
   .topbar,
   .search-bar,
+  .course-type-switch,
   .filter-search-row,
   .filter-row {
     grid-template-columns: 1fr;

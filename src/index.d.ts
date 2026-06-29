@@ -119,6 +119,16 @@ export interface SelectionSnapshot {
   fetchedAt: Date;
 }
 
+export interface CourseTypeOption {
+  label: string;
+  kklxdm: string;
+  xkkzId: string;
+  njdmId: string;
+  zyhId: string;
+  xkkzXh: string;
+  active: boolean;
+}
+
 export interface ZfxkClientOptions {
   baseUrl: string;
   auth?: { type: 'cookie'; cookie: string } | { type: 'custom'; [key: string]: unknown };
@@ -137,6 +147,7 @@ export declare const endpoints: Record<string, string>;
 export declare function createZfxkClient(options: ZfxkClientOptions): ZfxkClient;
 export declare function loadRuntimeContext(input: { baseUrl?: string; html?: string; raw?: Record<string, string>; context?: RuntimeContext }): RuntimeContext;
 export declare function extractHiddenFields(html: string): Record<string, string>;
+export declare function parseCourseTypeOptions(input: string | { html?: string; raw?: Record<string, string> }): CourseTypeOption[];
 export declare function mapCourse(row: Record<string, unknown>): Course;
 export declare function mapTeachingClass(row: Record<string, unknown>): TeachingClass;
 export declare function normalizeSaveSelection(data: unknown): unknown;

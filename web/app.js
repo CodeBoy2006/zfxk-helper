@@ -1,4 +1,4 @@
-import { createZfxkClient } from '../src/index.js';
+import { createZfxkClient, parseCourseTypeOptions } from '../src/index.js';
 
 const elements = {
   sessionForm: document.querySelector('#sessionForm'),
@@ -7,6 +7,7 @@ const elements = {
   cookieInput: document.querySelector('#cookieInput'),
   pagePathInput: document.querySelector('#pagePathInput'),
   keywordInput: document.querySelector('#keywordInput'),
+  courseTypeTabs: document.querySelector('#courseTypeTabs'),
   filterPanel: document.querySelector('#filterPanel'),
   filterRows: document.querySelector('#filterRows'),
   resetFiltersBtn: document.querySelector('#resetFiltersBtn'),
@@ -31,6 +32,9 @@ const state = {
   classes: [],
   selectedCourseId: null,
   snapshot: null,
+  entryHtml: '',
+  courseTypes: [],
+  activeCourseTypeKey: '',
   filterGroups: [],
   filters: {},
   expandedFilterRows: new Set(),
@@ -92,6 +96,12 @@ elements.filterRows.addEventListener('click', async (event) => {
   }
 });
 
+elements.courseTypeTabs.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-course-type-key]');
+  if (!button) return;
+  await switchCourseType(button.dataset.courseTypeKey);
+});
+
 elements.refreshSnapshotBtn.addEventListener('click', () => refreshSnapshot());
 elements.saveOrderBtn.addEventListener('click', () => saveOrder());
 elements.clearLogBtn.addEventListener('click', () => {
@@ -102,6 +112,7 @@ elements.clearLogBtn.addEventListener('click', () => {
 renderCourses();
 renderClasses();
 renderChosen();
+renderCourseTypeTabs();
 renderFilterPanel();
 
 async function initialize() {
@@ -121,16 +132,50 @@ async function initialize() {
     });
     state.transport = transport;
     const html = await transport.get(path);
-    await state.client.bootstrap({ html });
+    state.entryHtml = typeof html === 'string' ? html : '';
+    state.courseTypes = parseCourseTypeOptions(state.entryHtml);
+    const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
+    state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
+    await state.client.bootstrap({ html: state.entryHtml, raw: activeType ? courseTypeRaw(activeType) : undefined });
     state.filters = {};
     state.expandedFilterRows = new Set();
     state.filtersCollapsed = false;
     state.filterGroups = await loadFilterGroups(transport, state.client.context);
+    renderCourseTypeTabs();
     renderFilterPanel();
     log('会话已通过本地代理解析。');
     updateSessionSummary();
     await searchCoursesCore();
     await refreshSnapshotCore();
+  });
+}
+
+async function switchCourseType(key) {
+  if (!state.client) {
+    log('请先初始化会话。');
+    return;
+  }
+  if (!key || key === state.activeCourseTypeKey) return;
+  const courseType = state.courseTypes.find((option) => courseTypeKey(option) === key);
+  if (!courseType) return;
+
+  await runTask(`切换到${courseType.label}`, async () => {
+    state.activeCourseTypeKey = key;
+    state.filters = {};
+    state.expandedFilterRows = new Set();
+    state.courses = [];
+    state.classes = [];
+    state.selectedCourseId = null;
+    await state.client.refreshContext({ html: state.entryHtml, raw: courseTypeRaw(courseType) });
+    state.filterGroups = await loadFilterGroups(state.transport, state.client.context);
+    renderCourseTypeTabs();
+    renderFilterPanel();
+    renderCourses();
+    renderClasses();
+    updateSessionSummary();
+    await searchCoursesCore();
+    await refreshSnapshotCore();
+    log(`当前显示：${courseType.label}`);
   });
 }
 
@@ -407,6 +452,28 @@ function renderChosen() {
   });
 }
 
+function renderCourseTypeTabs() {
+  elements.courseTypeTabs.replaceChildren();
+  if (!state.courseTypes.length) {
+    const placeholder = document.createElement('span');
+    placeholder.className = 'course-type-placeholder';
+    placeholder.textContent = '初始化后显示可切换类型';
+    elements.courseTypeTabs.append(placeholder);
+    return;
+  }
+
+  for (const option of state.courseTypes) {
+    const key = courseTypeKey(option);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `course-type-tab ${key === state.activeCourseTypeKey ? 'active' : ''}`;
+    button.dataset.courseTypeKey = key;
+    button.textContent = option.label;
+    button.title = `${option.kklxdm} · ${option.xkkzId}`;
+    elements.courseTypeTabs.append(button);
+  }
+}
+
 function renderClassDetails(item) {
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
@@ -524,7 +591,8 @@ function updateSessionSummary() {
     elements.sessionSummary.textContent = '未初始化会话';
     return;
   }
-  elements.sessionSummary.textContent = `代理会话 · ${context.term.xkxnm}-${context.term.xkxqm} · ${context.current.kklxdm} · ${context.current.xkkzId}`;
+  const typeName = context.current.kklxmc || state.courseTypes.find((option) => courseTypeKey(option) === state.activeCourseTypeKey)?.label || context.current.kklxdm;
+  elements.sessionSummary.textContent = `代理会话 · ${context.term.xkxnm}-${context.term.xkxqm} · ${typeName} · ${context.current.kklxdm} · ${context.current.xkkzId}`;
 }
 
 async function runTask(label, task) {
@@ -545,7 +613,7 @@ async function runTask(label, task) {
 }
 
 function setButtonsDisabled(disabled) {
-  for (const button of document.querySelectorAll('.topbar-actions button, #sessionForm button, #searchForm button, #saveOrderBtn')) {
+  for (const button of document.querySelectorAll('.topbar-actions button, #sessionForm button, #courseTypeTabs button, #searchForm button, #saveOrderBtn')) {
     button.disabled = disabled;
   }
 }
@@ -569,6 +637,21 @@ function empty(text) {
 
 function selectedFilterPayload() {
   return Object.fromEntries(Object.entries(state.filters).filter(([, value]) => value !== undefined && value !== null && value !== ''));
+}
+
+function courseTypeKey(option) {
+  return [option.kklxdm, option.xkkzId, option.xkkzXh].join('::');
+}
+
+function courseTypeRaw(option) {
+  return {
+    kklxdm: option.kklxdm,
+    kklxmc: option.label,
+    xkkz_id: option.xkkzId,
+    njdm_id: option.njdmId,
+    zyh_id: option.zyhId,
+    xkkz_xh: option.xkkzXh
+  };
 }
 
 async function loadFilterGroups(transport, context) {

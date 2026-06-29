@@ -51,3 +51,9 @@
 - **Status:** Completed
 - **Next Steps:** Re-check with live course data if the school system returns additional schedule formats.
 - **Context:** The sample `星期二第8-9节{5-16周}<br/>星期三第6-7节{5-16周}` format now displays as two readable meeting rows with matching `健B105` locations.
+
+## [2026-06-29 17:15] Course Type Switcher
+- **Changes:** Added SDK parsing for entry-page course-type tabs and a Web frontend switcher that refreshes context/search for 主修课程, 跨专业个性化课程, 通识选修课, 体育分项, or any other tab discovered on the real page.
+- **Status:** Completed
+- **Next Steps:** Use the Web frontend against a live session to confirm every discovered type has an active `xkkz_id`.
+- **Context:** Switching updates `kklxdm`, `kklxmc`, `xkkz_id`, `njdm_id`, `zyh_id`, and `xkkz_xh`, then reloads filters, course results, teaching classes, and selected-course snapshot.

@@ -67,6 +67,7 @@ Some ZFXK entry pages leave `xkkz_id` and `kklxdm` blank until the browser runs 
 ## Implemented Surface
 
 - `loadRuntimeContext()` parses hidden fields into a structured runtime context.
+- `parseCourseTypeOptions()` reads the original entry-page tab calls and extracts selectable course-type contexts.
 - `client.bootstrapFromPage()` fetches a selection page with the configured cookie and parses hidden fields automatically.
 - `client.catalog.searchCourses()` wraps `/xsxk/zzxkyzb_cxZzxkYzbPartDisplay.html`.
 - `client.catalog.getTeachingClasses()` wraps `/xsxk/zzxkyzbjk_cxJxbWithKchZzxkYzb.html`.
@@ -120,4 +121,4 @@ Fill in:
 
 The browser calls the local Node server under `/api/proxy/*`. The Node proxy then sends requests to the school system with the provided `Cookie` header, avoiding the browser restriction that blocks frontend JavaScript from setting raw cross-origin cookies. Cookies stay in the local browser/server process and are not written to project files.
 
-After initialization, the Web frontend reads the real selection page and dictionary endpoints to render the advanced filter bar. It supports keyword search plus the school system's filter parameters such as opening college, grade, student college, major, course category, course nature, course ownership, teaching mode, weekday, period, teaching-class name, retake, capacity, and schedule-conflict flags.
+After initialization, the Web frontend reads the real selection page and dictionary endpoints to render the course-type switch and advanced filter bar. The course-type switch is populated from the school's own entry-page tabs, so it can switch the current display between entries such as 主修课程, 跨专业个性化课程, 通识选修课, and 体育分项 when those contexts are present. The filter bar supports keyword search plus the school system's filter parameters such as opening college, grade, student college, major, course category, course nature, course ownership, teaching mode, weekday, period, teaching-class name, retake, capacity, and schedule-conflict flags.

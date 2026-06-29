@@ -8,6 +8,7 @@ import {
   mapCourse,
   mapTeachingClass,
   normalizeSaveSelection,
+  parseCourseTypeOptions,
   HttpTransport,
   MemoryTransport
 } from '../src/index.js';
@@ -96,6 +97,35 @@ test('loads initial course-type context from first hidden fields before page scr
   assert.equal(ctx.current.xkkzXh, '3');
   assert.equal(ctx.student.njdmId, '2024');
   assert.equal(ctx.student.zyhId, 'CS');
+});
+
+test('parses selectable course types from original entry page tabs', () => {
+  const pageHtml = `
+    <input id="firstKklxdm" value="01"/>
+    <input id="firstKklxmc" value="主修课程"/>
+    <input id="firstXkkzId" value="KZ-MAJOR"/>
+    <input id="firstNjdmId" value="2024"/>
+    <input id="firstZyhId" value="CHEM"/>
+    <input id="firstXkkzXh" value="1"/>
+    <ul id="nav_tab">
+      <li class="active"><a id="tab_kklx_01" onclick="queryCourse(this,'01','KZ-MAJOR','2024','CHEM','1')">主修课程</a></li>
+      <li><a id="tab_kklx_11" onclick="queryCourse(this,'11','KZ-CROSS','2024','CHEM','2')">跨专业个性化课程</a></li>
+      <li><a id="tab_kklx_10" onclick="queryCourse(this,'10','KZ-GENERAL','2024','CHEM','3')">通识选修课</a></li>
+      <li><a id="tab_kklx_05" onclick="queryCourse(this,'05','KZ-PE','2024','CHEM','4')">体育分项</a></li>
+    </ul>
+  `;
+
+  const options = parseCourseTypeOptions(pageHtml);
+
+  assert.deepEqual(
+    options.map((option) => [option.label, option.kklxdm, option.xkkzId, option.xkkzXh, option.active]),
+    [
+      ['主修课程', '01', 'KZ-MAJOR', '1', true],
+      ['跨专业个性化课程', '11', 'KZ-CROSS', '2', false],
+      ['通识选修课', '10', 'KZ-GENERAL', '3', false],
+      ['体育分项', '05', 'KZ-PE', '4', false]
+    ]
+  );
 });
 
 test('bootstrapFromPage fetches an authenticated page and parses hidden context', async () => {
