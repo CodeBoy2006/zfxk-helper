@@ -3,11 +3,15 @@ import test from 'node:test';
 
 import {
   classRemaining,
+  chooseTarget,
+  createAutoSelectionEventLog,
   exportAutoSelectionConfig,
   importAutoSelectionConfig,
   matchTarget,
   normalizeChooseOutcome,
   normalizeAutoSelectionConfig,
+  planGroupAction,
+  reconcileGroups,
   snapshotHasTarget,
   validateAutoSelectionConfig
 } from '../src/auto-selection/index.js';
@@ -119,4 +123,115 @@ test('auto-selection capacity helper treats known capacity as remaining seats', 
   assert.equal(classRemaining({ selectedCount: 12, capacity: 30 }), 18);
   assert.equal(classRemaining({ selectedCount: 30, capacity: 30 }), 0);
   assert.equal(classRemaining({ selectedCount: 0, capacity: 0, flags: { full: false } }), null);
+});
+
+function makeSnapshot(selectedClasses = []) {
+  const byClassId = new Map();
+  for (const selected of selectedClasses) {
+    byClassId.set(selected.classId, selected);
+    byClassId.set(selected.submitClassId, selected);
+  }
+  return { selectedClasses, byClassId };
+}
+
+test('auto-selection reconcile clears manual drops and detects manual upgrade', () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: '体育课',
+      targets: [
+        { courseId: 'KC1', classId: 'HIGH', submitClassId: 'DO_HIGH', priority: 100 },
+        { courseId: 'KC1', classId: 'LOW', submitClassId: 'DO_LOW', priority: 10, isBackup: true }
+      ]
+    }]
+  });
+  const group = config.groups[0];
+  group.currentPlacement = group.targets[1];
+
+  reconcileGroups(config.groups, makeSnapshot([]));
+  assert.equal(group.currentPlacement, null);
+  assert.equal(group.state, 'WATCHING');
+
+  reconcileGroups(config.groups, makeSnapshot([{ courseId: 'KC1', classId: 'HIGH', submitClassId: 'DO_HIGH' }]));
+  assert.equal(group.currentPlacement.targetId, group.targets[0].targetId);
+  assert.equal(group.state, 'SUCCEEDED');
+  assert.equal(group.isTopTargetSelected, true);
+});
+
+test('auto-selection group planner refreshes only target course ids and picks highest available target', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: '体育课',
+      targets: [
+        { courseId: 'KC1', classId: 'HIGH', priority: 100 },
+        { courseId: 'KC1', classId: 'LOW', priority: 10, isBackup: true }
+      ]
+    }]
+  });
+  const calls = [];
+  const task = {
+    client: {
+      catalog: {
+        getTeachingClasses: async (courseId) => {
+          calls.push(courseId);
+          return [
+            { courseId, classId: 'HIGH', submitClassId: 'DO_HIGH', selectedCount: 30, capacity: 30, flags: { canSelect: true, full: true } },
+            { courseId, classId: 'LOW', submitClassId: 'DO_LOW', selectedCount: 5, capacity: 30, flags: { canSelect: true, full: false } }
+          ];
+        }
+      }
+    }
+  };
+
+  const action = await planGroupAction(task, config.groups[0]);
+  assert.deepEqual(calls, ['KC1']);
+  assert.equal(action.type, 'choose');
+  assert.equal(action.target.classId, 'LOW');
+  assert.equal(config.groups[0].targets[0].lastObservedRemaining, 0);
+  assert.equal(config.groups[0].targets[1].lastObservedRemaining, 25);
+});
+
+test('auto-selection choose does a second snapshot before treating selected as confirmed', async () => {
+  const events = createAutoSelectionEventLog();
+  const target = {
+    courseId: 'KC1',
+    classId: 'HIGH',
+    submitClassId: 'DO_HIGH',
+    priority: 100,
+    targetId: 'KC1:HIGH:0',
+    status: 'watching'
+  };
+  const group = {
+    name: '体育课',
+    state: 'WATCHING',
+    targets: [target],
+    currentPlacement: null,
+    isTopTargetSelected: false
+  };
+  let snapshotCalls = 0;
+  const task = {
+    events,
+    client: {
+      selection: {
+        choose: async () => ({ status: 'selected', snapshot: makeSnapshot([]) })
+      },
+      chosen: {
+        snapshot: async () => {
+          snapshotCalls += 1;
+          return snapshotCalls === 1
+            ? makeSnapshot([])
+            : makeSnapshot([{ courseId: 'KC1', classId: 'HIGH', submitClassId: 'DO_HIGH', selectedBySystem: true }]);
+        }
+      }
+    }
+  };
+
+  const outcome = await chooseTarget(task, group, target);
+  assert.equal(outcome.type, 'selected');
+  assert.equal(snapshotCalls, 2);
+  assert.equal(group.state, 'SUCCEEDED');
+  assert.equal(group.currentPlacement.targetId, target.targetId);
 });
