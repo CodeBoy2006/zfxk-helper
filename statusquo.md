@@ -393,3 +393,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; automatic login during initialization remains available.
+
+## [2026-06-30 00:51] Remove Auto Enable Switch
+- **Changes:** Removed the topbar automatic-selection enable switch, its startup guard, event binding, and unused switch styling; updated web tests to enforce the removal.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; starting an auto-selection task no longer depends on a separate UI switch.

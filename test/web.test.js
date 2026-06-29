@@ -204,7 +204,9 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(html, /返回主页面/);
   assert.doesNotMatch(html, /id="autoCourseTypeTabs"/);
   assert.doesNotMatch(html, /当前显示/);
-  assert.match(html, /id="autoEnabledSwitch"/);
+  assert.doesNotMatch(html, /id="autoEnabledSwitch"/);
+  assert.doesNotMatch(html, /class="auto-switch"/);
+  assert.doesNotMatch(html, /已启用/);
   assert.match(html, /id="autoHelpBtn"/);
   assert.match(html, /id="autoHelpDialog"/);
   assert.doesNotMatch(html, /id="autoCollapseBtn"/);
@@ -290,6 +292,8 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /normalizeDraftGroupStrategy/);
   assert.match(app, /strategy: normalizeDraftGroupStrategy/);
   assert.match(app, /startAutoSelectionTask/);
+  assert.doesNotMatch(app, /autoEnabledSwitch/);
+  assert.doesNotMatch(app, /自动选课开关未启用/);
   assert.match(app, /pauseCurrentAutoTask/);
   assert.match(app, /resumeCurrentAutoTask/);
   assert.match(app, /cancelCurrentAutoTask/);
@@ -307,6 +311,7 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(css, /auto-page-shell/);
   assert.match(css, /auto-page-topbar/);
   assert.doesNotMatch(css, /auto-top-icon/);
+  assert.doesNotMatch(css, /auto-switch/);
   assert.doesNotMatch(css, /auto-auth-refresh/);
   assert.match(css, /auto-page-workspace/);
   assert.match(css, /auto-id-target-form/);

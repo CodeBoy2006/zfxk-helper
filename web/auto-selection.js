@@ -14,7 +14,6 @@ const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const DEFAULT_GROUP_STRATEGY = 'priority';
 const DEFAULT_GROUP_NAME = '默认';
 const elements = {
-  autoEnabledSwitch: document.querySelector('#autoEnabledSwitch'),
   autoHelpBtn: document.querySelector('#autoHelpBtn'),
   autoHelpDialog: document.querySelector('#autoHelpDialog'),
   autoSessionSummary: document.querySelector('#autoSessionSummary'),
@@ -82,7 +81,6 @@ function bindEvents() {
     event.preventDefault();
     await addIdTargetToAutoSelection();
   });
-  elements.autoEnabledSwitch.addEventListener('change', () => renderAutoTaskStatus());
   elements.autoHelpBtn.addEventListener('click', () => showHelpDialog());
   elements.autoAddGroupBtn.addEventListener('click', () => addAutoSelectionGroup());
   elements.autoGroupTabs.addEventListener('click', (event) => selectAutoGroup(event));
@@ -400,7 +398,6 @@ function reorderTarget(index, direction, options = {}) {
 
 async function startAutoSelectionTask() {
   await runTask('启动自动选课', async () => {
-    if (!elements.autoEnabledSwitch.checked) throw new Error('自动选课开关未启用。');
     const payload = buildAutoSelectionPayload(true);
     const response = await fetch('/api/auto-selection/tasks', {
       method: 'POST',
@@ -494,7 +491,6 @@ async function refreshTaskEvents(taskId) {
 
 function renderAutoTaskStatus() {
   const task = currentTask();
-  elements.autoEnabledSwitch.nextElementSibling?.classList.toggle('off', !elements.autoEnabledSwitch.checked);
   if (!task) {
     elements.autoTaskSummary.innerHTML = `
       <div><strong>WAITING</strong><span class="tag">未启动</span></div>

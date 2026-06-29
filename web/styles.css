@@ -847,63 +847,6 @@ body[data-page="setup"] {
   text-decoration: none;
 }
 
-.auto-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #f8fbff;
-  font-size: 14px;
-  font-weight: 850;
-  white-space: nowrap;
-}
-
-.auto-switch input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  min-height: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.auto-switch i {
-  position: relative;
-  width: 38px;
-  height: 22px;
-  border-radius: 999px;
-  background: #31b677;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
-}
-
-.auto-switch i::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
-}
-
-.auto-switch input:not(:checked) + i {
-  background: #526176;
-}
-
-.auto-switch input:not(:checked) + i::after {
-  right: 19px;
-}
-
-.auto-switch strong {
-  font-size: 14px;
-}
-
-.auto-switch input:not(:checked) ~ strong {
-  color: #bcc8d8;
-}
-
 .auto-page-workspace {
   display: grid;
   grid-template-columns: minmax(300px, 0.82fr) minmax(560px, 1.5fr) minmax(360px, 0.96fr);
@@ -2130,10 +2073,6 @@ body[data-page="setup"] {
     display: grid;
     grid-template-columns: 1fr;
     width: 100%;
-  }
-
-  .auto-switch {
-    justify-content: space-between;
   }
 
   .auto-page-shell .auto-event-log li {
