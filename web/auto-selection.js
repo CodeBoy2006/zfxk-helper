@@ -5,6 +5,7 @@ import { loadAllCoursePages } from './course-pages.js';
 import { downloadJson } from './export-data.js';
 
 const DEFAULT_PAGE_PATH = '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512';
+const MAIN_SESSION_STORAGE_KEY = 'zfxk.web.session.v1';
 const AUTO_SESSION_STORAGE_KEY = 'zfxk.autoSelection.session.v1';
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const elements = {
@@ -822,24 +823,41 @@ function toggleChromeCompactMode() {
 }
 
 function restoreSession() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(AUTO_SESSION_STORAGE_KEY) || '{}');
-    elements.baseUrlInput.value = saved.baseUrl || '';
-    elements.usernameInput.value = saved.username || '';
-    elements.pagePathInput.value = saved.pagePath || DEFAULT_PAGE_PATH;
-    elements.cookieInput.value = saved.cookie || '';
-  } catch {
-    elements.pagePathInput.value = DEFAULT_PAGE_PATH;
-  }
+  const saved = readStoredSession(AUTO_SESSION_STORAGE_KEY);
+  const inherited = readStoredSession(MAIN_SESSION_STORAGE_KEY);
+  elements.baseUrlInput.value = sessionValue(inherited.baseUrl, saved.baseUrl);
+  elements.usernameInput.value = sessionValue(inherited.username, saved.username);
+  elements.passwordInput.value = sessionValue(inherited.password);
+  elements.pagePathInput.value = sessionValue(inherited.pagePath, saved.pagePath, DEFAULT_PAGE_PATH);
+  elements.cookieInput.value = sessionValue(inherited.cookie, saved.cookie);
 }
 
 function persistSession() {
-  localStorage.setItem(AUTO_SESSION_STORAGE_KEY, JSON.stringify({
-    baseUrl: elements.baseUrlInput.value.trim(),
-    username: elements.usernameInput.value.trim(),
-    pagePath: elements.pagePathInput.value.trim() || DEFAULT_PAGE_PATH,
-    cookie: elements.cookieInput.value.trim()
-  }));
+  try {
+    localStorage.setItem(AUTO_SESSION_STORAGE_KEY, JSON.stringify({
+      baseUrl: elements.baseUrlInput.value.trim(),
+      username: elements.usernameInput.value.trim(),
+      pagePath: elements.pagePathInput.value.trim() || DEFAULT_PAGE_PATH,
+      cookie: elements.cookieInput.value.trim()
+    }));
+  } catch {
+    // Storage can be unavailable in private contexts; inherited form values still work for the current page.
+  }
+}
+
+function readStoredSession(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function sessionValue(...values) {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value;
+  }
+  return '';
 }
 
 function restoreDraft() {

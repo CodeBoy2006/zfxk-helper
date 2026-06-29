@@ -218,6 +218,10 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /createZfxkClient/);
   assert.match(app, /parseCourseTypeOptions/);
   assert.match(app, /loadAllCoursePages/);
+  assert.match(app, /MAIN_SESSION_STORAGE_KEY/);
+  assert.match(app, /zfxk\.web\.session\.v1/);
+  assert.match(app, /readStoredSession\(MAIN_SESSION_STORAGE_KEY\)/);
+  assert.match(app, /elements\.passwordInput\.value = sessionValue\(inherited\.password\)/);
   assert.match(app, /AUTO_SELECTION_DRAFT_STORAGE_KEY/);
   assert.doesNotMatch(app, /renderCourseTypeTabs/);
   assert.doesNotMatch(app, /switchCourseType/);

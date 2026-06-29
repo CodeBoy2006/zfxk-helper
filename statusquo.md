@@ -309,3 +309,9 @@
 - **Status:** Completed
 - **Next Steps:** Use the topbar `自动选课` link to open the standalone control page from the main workspace.
 - **Context:** The standalone page remains the only place for automatic-selection task configuration and target management.
+
+## [2026-06-29 23:05] Auto Selection Session Inheritance
+- **Changes:** Updated the standalone auto-selection page to inherit Base URL, username, password, Path, and Cookie from the main page session cache, while keeping its own non-secret session cache as fallback.
+- **Status:** Completed
+- **Next Steps:** Open the standalone automatic-selection page from the main workspace after filling the main session form.
+- **Context:** The inherited password is only copied into the current page form; the standalone auto-selection session cache still does not save passwords.
