@@ -34,9 +34,9 @@ export async function fetchWithCookies(url, init = {}, options = {}) {
     });
     jar.storeFromHeaders(response.headers);
 
-    if (!isRedirect(response.status)) return response;
+    if (!isRedirect(response.status)) return annotateFinalUrl(response, currentUrl);
     const location = response.headers.get('location');
-    if (!location) return response;
+    if (!location) return annotateFinalUrl(response, currentUrl);
 
     currentUrl = new URL(location, currentUrl).toString();
     currentInit = redirectInit(currentInit, response.status);
@@ -53,6 +53,19 @@ function normalizeHeaders(headers = {}) {
 
 function isRedirect(status) {
   return [301, 302, 303, 307, 308].includes(status);
+}
+
+function annotateFinalUrl(response, finalUrl) {
+  try {
+    Object.defineProperty(response, 'finalUrl', {
+      value: finalUrl,
+      configurable: true
+    });
+  } catch {
+    // Some fetch implementations expose sealed Response objects. The response
+    // itself is still usable; callers can fall back to response.url.
+  }
+  return response;
 }
 
 function redirectInit(init, status) {

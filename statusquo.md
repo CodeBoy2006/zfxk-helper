@@ -93,3 +93,9 @@
 - **Status:** Completed
 - **Next Steps:** Verify against live selected-course data with multi-week, weekend, or overlapping classes.
 - **Context:** The grid reuses existing `<br/>` schedule parsing and falls back to raw course names from the snapshot when course IDs differ across chosen rows.
+
+## [2026-06-29 18:38] zfCaptcha Login Flow
+- **Changes:** Added `loginWithZfCaptcha()` and RSA password encryption helpers, reused the zfCaptcha solver with retry, submitted the timestamped Zhengfang login form, returned authenticated cookies, exposed `/api/login/zfcaptcha`, and added Web controls/tests/docs.
+- **Status:** Completed
+- **Next Steps:** Validate the full login flow against the live deployment, especially deployments that require SMS or identity-confirmation dialogs.
+- **Context:** Non-interactive blockers are surfaced as explicit error codes such as `SMS_LOGIN_REQUIRED` and `IDENTITY_CONFIRMATION_REQUIRED`.

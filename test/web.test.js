@@ -12,6 +12,9 @@ test('web frontend files expose the restored course-selection workspace', async 
 
   assert.match(html, /id="sessionForm"/);
   assert.match(html, /id="cookieInput"/);
+  assert.match(html, /id="usernameInput"/);
+  assert.match(html, /id="passwordInput"/);
+  assert.match(html, /id="loginWithCaptchaBtn"/);
   assert.match(html, /id="solveCaptchaBtn"/);
   assert.match(html, /id="filterPanel"/);
   assert.match(html, /id="filterRows"/);
@@ -32,6 +35,8 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /courseIdsForDisplayKey\(state\.courses, courseKey\)/);
   assert.match(app, /bootstrap\(\{ html: state\.entryHtml, raw:/);
   assert.match(app, /ProxyTransport/);
+  assert.match(app, /loginWithCaptchaCookie/);
+  assert.match(app, /\/api\/login\/zfcaptcha/);
   assert.match(app, /solveCaptchaCookie/);
   assert.match(app, /\/api\/captcha\/solve/);
   assert.match(app, /switchCourseType/);
@@ -89,5 +94,7 @@ test('web script and static server are wired in package.json', async () => {
   assert.match(server, /\/api\/proxy\/get/);
   assert.match(server, /\/api\/proxy\/post/);
   assert.match(server, /\/api\/captcha\/solve/);
+  assert.match(server, /\/api\/login\/zfcaptcha/);
+  assert.match(server, /loginWithZfCaptcha/);
   assert.match(server, /solveZfCaptcha/);
 });

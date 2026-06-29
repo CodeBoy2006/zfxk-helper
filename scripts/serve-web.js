@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { extname, join, normalize, resolve } from 'node:path';
 import { URLSearchParams } from 'node:url';
 
-import { formatCookieHeader, solveZfCaptcha } from '../src/captcha/index.js';
+import { formatCookieHeader, loginWithZfCaptcha, solveZfCaptcha } from '../src/index.js';
 
 const root = resolve('.');
 const captchaTemplateDir = resolve(root, 'src/captcha/templates');
@@ -27,6 +27,10 @@ const server = createServer(async (request, response) => {
   }
   if (url.pathname === '/api/captcha/solve') {
     await handleCaptchaSolve(request, response);
+    return;
+  }
+  if (url.pathname === '/api/login/zfcaptcha') {
+    await handleZfCaptchaLogin(request, response);
     return;
   }
 
@@ -101,6 +105,36 @@ async function handleCaptchaSolve(request, response) {
     });
   } catch (error) {
     writeJson(response, 500, { error: error.message });
+  }
+}
+
+async function handleZfCaptchaLogin(request, response) {
+  if (request.method !== 'POST') {
+    writeText(response, 405, 'Method not allowed');
+    return;
+  }
+
+  try {
+    const payload = await readJson(request);
+    const result = await loginWithZfCaptcha({
+      baseUrl: payload.baseUrl,
+      username: payload.username,
+      password: payload.password,
+      maxCaptchaAttempts: payload.maxCaptchaAttempts,
+      templateDir: captchaTemplateDir
+    });
+    writeJson(response, 200, {
+      status: result.status,
+      cookies: result.cookies,
+      cookie: result.cookieHeader,
+      responseUrl: result.responseUrl,
+      attempts: result.attempts
+    });
+  } catch (error) {
+    writeJson(response, 500, {
+      error: error.message,
+      code: error.code
+    });
   }
 }
 

@@ -151,8 +151,43 @@ export interface CaptchaSolveResult {
   distance: number;
 }
 
+export interface ZfLoginPublicKey {
+  modulus: string;
+  exponent: string;
+}
+
+export interface ZfLoginResult {
+  status: 'success';
+  cookies: Record<string, string>;
+  cookieHeader: string;
+  responseUrl: string;
+  attempts: number;
+}
+
+export interface LoginWithZfCaptchaOptions {
+  baseUrl: string;
+  username: string;
+  password: string;
+  appPath?: string;
+  loginPath?: string;
+  maxCaptchaAttempts?: number;
+  now?: () => number;
+  fetchImpl?: typeof fetch;
+  templateDir?: string;
+  instanceId?: string;
+  language?: string;
+  userAgent?: string;
+  publicKey?: ZfLoginPublicKey;
+  cookieJar?: CookieJar;
+  checkIdentityConfirmation?: boolean;
+  checkLoginLock?: boolean;
+  solveCaptcha?: (input: LoginWithZfCaptchaOptions & { cookieJar: CookieJar; attempt: number }) => Promise<unknown>;
+}
+
 export declare function createZfxkClient(options: ZfxkClientOptions): ZfxkClient;
-export declare function solveZfCaptcha(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string }): Promise<CaptchaSolveResult>;
+export declare function loginWithZfCaptcha(options: LoginWithZfCaptchaOptions): Promise<ZfLoginResult>;
+export declare function encryptZfPassword(password: string, publicKey: ZfLoginPublicKey): string;
+export declare function solveZfCaptcha(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string; cookieJar?: CookieJar }): Promise<CaptchaSolveResult>;
 export declare function formatCookieHeader(cookies: Record<string, string>): string;
 export declare function resolveAppBaseUrl(baseUrl: string, appPath?: string): string;
 export declare function generateMouseTrack(distance: number, options?: Record<string, unknown>): Array<{ x: number; y: number; t: number }>;
@@ -180,6 +215,23 @@ export declare class HttpTransport implements Transport {
   post(path: string, data?: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
 }
 
+export declare class CookieJar {
+  constructor(initialCookies?: Record<string, string>);
+  storeFromHeaders(headers: Headers | string[] | Record<string, string | string[]>): void;
+  get(name: string): string | undefined;
+  entries(): Array<[string, string]>;
+  toObject(names?: string[]): Record<string, string>;
+  header(): string;
+}
+
+export declare class ZfLoginError extends Error {
+  name: 'ZfLoginError';
+  code: string;
+  status?: number;
+  responseUrl?: string;
+  secondsRemaining?: number;
+}
+
 export declare class ImageMatcher {
   templates: Map<string, { name: string; image: { width: number; height: number; data: Uint8Array }; fingerprint: string }>;
   constructor(entries?: Array<{ name: string; image: { width: number; height: number; data: Uint8Array } }>);
@@ -189,8 +241,8 @@ export declare class ImageMatcher {
 }
 
 export declare class CaptchaSolver {
-  constructor(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string; matcher?: ImageMatcher });
-  static fromTemplates(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string; matcher?: ImageMatcher }): Promise<CaptchaSolver>;
+  constructor(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string; matcher?: ImageMatcher; cookieJar?: CookieJar });
+  static fromTemplates(options: { baseUrl: string; templateDir?: string; fetchImpl?: typeof fetch; instanceId?: string; userAgent?: string; matcher?: ImageMatcher; cookieJar?: CookieJar }): Promise<CaptchaSolver>;
   solve(): Promise<CaptchaSolveResult>;
 }
 

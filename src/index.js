@@ -5,8 +5,10 @@ export { parseCourseTypeOptions } from './course-types.js';
 export { mapCourse, mapTeachingClass, mapSelectionSnapshot, parseTeachers } from './mappers.js';
 export { normalizeConflictCheck, normalizeDropSelection, normalizeSaveSelection, normalizeTitleCheck } from './normalizers.js';
 export { HttpTransport, MemoryTransport } from './transport.js';
+export { encryptZfPassword, loginWithZfCaptcha, ZfLoginError } from './auth/index.js';
 export {
   CaptchaSolver,
+  CookieJar,
   ImageMatcher,
   buildVerifyPayload,
   findGapByComparison,

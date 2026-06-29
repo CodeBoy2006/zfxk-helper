@@ -4,7 +4,7 @@
 
 ## Install
 
-This repository has no runtime dependencies. TypeDoc is installed as a development dependency for API documentation generation.
+TypeDoc is installed as a development dependency for API documentation generation.
 
 ```bash
 npm install
@@ -80,10 +80,34 @@ const cookie = formatCookieHeader(captcha.cookies);
 
 This helper does not submit username/password credentials. Use the returned cookie as a bootstrap input only after confirming that your school deployment treats the captcha flow as sufficient for the page you are loading, or run any separate login workflow required by that deployment.
 
+## Login With zfCaptcha
+
+`loginWithZfCaptcha()` runs the login-page flow used by recent Zhengfang deployments: solve `zfcaptchaLogin`, fetch the RSA public key, encrypt the password, run the identity/lock guards, submit the timestamped login form, and return the authenticated cookies.
+
+```js
+import { createZfxkClient, loginWithZfCaptcha } from 'zfxk';
+
+const login = await loginWithZfCaptcha({
+  baseUrl: 'https://example.edu.cn/jwglxt',
+  username: process.env.ZFXK_USERNAME,
+  password: process.env.ZFXK_PASSWORD,
+  maxCaptchaAttempts: 3
+});
+
+const client = createZfxkClient({
+  baseUrl: 'https://example.edu.cn/jwglxt',
+  auth: { type: 'cookie', cookie: login.cookieHeader },
+  mode: 'commit'
+});
+```
+
+The helper retries when the slider verification fails. Interactive second factors are reported explicitly: `SMS_LOGIN_REQUIRED` for SMS verification and `IDENTITY_CONFIRMATION_REQUIRED` for identity-confirmation dialogs.
+
 ## Implemented Surface
 
 - `loadRuntimeContext()` parses hidden fields into a structured runtime context.
 - `parseCourseTypeOptions()` reads the original entry-page tab calls and extracts selectable course-type contexts.
+- `loginWithZfCaptcha()` solves the Zhengfang slider captcha, submits username/password login, and returns the authenticated cookie header.
 - `client.bootstrapFromPage()` fetches a selection page with the configured cookie and parses hidden fields automatically.
 - `client.catalog.searchCourses()` wraps `/xsxk/zzxkyzb_cxZzxkYzbPartDisplay.html`.
 - `client.catalog.getTeachingClasses()` wraps `/xsxk/zzxkyzbjk_cxJxbWithKchZzxkYzb.html`.
@@ -132,9 +156,10 @@ http://127.0.0.1:4173/
 Fill in:
 
 - `Base URL`: the school system root, for example `https://example.edu.cn/jwglxt`.
-- `Cookie`: the authenticated browser cookie copied from the school system, or filled by the local captcha helper.
+- `Cookie`: the authenticated browser cookie copied from the school system, filled by `登录获取 Cookie`, or filled by the local captcha-only helper.
+- `用户名` / `密码`: optional credentials used only by the local Node process when `登录获取 Cookie` is clicked.
 - `Path`: the course-selection entry page used to parse hidden runtime fields.
 
-The browser calls the local Node server under `/api/proxy/*` and `/api/captcha/solve`. The Node proxy then sends requests to the school system with the provided `Cookie` header, avoiding the browser restriction that blocks frontend JavaScript from setting raw cross-origin cookies. Cookies stay in the local browser/server process and are not written to project files.
+The browser calls the local Node server under `/api/proxy/*`, `/api/captcha/solve`, and `/api/login/zfcaptcha`. The Node proxy then sends requests to the school system with the provided `Cookie` header, avoiding the browser restriction that blocks frontend JavaScript from setting raw cross-origin cookies. Cookies stay in the local browser/server process and are not written to project files.
 
 After initialization, the Web frontend reads the real selection page and dictionary endpoints to render the course-type switch and advanced filter bar. The course-type switch is populated from the school's own entry-page tabs, so it can switch the current display between entries such as 主修课程, 跨专业个性化课程, 通识选修课, and 体育分项 when those contexts are present. The filter bar supports keyword search plus the school system's filter parameters such as opening college, grade, student college, major, course category, course nature, course ownership, teaching mode, weekday, period, teaching-class name, retake, capacity, and schedule-conflict flags.

@@ -7,6 +7,9 @@ const elements = {
   baseUrlInput: document.querySelector('#baseUrlInput'),
   cookieInput: document.querySelector('#cookieInput'),
   pagePathInput: document.querySelector('#pagePathInput'),
+  usernameInput: document.querySelector('#usernameInput'),
+  passwordInput: document.querySelector('#passwordInput'),
+  loginWithCaptchaBtn: document.querySelector('#loginWithCaptchaBtn'),
   solveCaptchaBtn: document.querySelector('#solveCaptchaBtn'),
   keywordInput: document.querySelector('#keywordInput'),
   courseTypeTabs: document.querySelector('#courseTypeTabs'),
@@ -55,6 +58,7 @@ elements.sessionForm.addEventListener('submit', async (event) => {
   await initialize();
 });
 
+elements.loginWithCaptchaBtn.addEventListener('click', () => loginWithCaptchaCookie());
 elements.solveCaptchaBtn.addEventListener('click', () => solveCaptchaCookie());
 
 elements.searchForm.addEventListener('submit', async (event) => {
@@ -174,6 +178,27 @@ async function solveCaptchaCookie() {
     if (!result.cookie) throw new Error('验证码接口未返回 Cookie。');
     elements.cookieInput.value = result.cookie;
     log('验证码 Cookie 已填入。');
+  });
+}
+
+async function loginWithCaptchaCookie() {
+  await runTask('登录获取 Cookie', async () => {
+    const baseUrl = elements.baseUrlInput.value.trim();
+    const username = elements.usernameInput.value.trim();
+    const password = elements.passwordInput.value;
+    if (!baseUrl) throw new Error('请填写教务系统 Base URL。');
+    if (!username) throw new Error('请填写用户名。');
+    if (!password) throw new Error('请填写密码。');
+
+    const response = await fetch('/api/login/zfcaptcha', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json; charset=UTF-8' },
+      body: JSON.stringify({ baseUrl, username, password, maxCaptchaAttempts: 3 })
+    });
+    const result = await readResponse(response, '/api/login/zfcaptcha');
+    if (!result.cookie) throw new Error('登录接口未返回 Cookie。');
+    elements.cookieInput.value = result.cookie;
+    log(`登录 Cookie 已填入，验证码尝试 ${result.attempts || 1} 次。`);
   });
 }
 
