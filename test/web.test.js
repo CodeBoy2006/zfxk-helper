@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from '../web/course-groups.js';
+import { buildCoursesForExport } from '../web/export-builders.js';
 import { buildCourseExport, buildSelectedCoursesExport } from '../web/export-data.js';
 import { loadAllCoursePages } from '../web/course-pages.js';
 import { withRetry } from '../web/retry.js';
@@ -12,6 +13,7 @@ import packageJson from '../package.json' with { type: 'json' };
 test('web frontend files expose the restored course-selection workspace', async () => {
   const html = await readFile(new URL('../web/index.html', import.meta.url), 'utf8');
   const app = await readFile(new URL('../web/app.js', import.meta.url), 'utf8');
+  const exportBuilders = await readFile(new URL('../web/export-builders.js', import.meta.url), 'utf8');
   const css = await readFile(new URL('../web/styles.css', import.meta.url), 'utf8');
 
   assert.match(html, /id="sessionForm"/);
@@ -43,8 +45,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /buildCourseExport/);
   assert.match(app, /buildSelectedCoursesExport/);
   assert.match(app, /buildCoursesForExport/);
-  assert.match(app, /withRetry/);
   assert.match(app, /downloadJson/);
+  assert.match(exportBuilders, /withRetry/);
+  assert.match(exportBuilders, /sourceCourseRowCount/);
   assert.match(app, /parseCourseTypeOptions/);
   assert.doesNotMatch(app, /from '..\/src\/index\.js'/);
   assert.doesNotMatch(app, /node:/);
@@ -165,6 +168,37 @@ test('web retry helper rethrows after the retry budget is exhausted', async () =
 
   assert.equal(attempts, 4);
   assert.deepEqual(delays, [100, 200, 400]);
+});
+
+test('course export builder deduplicates repeated course rows before attaching teaching classes', async () => {
+  const courses = [
+    { courseId: '13861', courseCode: '413001', name: '体育', raw: { jxb_id: 'JXB1', jxbmc: '体育-01' } },
+    { courseId: '13861', courseCode: '413001', name: '体育', raw: { jxb_id: 'JXB2', jxbmc: '体育-02' } },
+    { courseId: '13861', courseCode: '413001', name: '体育', raw: { jxb_id: 'JXB3', jxbmc: '体育-03' } }
+  ];
+  const exportCourses = await buildCoursesForExport(courses, {
+    wait: async () => {},
+    async getTeachingClasses(courseId) {
+      assert.equal(courseId, '13861');
+      return [
+        { classId: 'JXB1', submitClassId: 'JXB1', courseId, raw: { jxb_id: 'JXB1' } },
+        { classId: 'JXB2', submitClassId: 'JXB2', courseId, raw: { jxb_id: 'JXB2' } },
+        { classId: 'JXB3', submitClassId: 'JXB3', courseId, raw: { jxb_id: 'JXB3' } }
+      ];
+    }
+  });
+
+  assert.equal(exportCourses.length, 1);
+  assert.equal(exportCourses[0].sourceCourseRowCount, 3);
+  assert.equal(exportCourses[0].teachingClasses.length, 3);
+  assert.deepEqual(exportCourses[0].teachingClasses.map((item) => item.raw.jxbmc), ['体育-01', '体育-02', '体育-03']);
+
+  const payload = buildCourseExport(exportCourses, {
+    now: () => new Date('2026-06-29T12:00:00.000Z')
+  });
+  assert.equal(payload.课程数量, 1);
+  assert.equal(payload.课程[0].来源课程行数量, 3);
+  assert.equal(payload.课程[0].教学班.length, 3);
 });
 
 test('course export uses readable mapped fields and preserves unmapped raw details', () => {

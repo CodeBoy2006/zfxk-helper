@@ -242,6 +242,12 @@
 - **Status:** Completed
 - **Next Steps:** Re-export from a live session if transient detail requests previously produced `教学班加载错误`.
 - **Context:** Retry keeps the existing 5-request concurrency cap; a detail fetch still records failure only after the retry budget is exhausted.
+
+## [2026-06-29 21:55] Course Export Deduplication
+- **Changes:** Moved Web export detail assembly into a testable builder, deduplicated course exports by course ID before attaching teaching-class details, and added `来源课程行数量` to preserve upstream duplicate-row counts.
+- **Status:** Completed
+- **Next Steps:** Re-export 体育课程; the file should contain one 体育 course with its teaching classes once instead of repeating the same class list per source row.
+- **Context:** The 体育 export ballooned because the upstream list returned 324 rows for course ID `13861`, and the previous export attached all 324 teaching classes to every duplicate row.
 - **Context:** The shared pane height now caps at `100vh`; narrow layouts still switch back to auto pane height.
 
 ## [2026-06-29 20:40] Full-Height Workspace Panes

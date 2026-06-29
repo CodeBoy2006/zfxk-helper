@@ -9,7 +9,8 @@ const COURSE_FIELDS = [
   ['ownershipName', '课程归属名称'],
   ['retake', '是否重修'],
   ['hasPrerequisiteHint', '是否有先行课提示'],
-  ['recommended', '是否推荐']
+  ['recommended', '是否推荐'],
+  ['sourceCourseRowCount', '来源课程行数量']
 ];
 
 const SELECTED_COURSE_FIELDS = [

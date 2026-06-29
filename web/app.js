@@ -2,8 +2,8 @@ import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
 import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from './course-groups.js';
 import { loadAllCoursePages } from './course-pages.js';
+import { buildCoursesForExport, buildSelectedSnapshotForExport } from './export-builders.js';
 import { buildCourseExport, buildSelectedCoursesExport, downloadJson } from './export-data.js';
-import { withRetry } from './retry.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from './schedule-layout.js';
 
 const elements = {
@@ -446,7 +446,10 @@ async function exportCourses() {
     return;
   }
   await runTask('导出课程', async () => {
-    const courses = await buildCoursesForExport(state.courses);
+    const courses = await buildCoursesForExport(state.courses, {
+      allCourses: state.courses,
+      getTeachingClasses: (courseId) => state.client.catalog.getTeachingClasses(courseId)
+    });
     const payload = buildCourseExport(courses, { metadata: currentExportMetadata() });
     downloadJson(`zfxk-courses-${filenameTimestamp()}.json`, payload);
     const classCount = courses.reduce((sum, course) => sum + (course.teachingClasses?.length ?? 0), 0);
@@ -464,114 +467,13 @@ async function exportSelectedCourses() {
     return;
   }
   await runTask('导出已选', async () => {
-    const snapshot = await buildSelectedSnapshotForExport(state.snapshot);
+    const snapshot = await buildSelectedSnapshotForExport(state.snapshot, {
+      getTeachingClasses: (courseId) => state.client.catalog.getTeachingClasses(courseId)
+    });
     const payload = buildSelectedCoursesExport(snapshot, { metadata: currentExportMetadata() });
     downloadJson(`zfxk-selected-${filenameTimestamp()}.json`, payload);
     log(`已导出 ${snapshot.selectedClasses.length} 个已选教学班。`);
   });
-}
-
-async function buildCoursesForExport(courses) {
-  const uniqueCourses = uniqueBy(courses, (course) => String(course.courseId ?? ''));
-  const results = await mapWithConcurrency(uniqueCourses, 5, async (course) => {
-    try {
-      const classNames = teachingClassNamesById(state.courses, [String(course.courseId)]);
-      const teachingClasses = (await withRetry(() => state.client.catalog.getTeachingClasses(course.courseId), { retries: 3 }))
-        .map((item) => inheritCourseOwnershipFromCourse(mergeTeachingClassName(item, classNames), course));
-      return [String(course.courseId), { teachingClasses }];
-    } catch (error) {
-      return [String(course.courseId), { teachingClasses: [], teachingClassLoadError: error.message }];
-    }
-  });
-  const byCourseId = new Map(results);
-  return courses.map((course) => ({
-    ...course,
-    ...(byCourseId.get(String(course.courseId)) ?? { teachingClasses: [] })
-  }));
-}
-
-async function buildSelectedSnapshotForExport(snapshot) {
-  const courseIds = uniqueBy(snapshot.selectedClasses ?? [], (item) => String(item.courseId ?? ''))
-    .map((item) => String(item.courseId))
-    .filter(Boolean);
-  const results = await mapWithConcurrency(courseIds, 5, async (courseId) => {
-    try {
-      return await withRetry(() => state.client.catalog.getTeachingClasses(courseId), { retries: 3 });
-    } catch {
-      return [];
-    }
-  });
-  const detailsByClassId = new Map();
-  for (const detail of results.flat()) {
-    detailsByClassId.set(String(detail.classId), detail);
-    detailsByClassId.set(String(detail.submitClassId), detail);
-  }
-
-  const selectedClasses = (snapshot.selectedClasses ?? []).map((item) => mergeSelectedClassDetail(item, detailsByClassId));
-  const selectedClassByKey = new Map();
-  for (const item of selectedClasses) {
-    selectedClassByKey.set(String(item.classId), item);
-    selectedClassByKey.set(String(item.submitClassId), item);
-  }
-  const selectedCourses = (snapshot.selectedCourses ?? []).map((course) => ({
-    ...course,
-    classes: (course.classes ?? []).map((item) => selectedClassByKey.get(String(item.classId)) ?? selectedClassByKey.get(String(item.submitClassId)) ?? item)
-  }));
-
-  return { ...snapshot, selectedCourses, selectedClasses };
-}
-
-function mergeSelectedClassDetail(item, detailsByClassId) {
-  const detail = detailsByClassId.get(String(item.classId)) ?? detailsByClassId.get(String(item.submitClassId));
-  if (!detail) return item;
-  return {
-    ...item,
-    teachers: item.teachers?.length ? item.teachers : detail.teachers,
-    scheduleText: item.scheduleText || detail.scheduleText,
-    locationText: item.locationText || detail.locationText,
-    ownershipCode: item.ownershipCode || detail.ownershipCode,
-    ownershipName: item.ownershipName || detail.ownershipName,
-    raw: {
-      ...(detail.raw ?? {}),
-      ...(item.raw ?? {})
-    }
-  };
-}
-
-function inheritCourseOwnershipFromCourse(item, course) {
-  if (item.ownershipName || item.ownershipCode) return item;
-  if (!course?.ownershipName && !course?.ownershipCode) return item;
-  return {
-    ...item,
-    ownershipName: course.ownershipName,
-    ownershipCode: course.ownershipCode
-  };
-}
-
-function uniqueBy(items, keyOf) {
-  const seen = new Set();
-  const values = [];
-  for (const item of items) {
-    const key = keyOf(item);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    values.push(item);
-  }
-  return values;
-}
-
-async function mapWithConcurrency(items, limit, mapper) {
-  const results = [];
-  let nextIndex = 0;
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (nextIndex < items.length) {
-      const index = nextIndex;
-      nextIndex += 1;
-      results[index] = await mapper(items[index], index);
-    }
-  });
-  await Promise.all(workers);
-  return results;
 }
 
 function renderFilterPanel() {
