@@ -8,6 +8,7 @@ import {
   mapCourse,
   mapTeachingClass,
   normalizeSaveSelection,
+  HttpTransport,
   MemoryTransport
 } from '../src/index.js';
 
@@ -67,6 +68,63 @@ test('loads runtime context from hidden fields', () => {
   assert.equal(ctx.switches.canSelect, true);
   assert.equal(ctx.switches.useWeight, false);
   assert.equal(ctx.switches.enableTextbook, true);
+});
+
+test('bootstrapFromPage fetches an authenticated page and parses hidden context', async () => {
+  const transport = new MemoryTransport({
+    '/xsxk/index.html': html
+  });
+  const client = createZfxkClient({
+    baseUrl: 'https://example.edu.cn/jwglxt',
+    auth: { type: 'cookie', cookie: 'JSESSIONID=test' },
+    transport
+  });
+
+  const context = await client.bootstrapFromPage({ path: '/xsxk/index.html' });
+
+  assert.equal(context.current.xkkzId, 'KZ1');
+  assert.equal(context.term.xkxnm, '2025');
+  assert.equal(context.student.zyhId, 'CS');
+  assert.equal(transport.calls[0].method, 'GET');
+  assert.equal(transport.calls[0].path, '/xsxk/index.html');
+});
+
+test('bootstrapFromPage rejects pages that do not contain selection context', async () => {
+  const transport = new MemoryTransport({
+    '/xsxk/index.html': '<html><title>login</title></html>'
+  });
+  const client = createZfxkClient({
+    baseUrl: 'https://example.edu.cn/jwglxt',
+    auth: { type: 'cookie', cookie: 'JSESSIONID=expired' },
+    transport
+  });
+
+  await assert.rejects(
+    () => client.bootstrapFromPage({ path: '/xsxk/index.html' }),
+    /CONTEXT_NOT_FOUND/
+  );
+});
+
+test('HttpTransport.get sends cookie auth and returns page HTML', async () => {
+  const calls = [];
+  const transport = new HttpTransport({
+    baseUrl: 'https://example.edu.cn/jwglxt',
+    auth: { type: 'cookie', cookie: 'JSESSIONID=test' },
+    fetchImpl: async (url, init) => {
+      calls.push({ url, init });
+      return new Response('<input id="xkxnm" value="2025">', {
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=UTF-8' }
+      });
+    }
+  });
+
+  const page = await transport.get('/xsxk/index.html');
+
+  assert.equal(page, '<input id="xkxnm" value="2025">');
+  assert.equal(calls[0].url, 'https://example.edu.cn/jwglxt/xsxk/index.html');
+  assert.equal(calls[0].init.method, 'GET');
+  assert.equal(calls[0].init.headers.cookie, 'JSESSIONID=test');
 });
 
 test('maps course and teaching-class rows into SDK models', () => {

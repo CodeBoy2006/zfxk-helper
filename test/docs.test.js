@@ -17,6 +17,7 @@ test('buildOpenApiDocument exposes SDK schemas and workflow-oriented paths', () 
   assert.equal(document.components.schemas.Course.type, 'object');
   assert.equal(document.components.schemas.TeachingClass.required.includes('submitClassId'), true);
   assert.equal(document.components.schemas.SelectionSnapshot.properties.selectedClasses.type, 'array');
+  assert.equal(document.paths['/sdk/context/bootstrap-from-page'].post.operationId, 'bootstrapFromPage');
   assert.equal(document.paths['/sdk/catalog/courses'].post.operationId, 'searchCourses');
   assert.equal(document.paths['/sdk/selection/choose'].post.operationId, 'chooseCourse');
   assert.equal(document.paths['/sdk/selection/drop'].post.responses['200'].description, 'Drop result');

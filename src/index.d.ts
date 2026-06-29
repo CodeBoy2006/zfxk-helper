@@ -128,6 +128,7 @@ export interface ZfxkClientOptions {
 }
 
 export interface Transport {
+  get?(path: string, options?: Record<string, unknown>): Promise<unknown>;
   post(path: string, data?: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
 }
 
@@ -144,11 +145,13 @@ export declare class MemoryTransport implements Transport {
   calls: Array<{ method: string; path: string; data: Record<string, unknown>; options: Record<string, unknown> }>;
   constructor(routes?: Record<string, unknown>);
   queue(path: string, response: unknown): void;
+  get(path: string, options?: Record<string, unknown>): Promise<unknown>;
   post(path: string, data?: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
 }
 
 export declare class HttpTransport implements Transport {
   constructor(options: { baseUrl: string; auth?: ZfxkClientOptions['auth']; fetchImpl?: typeof fetch });
+  get(path: string, options?: Record<string, unknown>): Promise<unknown>;
   post(path: string, data?: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
 }
 
@@ -176,5 +179,6 @@ export declare class ZfxkClient {
   listener: Record<string, (...args: any[]) => Promise<unknown>>;
   constructor(options: ZfxkClientOptions);
   bootstrap(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
+  bootstrapFromPage(input: { path: string; raw?: Record<string, string>; request?: Record<string, unknown> }): Promise<RuntimeContext>;
   refreshContext(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
 }

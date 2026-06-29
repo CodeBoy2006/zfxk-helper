@@ -47,9 +47,26 @@ const result = await client.selection.choose(
 console.log(result.status);
 ```
 
+If you already have a valid session cookie, the client can fetch the selection page and parse hidden fields automatically:
+
+```js
+const client = createZfxkClient({
+  baseUrl: 'https://example.edu.cn/jwglxt',
+  auth: { type: 'cookie', cookie: process.env.ZFXK_COOKIE },
+  mode: 'commit'
+});
+
+await client.bootstrapFromPage({
+  path: '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512'
+});
+```
+
+If the cookie is expired or the page is not a supported selection entry, `bootstrapFromPage()` throws `CONTEXT_NOT_FOUND`.
+
 ## Implemented Surface
 
 - `loadRuntimeContext()` parses hidden fields into a structured runtime context.
+- `client.bootstrapFromPage()` fetches a selection page with the configured cookie and parses hidden fields automatically.
 - `client.catalog.searchCourses()` wraps `/xsxk/zzxkyzb_cxZzxkYzbPartDisplay.html`.
 - `client.catalog.getTeachingClasses()` wraps `/xsxk/zzxkyzbjk_cxJxbWithKchZzxkYzb.html`.
 - `client.chosen.snapshot()` wraps `/xsxk/zzxkyzb_cxZzxkYzbChoosedDisplay.html`.

@@ -27,6 +27,23 @@ export class HttpTransport {
     return parseResponse(text, response.headers.get('content-type'));
   }
 
+  async get(path, options = {}) {
+    const response = await this.fetchImpl(this.url(path), {
+      method: 'GET',
+      headers: {
+        accept: 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
+        ...this.authHeaders(),
+        ...(options.headers ?? {})
+      }
+    });
+
+    const text = await response.text();
+    if (!response.ok) {
+      throw new Error(`GET ${path} failed with HTTP ${response.status}: ${text}`);
+    }
+    return parseResponse(text, response.headers.get('content-type'));
+  }
+
   url(path) {
     if (/^https?:\/\//i.test(path)) return path;
     return `${this.baseUrl}${path}`;
@@ -60,6 +77,15 @@ export class MemoryTransport {
     if (!this.routes.has(path)) throw new Error(`No memory route for ${path}`);
     const route = this.routes.get(path);
     return clone(typeof route === 'function' ? await route({ path, data, options, calls: this.calls }) : route);
+  }
+
+  async get(path, options = {}) {
+    this.calls.push({ method: 'GET', path, data: undefined, options });
+    const queue = this.queues.get(path);
+    if (queue?.length) return clone(queue.shift());
+    if (!this.routes.has(path)) throw new Error(`No memory route for ${path}`);
+    const route = this.routes.get(path);
+    return clone(typeof route === 'function' ? await route({ path, data: undefined, options, calls: this.calls }) : route);
   }
 }
 

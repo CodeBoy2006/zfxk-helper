@@ -24,6 +24,28 @@ export class ZfxkClient {
     return this.requireContext();
   }
 
+  async bootstrapFromPage(input = {}) {
+    const path = input.path;
+    if (!path) throw new Error('bootstrapFromPage requires a page path.');
+    if (typeof this.transport.get !== 'function') {
+      throw new Error('Current transport does not support GET requests.');
+    }
+
+    const html = await this.transport.get(path, input.request);
+    if (typeof html !== 'string') {
+      throw new Error('CONTEXT_NOT_FOUND: expected an HTML page response.');
+    }
+
+    const context = loadRuntimeContext({
+      baseUrl: this.baseUrl,
+      html,
+      raw: input.raw
+    });
+    assertSelectionContext(context);
+    this.context = context;
+    return context;
+  }
+
   async refreshContext(input = {}) {
     return this.bootstrap(input);
   }
@@ -38,4 +60,15 @@ export class ZfxkClient {
 
 export function createZfxkClient(options = {}) {
   return new ZfxkClient(options);
+}
+
+function assertSelectionContext(context) {
+  const missing = [];
+  if (!context.term.xkxnm) missing.push('xkxnm');
+  if (!context.term.xkxqm) missing.push('xkxqm');
+  if (!context.current.xkkzId) missing.push('xkkz_id');
+  if (!context.current.kklxdm) missing.push('kklxdm');
+  if (missing.length) {
+    throw new Error(`CONTEXT_NOT_FOUND: missing ${missing.join(', ')}. The page may be a login page or an unsupported selection entry.`);
+  }
 }

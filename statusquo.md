@@ -9,3 +9,9 @@
 - **Status:** Completed
 - **Next Steps:** Configure a git remote if source links in generated TypeDoc output should point to hosted code.
 - **Context:** `npm run docs` currently emits one TypeDoc warning because the repository has no valid `origin` remote; generated API docs are still produced.
+
+## [2026-06-29 15:32] Page Bootstrap Auth Flow
+- **Changes:** Added `bootstrapFromPage()` to fetch a selection page with the configured Cookie, parse hidden-field context automatically, reject non-selection/login pages with `CONTEXT_NOT_FOUND`, and documented the flow in README/OpenAPI/TypeDoc.
+- **Status:** Completed
+- **Next Steps:** Verify the default entry path against a real school deployment before hard-coding any convenience alias.
+- **Context:** The method intentionally requires callers to pass the page path because selection entry URLs vary by school/menu code.

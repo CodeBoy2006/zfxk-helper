@@ -49,6 +49,17 @@ export function buildOpenApiDocument(options = {}) {
           }
         }
       },
+      '/sdk/context/bootstrap-from-page': {
+        post: {
+          tags: ['Context'],
+          operationId: 'bootstrapFromPage',
+          summary: 'Fetch a selection page with the configured session and parse runtime context.',
+          requestBody: requestBody(ref('BootstrapFromPageInput')),
+          responses: {
+            200: ok('Runtime context', ref('RuntimeContext'))
+          }
+        }
+      },
       '/sdk/catalog/courses': {
         post: {
           tags: ['Catalog'],
@@ -178,6 +189,10 @@ const schemas = {
     html: string('Course-selection page HTML containing hidden inputs.'),
     raw: mapOf(string())
   }),
+  BootstrapFromPageInput: object({
+    path: string('Selection page path relative to baseUrl.'),
+    raw: mapOf(string())
+  }, ['path']),
   RuntimeContext: object(
     {
       baseUrl: string(),

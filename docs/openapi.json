@@ -60,6 +60,37 @@
         }
       }
     },
+    "/sdk/context/bootstrap-from-page": {
+      "post": {
+        "tags": [
+          "Context"
+        ],
+        "operationId": "bootstrapFromPage",
+        "summary": "Fetch a selection page with the configured session and parse runtime context.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BootstrapFromPageInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Runtime context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeContext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sdk/catalog/courses": {
       "post": {
         "tags": [
@@ -387,6 +418,24 @@
             }
           }
         }
+      },
+      "BootstrapFromPageInput": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Selection page path relative to baseUrl."
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "path"
+        ]
       },
       "RuntimeContext": {
         "type": "object",
