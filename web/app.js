@@ -652,7 +652,7 @@ function renderAutoClassMenu(teachingClass) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'secondary auto-class-button';
-  button.textContent = '自动选课';
+  button.textContent = '加入抢课';
   button.addEventListener('click', (event) => {
     event.stopPropagation();
     toggleAutoClassMenu(wrapper, teachingClass);

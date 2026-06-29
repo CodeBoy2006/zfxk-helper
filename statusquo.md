@@ -333,3 +333,9 @@
 - **Status:** Completed
 - **Next Steps:** Verify direct ID lookup with a live school session, especially when the user enters `jxb_id` versus `do_jxb_id`.
 - **Context:** The direct ID form now requires an initialized session so the page can fetch authoritative teaching-class details before adding a target.
+
+## [2026-06-29 23:51] Auto Selection Button Copy
+- **Changes:** Renamed the main-page class-card button from `自动选课` to `加入抢课`, and updated README and Web coverage for the new label.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** The topbar link and standalone page title still use `自动选课`; only the per-class action button label changed.

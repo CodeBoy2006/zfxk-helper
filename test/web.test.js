@@ -91,6 +91,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /renderAutoClassMenu/);
   assert.match(app, /addTeachingClassToAutoGroup/);
   assert.match(app, /auto-class-button/);
+  assert.match(app, /textContent = '加入抢课'/);
   assert.match(app, /switchCourseType/);
   assert.match(app, /renderCourseTypeTabs/);
   assert.match(app, /\/api\/proxy\/post/);
