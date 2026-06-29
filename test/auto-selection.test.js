@@ -2,9 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  classRemaining,
   exportAutoSelectionConfig,
   importAutoSelectionConfig,
+  matchTarget,
+  normalizeChooseOutcome,
   normalizeAutoSelectionConfig,
+  snapshotHasTarget,
   validateAutoSelectionConfig
 } from '../src/auto-selection/index.js';
 
@@ -71,4 +75,48 @@ test('auto-selection validation reports invalid targets without throwing', () =>
   assert.match(result.errors.join('\n'), /baseUrl is required/);
   assert.match(result.errors.join('\n'), /groups\[0\]\.targets\[0\]\.courseId is required/);
   assert.match(result.errors.join('\n'), /priority must be a finite number/);
+});
+
+test('auto-selection target matching accepts classId and submitClassId aliases', () => {
+  const target = { courseId: 'KC1', classId: 'JXB1', submitClassId: 'DO1' };
+
+  assert.equal(matchTarget(target, { courseId: 'KC1', classId: 'JXB1', submitClassId: 'DO1' }), true);
+  assert.equal(matchTarget(target, { courseId: 'KC1', classId: 'DO1', submitClassId: 'JXB1' }), true);
+  assert.equal(matchTarget(target, { courseId: 'KC1', classId: 'OTHER', submitClassId: 'NOPE' }), false);
+  assert.equal(matchTarget(target, { courseId: 'KC2', classId: 'JXB1', submitClassId: 'DO1' }), false);
+});
+
+test('auto-selection outcome separates capacity full from human required and business failure', () => {
+  assert.deepEqual(normalizeChooseOutcome({ status: 'capacity-full' }), { type: 'capacity-full' });
+  assert.deepEqual(normalizeChooseOutcome({ status: 'pending-filter' }), { type: 'pending-filter' });
+  assert.deepEqual(normalizeChooseOutcome({ status: 'requires-listener-apply' }), {
+    type: 'human-required',
+    reason: 'LISTENER_APPLY_REQUIRED',
+    pauseScope: 'group'
+  });
+  assert.deepEqual(normalizeChooseOutcome({ status: 'rejected', reason: 'WEIGHT_REQUIRED' }), {
+    type: 'human-required',
+    reason: 'WEIGHT_REQUIRED',
+    pauseScope: 'group'
+  });
+  assert.deepEqual(normalizeChooseOutcome({ status: 'rejected', reason: 'SESSION_EXPIRED' }), { type: 'session-expired' });
+  assert.equal(normalizeChooseOutcome({ status: 'rejected', reason: 'REJECTED' }).type, 'business-failed');
+});
+
+test('auto-selection snapshot matching uses both selected ids', () => {
+  const snapshot = {
+    byClassId: new Map([
+      ['JXB1', { classId: 'JXB1', submitClassId: 'DO1', courseId: 'KC1' }],
+      ['DO1', { classId: 'JXB1', submitClassId: 'DO1', courseId: 'KC1' }]
+    ])
+  };
+
+  assert.equal(snapshotHasTarget(snapshot, { courseId: 'KC1', classId: 'DO1' }), true);
+  assert.equal(snapshotHasTarget(snapshot, { courseId: 'KC1', classId: 'NOPE' }), false);
+});
+
+test('auto-selection capacity helper treats known capacity as remaining seats', () => {
+  assert.equal(classRemaining({ selectedCount: 12, capacity: 30 }), 18);
+  assert.equal(classRemaining({ selectedCount: 30, capacity: 30 }), 0);
+  assert.equal(classRemaining({ selectedCount: 0, capacity: 0, flags: { full: false } }), null);
 });
