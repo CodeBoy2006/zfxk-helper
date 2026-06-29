@@ -29,7 +29,7 @@ export function writeSessionConfig(config) {
 }
 
 export function hasSavedSessionConfig(config = readSessionConfig()) {
-  return Boolean(config.baseUrl && config.pagePath && config.cookie);
+  return Boolean(config.baseUrl && config.pagePath && (config.cookie || (config.username && config.password)));
 }
 
 export function requireSessionConfig(nextPath = currentPath()) {

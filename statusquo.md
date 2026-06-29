@@ -381,3 +381,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; mobile layout still collapses these controls to a single column.
+
+## [2026-06-30 00:47] Web Auto Initialization
+- **Changes:** Allowed saved username/password configs to pass the setup gate without a Cookie, added main-page automatic login before initialization, and made successful setup login continue directly into the target page for automatic initialization.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; auto-selection already uses the same saved credentials path when Cookie is absent.

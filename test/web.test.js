@@ -88,6 +88,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /bootstrap\(\{ html: state\.entryHtml, raw:/);
   assert.match(app, /ProxyTransport/);
   assert.match(app, /requireSessionConfig\('\/'\)/);
+  assert.match(app, /ensureSessionCookie/);
+  assert.match(app, /\/api\/login\/zfcaptcha/);
+  assert.match(app, /writeSessionConfig/);
   assert.match(app, /state\.sessionConfig/);
   assert.doesNotMatch(app, /loginWithCaptchaCookie/);
   assert.doesNotMatch(app, /solveCaptchaCookie/);
@@ -339,11 +342,14 @@ test('setup page owns saved login configuration for web pages', async () => {
 
   assert.match(setup, /readSessionConfig/);
   assert.match(setup, /writeSessionConfig/);
+  assert.match(setup, /正在自动初始化/);
+  assert.match(setup, /填写账号密码用于自动初始化/);
   assert.match(setup, /sanitizeNextPath/);
   assert.match(setup, /\/api\/login\/zfcaptcha/);
   assert.match(setup, /\/api\/captcha\/solve/);
   assert.match(setup, /window\.location\.assign\(nextPath\)/);
   assert.match(sessionConfig, /hasSavedSessionConfig/);
+  assert.match(sessionConfig, /config\.cookie \|\| \(config\.username && config\.password\)/);
   assert.match(sessionConfig, /window\.location\.replace\(setupUrl\(nextPath\)\)/);
   assert.match(css, /setup-shell/);
   assert.match(css, /setup-panel/);

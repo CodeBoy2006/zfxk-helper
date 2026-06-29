@@ -6,7 +6,7 @@ import { loadAllCoursePages } from './course-pages.js';
 import { buildCoursesForExport, buildSelectedSnapshotForExport } from './export-builders.js';
 import { buildCourseExport, buildSelectedCoursesExport, downloadJson } from './export-data.js';
 import { buildScheduleBlocks, colorScheduleEntries, scheduleSlotKey } from './schedule-layout.js';
-import { requireSessionConfig, sessionHost } from './session-config.js';
+import { normalizeSessionConfig, requireSessionConfig, sessionHost, writeSessionConfig } from './session-config.js';
 
 const elements = {
   searchForm: document.querySelector('#searchForm'),
@@ -158,8 +158,9 @@ if (state.sessionConfig) initialize();
 
 async function initialize() {
   await runTask('初始化会话', async () => {
-    const { baseUrl, cookie, pagePath } = state.sessionConfig ?? {};
-    if (!baseUrl || !cookie || !pagePath) throw new Error('保存配置不完整，请先进入配置页面登录。');
+    const { baseUrl, pagePath } = state.sessionConfig ?? {};
+    if (!baseUrl || !pagePath) throw new Error('保存配置不完整，请先进入配置页面登录。');
+    const cookie = await ensureSessionCookie();
 
     const transport = new ProxyTransport({ baseUrl, cookie });
     state.client = createZfxkClient({
@@ -188,6 +189,30 @@ async function initialize() {
     await searchCoursesCore();
     await refreshSnapshotCore();
   });
+}
+
+async function ensureSessionCookie() {
+  const config = state.sessionConfig;
+  if (config?.cookie) return config.cookie;
+  if (!config?.username || !config?.password) throw new Error('保存配置缺少 Cookie，请先进入配置页面登录。');
+
+  const response = await fetch('/api/login/zfcaptcha', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json; charset=UTF-8' },
+    body: JSON.stringify({
+      baseUrl: config.baseUrl,
+      username: config.username,
+      password: config.password,
+      maxCaptchaAttempts: 3
+    })
+  });
+  const result = await readResponse(response, '/api/login/zfcaptcha');
+  if (!result.cookie) throw new Error('登录接口未返回 Cookie。');
+  state.sessionConfig = normalizeSessionConfig({ ...config, cookie: result.cookie });
+  writeSessionConfig(state.sessionConfig);
+  renderSessionConfigSummary();
+  log(`已自动登录并保存 Cookie，验证码尝试 ${result.attempts || 1} 次。`);
+  return result.cookie;
 }
 
 async function switchCourseType(key) {
@@ -1228,7 +1253,8 @@ function renderSessionConfigSummary() {
     return;
   }
   const username = state.sessionConfig.username || '未保存用户名';
-  elements.sessionConfigSummary.textContent = `${sessionHost(state.sessionConfig)} · ${username} · Cookie 已保存`;
+  const cookieState = state.sessionConfig.cookie ? 'Cookie 已保存' : '将自动登录';
+  elements.sessionConfigSummary.textContent = `${sessionHost(state.sessionConfig)} · ${username} · ${cookieState}`;
 }
 
 function currentExportMetadata() {

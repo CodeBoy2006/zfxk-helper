@@ -70,9 +70,10 @@ async function loginWithCaptchaCookie() {
     const result = await readResponse(response, '/api/login/zfcaptcha');
     if (!result.cookie) throw new Error('登录接口未返回 Cookie。');
     elements.cookieInput.value = result.cookie;
-    writeSessionConfig(formConfig());
+    if (!writeSessionConfig(formConfig())) throw new Error('保存失败：浏览器本地存储不可用。');
     renderPreview();
-    setMessage(`登录完成，验证码尝试 ${result.attempts || 1} 次，配置已保存。`);
+    setMessage(`登录完成，验证码尝试 ${result.attempts || 1} 次，正在自动初始化。`);
+    window.location.assign(nextPath);
   });
 }
 
@@ -99,13 +100,15 @@ function saveAndContinue() {
   const config = formConfig();
   if (!config.baseUrl) return setMessage('请填写教务系统 Base URL。', true);
   if (!config.pagePath) return setMessage('请填写选课入口 Path。', true);
-  if (!config.cookie) return setMessage('请先登录获取 Cookie，或手动填写已登录 Cookie。', true);
+  if (!config.cookie && !(config.username && config.password)) {
+    return setMessage('请先登录获取 Cookie，或填写账号密码用于自动初始化。', true);
+  }
 
   if (!writeSessionConfig(config)) {
     setMessage('保存失败：浏览器本地存储不可用。', true);
     return;
   }
-  setMessage('配置已保存，正在进入页面。');
+  setMessage(config.cookie ? '配置已保存，正在进入页面。' : '配置已保存，正在自动初始化。');
   window.location.assign(nextPath);
 }
 
