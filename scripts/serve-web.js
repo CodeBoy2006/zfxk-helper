@@ -4,12 +4,16 @@ import { createServer } from 'node:http';
 import { extname, join, normalize, resolve } from 'node:path';
 import { URLSearchParams } from 'node:url';
 
+import { AutoSelectionTaskManager } from '../src/auto-selection/index.js';
 import { formatCookieHeader, loginWithZfCaptcha, solveZfCaptcha } from '../src/index.js';
 
 const root = resolve('.');
 const captchaTemplateDir = resolve(root, 'src/captcha/templates');
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || '127.0.0.1';
+const autoSelectionManager = new AutoSelectionTaskManager({
+  login: (input) => loginWithZfCaptcha({ ...input, templateDir: captchaTemplateDir })
+});
 
 const mime = {
   '.css': 'text/css; charset=UTF-8',
@@ -31,6 +35,10 @@ const server = createServer(async (request, response) => {
   }
   if (url.pathname === '/api/login/zfcaptcha') {
     await handleZfCaptchaLogin(request, response);
+    return;
+  }
+  if (url.pathname.startsWith('/api/auto-selection/')) {
+    await handleAutoSelection(request, response, url);
     return;
   }
 
@@ -136,6 +144,55 @@ async function handleZfCaptchaLogin(request, response) {
       code: error.code
     });
   }
+}
+
+async function handleAutoSelection(request, response, url) {
+  try {
+    if (url.pathname === '/api/auto-selection/tasks' && request.method === 'POST') {
+      writeJson(response, 200, await autoSelectionManager.createTask(await readJson(request)));
+      return;
+    }
+    if (url.pathname === '/api/auto-selection/tasks' && request.method === 'GET') {
+      writeJson(response, 200, { tasks: autoSelectionManager.listTasks() });
+      return;
+    }
+
+    const taskMatch = url.pathname.match(/^\/api\/auto-selection\/tasks\/([^/]+)(?:\/([^/]+))?$/);
+    if (taskMatch) {
+      const [, id, action] = taskMatch;
+      if (!action && request.method === 'GET') return writeFoundTask(response, autoSelectionManager.getTask(id));
+      if (action === 'events' && request.method === 'GET') return writeFoundEvents(response, autoSelectionManager.getTaskEvents(id));
+      if (action === 'cancel' && request.method === 'POST') return writeFoundTask(response, autoSelectionManager.cancelTask(id));
+      if (action === 'resume' && request.method === 'POST') return writeFoundTask(response, autoSelectionManager.resumeTask(id));
+    }
+
+    if (url.pathname === '/api/auto-selection/config/validate' && request.method === 'POST') {
+      writeJson(response, 200, autoSelectionManager.validateConfig(await readJson(request)));
+      return;
+    }
+    if (url.pathname === '/api/auto-selection/config/import' && request.method === 'POST') {
+      writeJson(response, 200, autoSelectionManager.importConfig(await readJson(request)));
+      return;
+    }
+
+    writeText(response, 404, 'Not found');
+  } catch (error) {
+    writeJson(response, error.code === 'AUTO_SELECTION_CONFIG_INVALID' ? 400 : 500, {
+      error: error.message,
+      code: error.code,
+      errors: error.errors
+    });
+  }
+}
+
+function writeFoundTask(response, task) {
+  if (!task) return writeText(response, 404, 'Task not found');
+  return writeJson(response, 200, task);
+}
+
+function writeFoundEvents(response, events) {
+  if (!events) return writeText(response, 404, 'Task not found');
+  return writeJson(response, 200, { events });
 }
 
 function proxyHeaders(payload, method) {

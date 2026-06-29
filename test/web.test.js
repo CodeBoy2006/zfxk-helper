@@ -15,6 +15,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   const app = await readFile(new URL('../web/app.js', import.meta.url), 'utf8');
   const exportBuilders = await readFile(new URL('../web/export-builders.js', import.meta.url), 'utf8');
   const css = await readFile(new URL('../web/styles.css', import.meta.url), 'utf8');
+  const server = await readFile(new URL('../scripts/serve-web.js', import.meta.url), 'utf8');
 
   assert.match(html, /id="sessionForm"/);
   assert.match(html, /id="cookieInput"/);
@@ -41,6 +42,11 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(html.match(/<div class="topbar-actions">([\s\S]*?)<\/div>/)?.[1] ?? '', /exportCoursesBtn|exportSelectedBtn/);
   assert.match(html, /id="activityLog"/);
   assert.doesNotMatch(html, /Demo 回放/);
+  assert.match(server, /AutoSelectionTaskManager/);
+  assert.match(server, /\/api\/auto-selection\/tasks/);
+  assert.match(server, /\/api\/auto-selection\/config\/validate/);
+  assert.match(server, /\/api\/auto-selection\/config\/import/);
+  assert.match(server, /handleAutoSelection/);
   assert.match(app, /createZfxkClient/);
   assert.match(app, /buildCourseExport/);
   assert.match(app, /buildSelectedCoursesExport/);
