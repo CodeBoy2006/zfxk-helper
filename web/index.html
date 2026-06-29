@@ -70,7 +70,12 @@
               <h2>教学班</h2>
               <span id="classCountBadge">共 0 个教学班</span>
             </div>
-            <button id="classSortBtn" class="section-text-button" type="button">默认排序</button>
+            <select id="classSortSelect" class="section-sort-select" aria-label="教学班排序">
+              <option value="default">默认排序</option>
+              <option value="selected-count">已选人数排序</option>
+              <option value="daily-time">时间（每日）排序</option>
+              <option value="weekday">星期排序</option>
+            </select>
           </div>
           <div id="classList" class="class-list"></div>
         </section>

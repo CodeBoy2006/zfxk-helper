@@ -411,3 +411,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; the current configuration summaries still render host, username, and Cookie state.
+
+## [2026-06-30 01:20] Add Teaching Class Sort Modes
+- **Changes:** Replaced the teaching-class default sort button with a sort selector for default order, selected-count order, daily time order, and weekday order; added sorting helpers and styling.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; default sort restores the original teaching-class order from the loaded course result.

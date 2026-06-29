@@ -1226,6 +1226,19 @@ body[data-page="setup"] {
   box-shadow: none;
 }
 
+.section-sort-select {
+  width: auto;
+  min-width: 142px;
+  min-height: 32px;
+  border-color: #d7e2ef;
+  border-radius: 6px;
+  padding: 4px 30px 4px 10px;
+  background: #fff;
+  color: #5f6f89;
+  font-size: 14px;
+  font-weight: 850;
+}
+
 .course-list,
 .class-list,
 .chosen-list {

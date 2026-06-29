@@ -24,7 +24,7 @@ const elements = {
   catalogSearchBtn: document.querySelector('#catalogSearchBtn'),
   classList: document.querySelector('#classList'),
   classCountBadge: document.querySelector('#classCountBadge'),
-  classSortBtn: document.querySelector('#classSortBtn'),
+  classSortSelect: document.querySelector('#classSortSelect'),
   chosenList: document.querySelector('#chosenList'),
   chosenTotals: document.querySelector('#chosenTotals'),
   scheduleStatus: document.querySelector('#scheduleStatus'),
@@ -131,13 +131,8 @@ elements.catalogSearchBtn.addEventListener('click', () => {
   elements.keywordInput.focus();
   elements.filterPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
-elements.classSortBtn.addEventListener('click', () => {
-  state.classes = [...state.classes].sort((a, b) => {
-    const aFull = Number(Boolean(a.flags.full));
-    const bFull = Number(Boolean(b.flags.full));
-    if (aFull !== bFull) return aFull - bFull;
-    return (b.capacity - b.selectedCount) - (a.capacity - a.selectedCount);
-  });
+elements.classSortSelect.addEventListener('change', () => {
+  sortClasses();
   renderClasses();
 });
 elements.clearLogBtn.addEventListener('click', () => {
@@ -296,9 +291,58 @@ async function loadClassesCore(courseKey) {
   const courseIds = courseIdsForDisplayKey(state.courses, courseKey);
   const classGroups = await Promise.all(courseIds.map((courseId) => state.client.catalog.getTeachingClasses(courseId)));
   const classNames = teachingClassNamesById(state.courses, courseIds);
-  state.classes = classGroups.flat().map((item) => inheritCourseOwnership(mergeTeachingClassName(item, classNames)));
+  state.classes = classGroups.flat().map((item, index) => ({
+    ...inheritCourseOwnership(mergeTeachingClassName(item, classNames)),
+    originalOrder: index
+  }));
+  sortClasses();
   renderClasses();
   log(`课程 ${courseKey} 加载 ${state.classes.length} 个教学班。`);
+}
+
+function sortClasses() {
+  const mode = elements.classSortSelect.value;
+  state.classes = [...state.classes].sort((left, right) => compareClasses(left, right, mode));
+}
+
+function compareClasses(left, right, mode) {
+  if (mode === 'selected-count') {
+    const selectedDiff = finiteSortNumber(left.selectedCount) - finiteSortNumber(right.selectedCount);
+    if (selectedDiff) return selectedDiff;
+  }
+  if (mode === 'daily-time' || mode === 'weekday') {
+    const primary = mode === 'daily-time' ? 'period' : 'weekday';
+    const leftKey = classMeetingSortKey(left, primary);
+    const rightKey = classMeetingSortKey(right, primary);
+    const primaryDiff = leftKey[primary] - rightKey[primary];
+    if (primaryDiff) return primaryDiff;
+    const secondary = primary === 'period' ? 'weekday' : 'period';
+    const secondaryDiff = leftKey[secondary] - rightKey[secondary];
+    if (secondaryDiff) return secondaryDiff;
+  }
+  return finiteSortNumber(left.originalOrder) - finiteSortNumber(right.originalOrder);
+}
+
+function classMeetingSortKey(item, primary) {
+  const meetings = parseMeetingLines(item.scheduleText, item.locationText)
+    .map((meeting) => ({
+      weekday: weekdaySortIndex(meetingWeekday(meeting)),
+      period: parsePeriodNumbers(meeting.period, meeting.raw)[0] ?? Number.POSITIVE_INFINITY
+    }))
+    .filter((meeting) => Number.isFinite(meeting.weekday) || Number.isFinite(meeting.period));
+  if (!meetings.length) return { weekday: Number.POSITIVE_INFINITY, period: Number.POSITIVE_INFINITY };
+  const secondary = primary === 'period' ? 'weekday' : 'period';
+  return meetings.sort((left, right) => left[primary] - right[primary] || left[secondary] - right[secondary])[0];
+}
+
+function weekdaySortIndex(day) {
+  const index = WEEKDAYS.indexOf(day);
+  return index === -1 ? Number.POSITIVE_INFINITY : index;
+}
+
+function finiteSortNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : Number.POSITIVE_INFINITY;
 }
 
 async function enrichCourseOwnerships(query) {
@@ -1298,7 +1342,7 @@ async function runTask(label, task) {
 }
 
 function setButtonsDisabled(disabled) {
-  for (const button of document.querySelectorAll('.topbar-actions button, #reinitializeSessionBtn, #courseTypeTabs button, #searchForm button, #saveOrderBtn, #catalogSearchBtn, #classSortBtn, #exportCoursesBtn, #exportSelectedBtn')) {
+  for (const button of document.querySelectorAll('.topbar-actions button, #reinitializeSessionBtn, #courseTypeTabs button, #searchForm button, #saveOrderBtn, #catalogSearchBtn, #classSortSelect, #exportCoursesBtn, #exportSelectedBtn')) {
     button.disabled = disabled;
   }
 }

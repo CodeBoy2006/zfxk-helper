@@ -44,7 +44,10 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(html, /id="courseList"/);
   assert.match(html, /id="courseTotalBadge"/);
   assert.match(html, /id="catalogSearchBtn"/);
-  assert.match(html, /id="classSortBtn"/);
+  assert.match(html, /id="classSortSelect"/);
+  assert.match(html, /已选人数排序/);
+  assert.match(html, /时间（每日）排序/);
+  assert.match(html, /星期排序/);
   assert.match(html, /id="chosenPanel"/);
   assert.match(html, /id="selectedScheduleBody"/);
   assert.match(html, /当前已选课程时间分布/);
@@ -131,6 +134,11 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(app, /教学班待定/);
   assert.doesNotMatch(app, /detail-label/);
   assert.doesNotMatch(app, /renderClassTitle/);
+  assert.match(app, /sortClasses/);
+  assert.match(app, /compareClasses/);
+  assert.match(app, /selected-count/);
+  assert.match(app, /daily-time/);
+  assert.match(app, /weekday/);
   assert.match(app, /parseMeetingTime/);
   assert.match(app, /renderSelectedSchedule/);
   assert.match(app, /buildSelectedScheduleLayout/);
@@ -167,6 +175,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /grid-template-columns/);
   assert.match(css, /course-type-tabs/);
   assert.doesNotMatch(css, /course-type-placeholder/);
+  assert.match(css, /section-sort-select/);
   assert.match(css, /class-card-main/);
   assert.match(css, /class-card-action/);
   assert.match(css, /schedule-grid/);
