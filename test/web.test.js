@@ -309,6 +309,8 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(css, /table-layout:\s*fixed/);
   assert.match(css, /auto-target-id-line/);
   assert.match(css, /text-overflow:\s*ellipsis/);
+  assert.match(css, /\.auto-import-export\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/s);
+  assert.match(css, /\.auto-primary-actions button,\s*\.auto-import-export button,\s*\.auto-import-export \.file-button\s*\{[^}]*width:\s*100%/s);
   assert.match(css, /grid-template-columns:\s*minmax\(300px,\s*0\.82fr\)\s*minmax\(560px,\s*1\.5fr\)\s*minmax\(360px,\s*0\.96fr\)/);
   assert.match(server, /action === 'pause'/);
 });

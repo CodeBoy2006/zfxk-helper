@@ -375,3 +375,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; drag sorting remains available through the left drag handle.
+
+## [2026-06-30 00:44] Auto Config Button Alignment
+- **Changes:** Aligned the auto-selection task/config action buttons by sharing the three-column grid, full-width cells, and consistent 40px button height across primary, export, and import controls.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; mobile layout still collapses these controls to a single column.

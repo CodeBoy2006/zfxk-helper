@@ -474,7 +474,6 @@ textarea {
 }
 
 .auto-config-actions,
-.auto-import-export,
 .auto-group-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -482,7 +481,18 @@ textarea {
 }
 
 .auto-import-export {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   margin-top: 10px;
+}
+
+.auto-primary-actions button,
+.auto-import-export button,
+.auto-import-export .file-button {
+  width: 100%;
+  min-height: 40px;
+  font-weight: 900;
 }
 
 .file-button {
@@ -2121,7 +2131,8 @@ body[data-page="setup"] {
   .auto-page-actions,
   .auto-page-tab-list,
   .auto-session-actions,
-  .auto-primary-actions {
+  .auto-primary-actions,
+  .auto-import-export {
     display: grid;
     grid-template-columns: 1fr;
     width: 100%;
