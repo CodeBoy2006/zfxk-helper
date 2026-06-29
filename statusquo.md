@@ -267,3 +267,9 @@
 - **Status:** Completed
 - **Next Steps:** Review the updated design, then write the implementation plan around contracts, core runners, API, UI, import/export, and docs.
 - **Context:** `HOLDING` now means a group has a lower-priority placement and continues watching; only `SUCCEEDED` means the top active target is selected.
+
+## [2026-06-29 21:48] Auto Selection Implementation Plan
+- **Changes:** Added `docs/superpowers/plans/2026-06-29-auto-selection-implementation-plan.md` with task-by-task implementation steps for contracts, outcome normalization, group and upgrade runners, task manager, API routes, UI, import/export, docs, tests, and verification.
+- **Status:** Completed
+- **Next Steps:** Execute the plan against the current worktree, starting with config contracts and failing unit tests.
+- **Context:** The plan follows the uploaded dense three-column UI reference and keeps credentials out of exported configs.
