@@ -796,10 +796,7 @@ function renderTeacherLine(item) {
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
     <div class="class-detail-line">
-      <span class="class-detail-pair">
-        <span class="detail-label">教师</span>
-        <span class="detail-value">${escapeHtml(teachers)}</span>
-      </span>
+      <span class="detail-value teacher-value">${escapeHtml(teachers)}</span>
     </div>
   `;
 }
@@ -808,15 +805,9 @@ function renderClassSummaryLine(item) {
   const className = String(item.raw?.jxbmc ?? '').trim();
   const teachers = item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '教师待定';
   return `
-    <div class="class-detail-line">
-      <span class="class-detail-pair">
-        <span class="detail-label">教学班</span>
-        <span class="detail-value">${escapeHtml(className)}</span>
-      </span>
-      <span class="class-detail-pair">
-        <span class="detail-label">教师</span>
-        <span class="detail-value">${escapeHtml(teachers)}</span>
-      </span>
+    <div class="class-detail-line class-summary-line">
+      <span class="class-name-value">${escapeHtml(className)}</span>
+      <span class="detail-value teacher-value">${escapeHtml(teachers)}</span>
     </div>
   `;
 }

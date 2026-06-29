@@ -177,3 +177,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend, rerun course search, and open a course so class cards rebuild from fresh rows.
 - **Context:** Live read-only inspection showed `/xsxk/zzxkyzbjk_cxJxbWithKchZzxkYzb.html` does not return `jxbmc`; the field is present on the course-list rows from the course page endpoint.
+
+## [2026-06-29 19:54] Teaching-Class Compact Labels
+- **Changes:** Removed the visible `教学班` and `教师` labels from Web class detail rows, made the teaching-class name bold/dark, and kept teacher names as secondary text.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and reopen a course to rebuild the class cards.
+- **Context:** Selected-course teacher rows reuse the same label-free teacher rendering.

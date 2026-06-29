@@ -56,7 +56,9 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /loadFilterGroups/);
   assert.match(app, /renderMeetingList/);
   assert.match(app, /raw\?\.jxbmc/);
+  assert.match(app, /class-name-value/);
   assert.doesNotMatch(app, /教学班待定/);
+  assert.doesNotMatch(app, /detail-label/);
   assert.doesNotMatch(app, /renderClassTitle/);
   assert.match(app, /parseMeetingTime/);
   assert.match(app, /renderSelectedSchedule/);

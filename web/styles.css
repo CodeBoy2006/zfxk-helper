@@ -602,23 +602,27 @@ textarea {
   min-width: 0;
 }
 
-.class-detail-pair {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+.class-summary-line {
+  display: grid;
+  align-items: start;
+  gap: 4px;
 }
 
-.detail-label {
-  flex: 0 0 auto;
+.class-name-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: #1d2740;
   font-size: 14px;
-  font-weight: 850;
+  font-weight: 900;
 }
 
 .detail-value {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.teacher-value {
+  color: #68758d;
 }
 
 .meeting-list {
