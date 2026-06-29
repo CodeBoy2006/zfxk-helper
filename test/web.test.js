@@ -141,6 +141,13 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(css, /\.chosen-state/);
   assert.match(css, /meeting-list/);
   assert.match(css, /meeting-location/);
+  assert.match(css, /auto-selection-workspace/);
+  assert.match(css, /auto-config-pane/);
+  assert.match(css, /auto-groups-pane/);
+  assert.match(css, /auto-status-pane/);
+  assert.match(css, /step-badge/);
+  assert.match(css, /auto-target-table/);
+  assert.match(css, /grid-template-columns:\s*minmax\(280px,\s*0\.82fr\)\s*minmax\(520px,\s*1\.45fr\)\s*minmax\(340px,\s*0\.95fr\)/);
   assert.match(css, /\.catalog-pane,\s*\.detail-pane,\s*\.chosen-pane\s*\{[^}]*height:\s*100vh/s);
   assert.match(css, /\.catalog-pane,\s*\.detail-pane,\s*\.chosen-pane\s*\{[^}]*max-height:\s*100vh/s);
   assert.match(css, /\.course-list,\s*\.class-list,\s*\.chosen-list\s*\{[^}]*display:\s*flex/s);
