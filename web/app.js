@@ -44,6 +44,8 @@ const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const DEFAULT_AUTO_GROUP_STRATEGY = 'priority';
 const DEFAULT_AUTO_GROUP_NAME = '默认';
 const VISIBLE_CLASS_REFRESH_INTERVAL_MS = 30_000;
+const CHOOSE_CONFIRM_RETRIES = 2;
+const CHOOSE_CONFIRM_DELAY_MS = 700;
 
 const state = {
   client: null,
@@ -460,7 +462,7 @@ async function enrichCourseOwnerships(query) {
 async function chooseClass(teachingClass) {
   await runTask('提交选课', async () => {
     const result = await state.client.selection.choose(
-      { courseId: teachingClass.courseId, classId: teachingClass.classId },
+      { courseId: teachingClass.courseId, classId: teachingClass.classId, teachingClass: teachingClass },
       {
         confirm: async (event) => window.confirm(event.message || '后端要求确认，是否继续？'),
         chooseWeight: async () => window.prompt('请输入权重/积分', '1') || '1',
@@ -469,9 +471,47 @@ async function chooseClass(teachingClass) {
       }
     );
     log(`选课结果：${result.status}`);
-    await refreshSnapshotCore();
+    await confirmChooseSnapshot(result, teachingClass);
     await loadClassesCore(state.selectedCourseId || teachingClass.courseId);
   });
+}
+
+async function confirmChooseSnapshot(result, teachingClass) {
+  if (result.snapshot) applySnapshot(result.snapshot);
+  if (!needsChooseSnapshotConfirmation(result)) {
+    if (!result.snapshot) await refreshSnapshotCore();
+    return;
+  }
+
+  for (let attempt = 0; attempt <= CHOOSE_CONFIRM_RETRIES; attempt += 1) {
+    if (snapshotHasTeachingClass(state.snapshot, teachingClass)) return;
+    if (attempt === CHOOSE_CONFIRM_RETRIES) break;
+    await delay(CHOOSE_CONFIRM_DELAY_MS);
+    applySnapshot(await state.client.chosen.snapshot());
+  }
+
+  log('保存接口已返回成功，但已选列表暂未确认，请稍后刷新已选。');
+}
+
+function needsChooseSnapshotConfirmation(result = {}) {
+  return result.status === 'selected' || result.status === 'pending-filter';
+}
+
+function snapshotHasTeachingClass(snapshot, teachingClass = {}) {
+  const ids = [teachingClass.classId, teachingClass.submitClassId].filter(Boolean).map(String);
+  for (const id of ids) {
+    if (snapshot?.byClassId?.has(id)) return true;
+  }
+  return (snapshot?.selectedClasses ?? []).some((item) =>
+    ids.includes(String(item.classId)) || ids.includes(String(item.submitClassId))
+  );
+}
+
+function applySnapshot(snapshot) {
+  state.snapshot = snapshot;
+  renderChosen();
+  renderClasses();
+  updateSessionSummary();
 }
 
 async function dropClass(selection) {
@@ -519,10 +559,7 @@ async function refreshSnapshot() {
 }
 
 async function refreshSnapshotCore() {
-  state.snapshot = await state.client.chosen.snapshot();
-  renderChosen();
-  renderClasses();
-  updateSessionSummary();
+  applySnapshot(await state.client.chosen.snapshot());
 }
 
 async function exportCourses() {
@@ -699,7 +736,7 @@ function renderClasses() {
     const chooseButton = document.createElement('button');
     chooseButton.type = 'button';
     chooseButton.textContent = selected ? '已选' : '选课';
-    chooseButton.disabled = selected || !item.flags.canSelect;
+    chooseButton.disabled = state.busy || selected || !item.flags.canSelect;
     chooseButton.addEventListener('click', () => chooseClass(item));
     actions.append(chooseButton);
     actions.append(renderAutoClassMenu(item));
@@ -1386,12 +1423,17 @@ function filenameTimestamp(date = new Date()) {
   return date.toISOString().replaceAll(':', '-').replaceAll('.', '-');
 }
 
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 async function runTask(label, task) {
   if (state.busy) return;
   state.busy = true;
   state.actionVersion += 1;
   setStatus(label);
   setButtonsDisabled(true);
+  renderClasses();
   try {
     await task();
     setStatus('idle');
@@ -1401,6 +1443,7 @@ async function runTask(label, task) {
   } finally {
     state.busy = false;
     setButtonsDisabled(false);
+    renderClasses();
   }
 }
 

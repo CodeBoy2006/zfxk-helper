@@ -157,6 +157,10 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /\/xkgl\/common_queryKkbmPaged\.html/);
   assert.match(app, /\/xtgl\/comm_cxJcsjList\.html\?lxdm=0036/);
   assert.match(app, /selection\.choose/);
+  assert.match(app, /teachingClass:\s*teachingClass/);
+  assert.match(app, /confirmChooseSnapshot/);
+  assert.match(app, /保存接口已返回成功/);
+  assert.match(app, /state\.busy \|\| selected/);
   assert.match(app, /selection\.drop/);
   assert.match(app, /formatDropRestriction/);
   assert.match(app, /dropRestriction/);

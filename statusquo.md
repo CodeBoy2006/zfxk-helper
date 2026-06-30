@@ -536,3 +536,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend session and reopen 板块课(体育) courses to confirm teaching classes load from the live school system.
 - **Context:** Some Zhengfang deployments return the visible PE course code in `kch_id` while the teaching-class endpoint expects `t_kch_id`; sending the display code causes `Illegal access while loading teaching classes.`.
+
+## [2026-06-30 15:10] Main Page Choose Feedback
+- **Changes:** Updated `web/app.js` so main-page selections reuse the visible teaching-class object, disable choose buttons during busy tasks, retry short snapshot confirmation after a successful save, and log a clear message when the selected list has not confirmed yet. Added regression assertions in `test/web.test.js`.
+- **Status:** Completed
+- **Next Steps:** Try selecting a live available class again; if the save succeeds but the school system delays the selected list, use the logged prompt to refresh after a moment.
+- **Context:** Root cause was that the UI could submit successfully and immediately render an unchanged stale snapshot, making the click look like it had no effect.
