@@ -65,6 +65,33 @@ export function teachingClassCourseNamesById(courses = [], courseIds = []) {
   return names;
 }
 
+export function filterTeachingClassesByCourseRows(classes = [], courses = [], courseIds = []) {
+  const allowedClassIds = teachingClassIdsByCourseRows(courses, courseIds);
+  if (!allowedClassIds.size) return classes;
+  return classes.filter((item) => teachingClassIds(item).some((id) => allowedClassIds.has(id)));
+}
+
+function teachingClassIdsByCourseRows(courses = [], courseIds = []) {
+  const allowedCourseIds = new Set(courseIds.map(String));
+  const ids = new Set();
+  for (const course of courses) {
+    if (allowedCourseIds.size && !allowedCourseIds.has(String(course.courseId))) continue;
+    for (const id of teachingClassIds(course)) {
+      ids.add(id);
+    }
+  }
+  return ids;
+}
+
+function teachingClassIds(item = {}) {
+  return [
+    item.classId,
+    item.submitClassId,
+    item.raw?.jxb_id,
+    item.raw?.do_jxb_id
+  ].map((value) => String(value ?? '').trim()).filter(Boolean);
+}
+
 function courseDisplayKey(course = {}) {
   return String(course.courseCode || course.courseId || '');
 }

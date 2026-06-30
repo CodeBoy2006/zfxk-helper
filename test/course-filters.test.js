@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { applyLocalCourseFilters, splitFilterPayload } from '../web/course-filters.js';
+import * as courseGroups from '../web/course-groups.js';
 
 test('web course filters split local and remote payloads by definition mode', () => {
   const result = splitFilterPayload([
@@ -61,4 +62,30 @@ test('web course filters apply keyword and local course fields without remote se
   });
 
   assert.deepEqual(filtered.map((course) => course.courseId), ['KC1']);
+});
+
+test('web teaching classes are constrained to filtered PE course rows', () => {
+  const filteredCourseRows = [
+    {
+      courseId: '13861',
+      courseCode: '413001',
+      name: '体育',
+      raw: {
+        jxb_id: 'JXB-TENNIS',
+        do_jxb_id: 'DO-TENNIS',
+        jxbmc: '网球初级混-陈芳芳周一67屏'
+      }
+    }
+  ];
+  const classes = [
+    { classId: 'JXB-TENNIS', submitClassId: 'DO-TENNIS', courseId: '13861', raw: { jxb_id: 'JXB-TENNIS' } },
+    { classId: 'JXB-BASKETBALL', submitClassId: 'DO-BASKETBALL', courseId: '13861', raw: { jxb_id: 'JXB-BASKETBALL' } },
+    { classId: 'JXB-BADMINTON', submitClassId: 'DO-BADMINTON', courseId: '13861', raw: { jxb_id: 'JXB-BADMINTON' } }
+  ];
+
+  assert.equal(typeof courseGroups.filterTeachingClassesByCourseRows, 'function');
+
+  const filtered = courseGroups.filterTeachingClassesByCourseRows(classes, filteredCourseRows, ['13861']);
+
+  assert.deepEqual(filtered.map((item) => item.classId), ['JXB-TENNIS']);
 });

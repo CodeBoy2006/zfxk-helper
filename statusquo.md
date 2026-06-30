@@ -566,3 +566,9 @@
 - **Status:** Completed
 - **Next Steps:** Use the saved page path with `gnmkdm=N253512` for future course-selection sessions.
 - **Context:** Live diagnosis showed Display returns HTTP 911 without `gnmkdm`, and the save endpoint returns `无操作权限！` unless `gnmkdm` is included. A live save with `gnmkdm=N253512` returned `flag:1`; the read-only selected snapshot confirms `跆拳道初级混-唐文兵周一67屏峰` is selected. `npm test` passes with 74/74 tests.
+
+## [2026-06-30 17:30] PE Teaching Class Filter Fix
+- **Changes:** Added a Web teaching-class row filter that constrains detail results to the currently filtered course rows, and wired it into the main page when search text or filters are active. Added regression coverage for filtered PE rows.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and retry 体育教学班筛选.
+- **Context:** The teaching-class detail endpoint can return every class for the same PE course after the course list has already been filtered, so unrelated classes could appear without restored `jxbmc` names. `npm test` passes with 75/75 tests.
