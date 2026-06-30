@@ -524,3 +524,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** Supersedes the prior re-add-old-targets note; legacy targets are now backfilled in memory when a matching teaching class is observed. `npm test` passes with 67/67 tests.
+
+## [2026-06-30 13:43] Document Auto Login Compatibility
+- **Changes:** Added README warnings that the automatic login flow has only been tested against ZJUT's current Zhengfang login process and may not work for other schools.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** Documentation-only change; users should fall back to pasted logged-in cookies when automatic login is incompatible.
