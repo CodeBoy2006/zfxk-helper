@@ -29,7 +29,7 @@
 <li>执行选课、退课、志愿排序，以及教材、候补、监听等端点包装。</li>
 <li>暴露 <code>loginWithZfCaptcha()</code> 和 <code>solveZfCaptcha()</code> 登录/Cookie 辅助能力。</li>
 </ul>
-<p>仓库根目录下的 <code>zzxkYzb*.js</code> 是原始页面脚本参考，用于核对端点名称和标志位含义。</p>
+<p>原始页面脚本样本不随仓库提交；需要核对端点名称、字段含义和 flag 语义时，请使用本机真实入口页和接口响应。</p>
 <p>已选课程快照中的 <code>SelectedClass.canDrop</code> 会按原页面的退选按钮条件计算：除 <code>sfktk</code>/<code>zntgpk</code> 外，还会检查 <code>sfxkbj</code>、<code>isInxksj</code>、<code>yxzrs &gt; tktjrs</code> 和正选控制标志。不可退时会附带 <code>dropRestriction</code>，Web 前端会像学校页面一样在操作列显示“已选”而不是退选按钮。</p>
 <h2 id="文档" class="tsd-anchor-link">文档<a href="#文档" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <pre><code class="bash"><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">run</span><span class="hl-1"> </span><span class="hl-2">docs</span>

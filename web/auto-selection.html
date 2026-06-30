@@ -65,6 +65,7 @@
           </div>
 
           <div class="auto-primary-actions">
+            <button id="autoPrecheckBtn" type="button" class="secondary">预检查</button>
             <button id="autoStartBtn" type="button">启动自动选课</button>
             <button id="autoPauseBtn" type="button" class="secondary">暂停任务</button>
             <button id="autoResumeBtn" type="button" class="secondary">恢复任务</button>
@@ -109,10 +110,10 @@
             <div id="autoTargetList" class="auto-target-list" aria-live="polite"></div>
           </section>
 
-          <section class="auto-id-source" aria-label="按 ID 加入选课组">
-            <div class="section-heading auto-subheading">
-              <h3>按 ID 添加 <small>直接加入当前选课组</small></h3>
-            </div>
+          <details class="auto-id-source" aria-label="按 ID 加入选课组">
+            <summary class="section-heading auto-subheading">
+              <h3>高级：按 ID 添加 <small>直接加入当前选课组</small></h3>
+            </summary>
             <form id="autoIdTargetForm" class="auto-id-target-form">
               <label>
                 课程 ID
@@ -124,7 +125,7 @@
               </label>
               <button id="autoAddIdTargetBtn" type="submit">获取详情并加入当前组</button>
             </form>
-          </section>
+          </details>
         </section>
 
         <aside id="autoTaskStatusPanel" class="auto-page-card auto-status-pane" aria-label="后台任务状态">
@@ -142,7 +143,11 @@
           <section class="auto-status-section">
             <div class="auto-log-heading">
               <h3>最近事件日志</h3>
-              <button id="autoClearEventsBtn" type="button" class="secondary">清空</button>
+              <div class="auto-log-actions">
+                <button id="autoCopyEventsBtn" type="button" class="secondary">复制日志</button>
+                <button id="autoExportEventsBtn" type="button" class="secondary">导出日志</button>
+                <button id="autoClearEventsBtn" type="button" class="secondary">清空</button>
+              </div>
             </div>
             <ol id="autoEventLog" class="auto-event-log"></ol>
           </section>

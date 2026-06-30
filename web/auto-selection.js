@@ -13,6 +13,9 @@ import {
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const DEFAULT_GROUP_STRATEGY = 'priority';
 const DEFAULT_GROUP_NAME = '默认';
+const AUTO_DROP_UPGRADE_TITLE = '选中后，如果更高优先级目标出现余量，系统可以先退掉该教学班，再尝试抢更高优先级目标。';
+const TERMINAL_AUTO_TASK_STATUSES = new Set(['cancelled', 'failed', 'succeeded']);
+const PAUSABLE_AUTO_TASK_STATUSES = new Set(['queued', 'running', 'auth-refreshing']);
 const elements = {
   autoHelpBtn: document.querySelector('#autoHelpBtn'),
   autoHelpDialog: document.querySelector('#autoHelpDialog'),
@@ -23,6 +26,7 @@ const elements = {
   autoMaxAttemptsInput: document.querySelector('#autoMaxAttemptsInput'),
   autoDeadlineInput: document.querySelector('#autoDeadlineInput'),
   autoFailureStrategySelect: document.querySelector('#autoFailureStrategySelect'),
+  autoPrecheckBtn: document.querySelector('#autoPrecheckBtn'),
   autoStartBtn: document.querySelector('#autoStartBtn'),
   autoPauseBtn: document.querySelector('#autoPauseBtn'),
   autoResumeBtn: document.querySelector('#autoResumeBtn'),
@@ -40,6 +44,8 @@ const elements = {
   autoTaskSummary: document.querySelector('#autoTaskSummary'),
   autoGroupStatusList: document.querySelector('#autoGroupStatusList'),
   autoEventLog: document.querySelector('#autoEventLog'),
+  autoCopyEventsBtn: document.querySelector('#autoCopyEventsBtn'),
+  autoExportEventsBtn: document.querySelector('#autoExportEventsBtn'),
   autoClearEventsBtn: document.querySelector('#autoClearEventsBtn'),
   autoExportConfigBtn: document.querySelector('#autoExportConfigBtn'),
   autoImportConfigInput: document.querySelector('#autoImportConfigInput')
@@ -93,11 +99,14 @@ function bindEvents() {
   elements.autoTargetList.addEventListener('dragstart', (event) => handleTargetDragStart(event));
   elements.autoTargetList.addEventListener('dragover', (event) => handleTargetDragOver(event));
   elements.autoTargetList.addEventListener('drop', (event) => handleTargetDrop(event));
+  elements.autoPrecheckBtn.addEventListener('click', () => precheckAutoSelectionTask());
   elements.autoStartBtn.addEventListener('click', () => startAutoSelectionTask());
   elements.autoPauseBtn.addEventListener('click', () => pauseCurrentAutoTask());
   elements.autoResumeBtn.addEventListener('click', () => resumeCurrentAutoTask());
   elements.autoCancelBtn.addEventListener('click', () => cancelCurrentAutoTask());
   elements.autoRefreshTasksBtn.addEventListener('click', () => pollAutoSelectionTasks({ schedule: false, logErrors: true }));
+  elements.autoCopyEventsBtn.addEventListener('click', () => copyAutoSelectionEvents());
+  elements.autoExportEventsBtn.addEventListener('click', () => exportAutoSelectionEvents());
   elements.autoClearEventsBtn.addEventListener('click', () => clearRenderedEvents());
   elements.autoExportConfigBtn.addEventListener('click', () => exportAutoSelectionDraft());
   elements.autoImportConfigInput.addEventListener('change', () => importAutoSelectionDraft());
@@ -296,7 +305,7 @@ function renderAutoSelectionDraft() {
         ${showPriorityColumn ? '<th>优先级</th>' : ''}
         <th>教学班</th>
         <th>上课时间/地点</th>
-        <th>可退课后升级</th>
+        <th title="${AUTO_DROP_UPGRADE_TITLE}">允许自动退课升级</th>
         <th>状态</th>
         <th>操作</th>
       </tr>
@@ -318,8 +327,11 @@ function renderAutoSelectionDraft() {
         <span class="auto-target-id-line" title="${escapeHtml(targetIds)}">${escapeHtml(targetIds)}</span>
       </td>
       <td>${renderTargetMeeting(target)}</td>
-      <td><input data-auto-target-index="${index}" data-auto-target-field="allowAutoDrop" type="checkbox" ${target.allowAutoDrop !== false ? 'checked' : ''}></td>
-      <td><span class="tag ${target.status === 'selected' ? 'ok' : ''}">${escapeHtml(targetStatusText(target.status))}</span></td>
+      <td><input data-auto-target-index="${index}" data-auto-target-field="allowAutoDrop" type="checkbox" title="${AUTO_DROP_UPGRADE_TITLE}" aria-label="允许自动退课升级：${escapeHtml(target.label || target.classId)}" ${target.allowAutoDrop !== false ? 'checked' : ''}></td>
+      <td>
+        <span class="tag ${target.status === 'selected' ? 'ok' : ''}">${escapeHtml(targetStatusText(target.status))}</span>
+        <span class="auto-target-reason">${escapeHtml(targetLastFailureText(target))}</span>
+      </td>
       <td>
         <div class="auto-row-actions">
           <button type="button" class="section-text-button danger-text" data-auto-remove-target="${index}" title="删除">删除</button>
@@ -406,6 +418,11 @@ function reorderTarget(index, direction, options = {}) {
 async function startAutoSelectionTask() {
   await runTask('启动自动选课', async () => {
     const payload = buildAutoSelectionPayload(true);
+    const summary = buildStartSummaryText(payload);
+    if (typeof window.confirm === 'function' && !window.confirm(summary)) {
+      log('已取消启动自动选课。');
+      return undefined;
+    }
     const response = await fetch('/api/auto-selection/tasks', {
       method: 'POST',
       headers: { 'content-type': 'application/json; charset=UTF-8' },
@@ -418,6 +435,41 @@ async function startAutoSelectionTask() {
     pollAutoSelectionTasks();
     log(`任务已启动：${task.id}`);
   });
+}
+
+async function precheckAutoSelectionTask() {
+  if (!state.client) {
+    log('预检查失败：请先初始化页面，以便读取教学班详情和已选快照。');
+    return;
+  }
+
+  await runTask('预检查', async () => {
+    const payload = buildAutoSelectionPayload(false);
+    const results = [];
+    results.push(...checkPrecheckBasicPayload(payload));
+    const classCache = await loadPrecheckTeachingClasses(payload.groups, results);
+    const snapshot = await loadPrecheckSnapshot(results);
+    results.push(...checkPreselectedGroups(payload.groups, snapshot));
+    results.push(...checkPrecheckTimeConflicts(payload.groups, snapshot, classCache));
+    results.push(...checkAutoDropSafety(payload.groups));
+    results.push(checkRenewalCredentials());
+    renderPrecheckResults(results);
+  });
+}
+
+function buildStartSummaryText(payload) {
+  const groups = payload.groups ?? [];
+  const targetCount = groups.reduce((total, group) => total + (group.targets?.length || 0), 0);
+  const autoDropCount = groups.reduce((total, group) =>
+    total + (group.targets ?? []).filter((target) => target.allowAutoDrop !== false).length, 0);
+  return [
+    '即将启动：',
+    `- ${groups.length} 个选课组`,
+    `- ${targetCount} 个目标教学班`,
+    `- 刷新间隔 ${Number(payload.intervalMs) || 1500}ms`,
+    `- 失败策略：${selectedFailureStrategyLabel()}`,
+    `- 允许自动退课升级：${autoDropCount} 个目标`
+  ].join('\n');
 }
 
 async function pauseCurrentAutoTask() {
@@ -472,6 +524,163 @@ function buildAutoSelectionPayload(includeSecrets = false) {
   };
 }
 
+function checkPrecheckBasicPayload(payload) {
+  const results = [];
+  const groups = payload.groups ?? [];
+  const targets = groups.flatMap((group) => group.targets ?? []);
+  if (!groups.length) {
+    results.push(precheckResult('fail', '检查目标是否存在', '还没有创建选课组。'));
+  } else if (!targets.length) {
+    results.push(precheckResult('fail', '检查目标是否存在', '选课组内还没有目标教学班。'));
+  } else {
+    results.push(precheckResult('ok', '检查目标是否存在', `草稿包含 ${targets.length} 个目标，开始核对教学班。`));
+  }
+  return results;
+}
+
+async function loadPrecheckTeachingClasses(groups, results) {
+  const classCache = new Map();
+  const courseIds = uniqueValues(groups.flatMap((group) => (group.targets ?? []).map((target) => target.courseId)));
+  for (const courseId of courseIds) {
+    try {
+      const classes = await state.client.catalog.getTeachingClasses(courseId);
+      classCache.set(String(courseId), classes);
+      results.push(precheckResult('ok', '检查是否能拉到教学班详情', `${courseId} 返回 ${classes.length} 个教学班。`));
+    } catch (error) {
+      results.push(precheckResult('fail', '检查是否能拉到教学班详情', `${courseId} 拉取失败：${error.message}`));
+      classCache.set(String(courseId), []);
+    }
+  }
+
+  for (const group of groups) {
+    for (const target of group.targets ?? []) {
+      const teachingClass = findCachedTeachingClass(classCache, target);
+      if (teachingClass) {
+        results.push(precheckResult('ok', '检查目标是否存在', `${group.name} / ${target.label || target.classId} 已匹配教学班。`));
+      } else {
+        results.push(precheckResult('fail', '检查目标是否存在', `${group.name} / ${target.label || target.classId} 未在课程 ${target.courseId} 中找到。`));
+      }
+    }
+  }
+  return classCache;
+}
+
+async function loadPrecheckSnapshot(results) {
+  try {
+    const snapshot = await state.client.chosen.snapshot();
+    results.push(precheckResult('ok', '检查是否已选同组课程', `已读取 ${snapshot.selectedClasses?.length || 0} 个已选教学班。`));
+    return snapshot;
+  } catch (error) {
+    results.push(precheckResult('warn', '检查是否已选同组课程', `已选快照读取失败：${error.message}`));
+    return null;
+  }
+}
+
+function checkPreselectedGroups(groups, snapshot) {
+  if (!snapshot) return [precheckResult('warn', '检查是否已选同组课程', '无法确认是否已有同组课程占位。')];
+  const selectedClasses = snapshot.selectedClasses ?? [];
+  if (!selectedClasses.length) {
+    return [precheckResult('ok', '检查是否已选同组课程', '当前没有已选教学班。')];
+  }
+
+  return groups.map((group) => {
+    const groupCourseIds = new Set((group.targets ?? []).map((target) => String(target.courseId)));
+    const selectedInGroup = selectedClasses.filter((selected) => groupCourseIds.has(String(selected.courseId)));
+    if (!selectedInGroup.length) {
+      return precheckResult('ok', '检查是否已选同组课程', `${group.name} 未发现同课程已选项。`);
+    }
+
+    const selectedTarget = selectedInGroup.find((selected) =>
+      (group.targets ?? []).some((target) => sameTargetDraft(target, selected)));
+    if (selectedTarget) {
+      return precheckResult('ok', '检查是否已选同组课程', `${group.name} 已占位：${selectedTarget.name || selectedTarget.classId}。`);
+    }
+    return precheckResult('warn', '检查是否已选同组课程', `${group.name} 已选同课程其他教学班，启动后可能需要人工确认。`);
+  });
+}
+
+function checkPrecheckTimeConflicts(groups, snapshot, classCache) {
+  if (!snapshot) return [precheckResult('warn', '检查是否存在时间冲突', '无法读取已选快照，暂不能检查时间冲突。')];
+  const selectedClasses = snapshot.selectedClasses ?? [];
+  if (!selectedClasses.length) return [precheckResult('ok', '检查是否存在时间冲突', '当前没有已选教学班，未发现时间冲突。')];
+
+  const conflicts = [];
+  for (const group of groups) {
+    for (const target of group.targets ?? []) {
+      const teachingClass = findCachedTeachingClass(classCache, target);
+      if (!teachingClass) continue;
+      const targetSlots = scheduleSlotSet(teachingClass);
+      if (!targetSlots.size) continue;
+      for (const selected of selectedClasses) {
+        if (sameTargetDraft(target, selected)) continue;
+        const selectedSlots = scheduleSlotSet(selected);
+        if (setsIntersect(targetSlots, selectedSlots)) {
+          conflicts.push(`${group.name} / ${target.label || target.classId} 与 ${selected.name || selected.classId}`);
+        }
+      }
+    }
+  }
+
+  if (!conflicts.length) return [precheckResult('ok', '检查是否存在时间冲突', '未发现明显时间冲突。')];
+  return conflicts.slice(0, 5).map((detail) => precheckResult('warn', '检查是否存在时间冲突', `${detail} 可能冲突。`));
+}
+
+function checkAutoDropSafety(groups) {
+  const results = [];
+  for (const group of groups) {
+    if (normalizeDraftGroupStrategy(group.strategy) === 'equivalent') {
+      results.push(precheckResult('ok', '检查 allowAutoDrop 是否安全', `${group.name} 是等价模式，不执行优先级升级退课。`));
+      continue;
+    }
+    const targets = [...(group.targets ?? [])].sort((a, b) => Number(b.priority) - Number(a.priority));
+    const lowerTargets = targets.slice(1);
+    const allowed = lowerTargets.filter((target) => target.allowAutoDrop !== false);
+    const blocked = lowerTargets.filter((target) => target.allowAutoDrop === false);
+    if (!lowerTargets.length) {
+      results.push(precheckResult('ok', '检查 allowAutoDrop 是否安全', `${group.name} 只有一个目标，不涉及自动退课升级。`));
+    } else if (allowed.length) {
+      results.push(precheckResult('warn', '检查 allowAutoDrop 是否安全', `${group.name} 有 ${allowed.length} 个低优先级目标允许自动退课升级，请确认这些不是不可丢失保底。`));
+    } else {
+      results.push(precheckResult('ok', '检查 allowAutoDrop 是否安全', `${group.name} 的低优先级占位不会被自动退掉。`));
+    }
+    if (blocked.length) {
+      results.push(precheckResult('ok', '检查 allowAutoDrop 是否安全', `${group.name} 有 ${blocked.length} 个目标禁止自动退课升级。`));
+    }
+  }
+  return results;
+}
+
+function checkRenewalCredentials() {
+  const config = state.sessionConfig ?? {};
+  if (config.username && config.password) {
+    return precheckResult('ok', '检查用户名密码是否可用于续期', '已保存用户名和密码，任务启动后可在需要时验证续期登录。');
+  }
+  if (config.cookie) {
+    return precheckResult('warn', '检查用户名密码是否可用于续期', '当前仅保存 Cookie，Cookie 过期后无法自动续期。');
+  }
+  return precheckResult('fail', '检查用户名密码是否可用于续期', '未保存 Cookie 或用户名密码，请先修改配置。');
+}
+
+function renderPrecheckResults(results) {
+  const levelLabels = { ok: '通过', warn: '提醒', fail: '失败' };
+  const failed = results.filter((result) => result.level === 'fail').length;
+  const warned = results.filter((result) => result.level === 'warn').length;
+  log(`预检查完成：${failed} 个失败，${warned} 个提醒。`);
+  results.forEach((result) => {
+    log(`预检查[${levelLabels[result.level] || result.level}] ${result.title}：${result.detail}`);
+  });
+}
+
+function precheckResult(level, title, detail) {
+  return { level, title, detail };
+}
+
+function findCachedTeachingClass(classCache, target) {
+  const classes = classCache.get(String(target.courseId)) ?? [];
+  return classes.find((item) => matchIdTeachingClass(item, target.courseId, target.classId))
+    ?? classes.find((item) => target.submitClassId && matchIdTeachingClass(item, target.courseId, target.submitClassId));
+}
+
 async function pollAutoSelectionTasks(options = {}) {
   clearTimeout(state.pollTimer);
   try {
@@ -499,10 +708,14 @@ async function refreshTaskEvents(taskId) {
 function renderAutoTaskStatus() {
   const task = currentTask();
   if (!task) {
+    const config = state.sessionConfig ?? {};
     elements.autoTaskSummary.innerHTML = `
       <div><strong>WAITING</strong><span class="tag">未启动</span></div>
       <div class="auto-state-grid">
-        <span>认证状态</span><b>未登录</b>
+        <span>配置 Cookie</span><b>${escapeHtml(config.cookie ? '已保存' : '未保存')}</b>
+        <span>任务会话</span><b>未启动</b>
+        <span>续期登录</span><b>${escapeHtml(config.username && config.password ? '未验证' : '未配置')}</b>
+        <span>认证状态</span><b>等待任务启动后验证</b>
         <span>下一次刷新</span><b>未排程</b>
         <span>已尝试次数</span><b>0 次</b>
         <span>失败策略</span><b>${escapeHtml(selectedFailureStrategyLabel())}</b>
@@ -510,14 +723,17 @@ function renderAutoTaskStatus() {
     `;
     elements.autoGroupStatusList.replaceChildren(empty('启动任务后显示组选课状态'));
     renderEvents();
+    updateAutoActionButtons();
     return;
   }
 
   elements.autoTaskSummary.innerHTML = `
-    <div><strong>${escapeHtml(task.status)}</strong><span class="tag ${autoStateTagClass(task.status)}">${escapeHtml(task.authStatus || 'unknown')}</span></div>
+    <div><strong>${escapeHtml(task.status)}</strong><span class="tag ${autoStateTagClass(task.status)}">${escapeHtml(authStatusLabel(task.authStatus, task.status))}</span></div>
     <div>任务 ID：${escapeHtml(task.id)}</div>
     <div class="auto-state-grid">
-      <span>认证状态</span><b>${escapeHtml(task.authStatus || 'unknown')}</b>
+      <span>配置 Cookie</span><b>${escapeHtml(task.cookie ? '已保存' : state.sessionConfig?.cookie ? '已保存' : '任务已接管')}</b>
+      <span>任务会话</span><b>${escapeHtml(taskSessionLabel(task.status))}</b>
+      <span>续期登录</span><b>${escapeHtml(authStatusLabel(task.authStatus, task.status))}</b>
       <span>下一次刷新</span><b>${escapeHtml(formatDate(task.nextRunAt))}</b>
       <span>已尝试次数</span><b>${Number(task.attempts) || 0} 次</b>
       <span>启动时间</span><b>${escapeHtml(formatDate(task.startedAt))}</b>
@@ -531,24 +747,36 @@ function renderAutoTaskStatus() {
     const card = document.createElement('article');
     card.className = 'auto-group-status-card';
     const current = group.targets?.find((target) => target.targetId === group.currentTargetId);
+    const topTarget = highestTargetForGroup(group);
+    const nextStep = groupNextActionText(group, current, topTarget);
     card.innerHTML = `
       <div class="card-title">
         <strong>${escapeHtml(group.name)}</strong>
         <span class="tag ${autoStateTagClass(group.state)}">${escapeHtml(group.state)}</span>
       </div>
-      <div class="meta">当前占位：${escapeHtml(current?.label || group.currentTargetId || '无')}</div>
-      <div class="meta">${group.isTopTargetSelected ? '已达到最高优先级' : '继续观察升级机会'}</div>
+      <div class="auto-group-progress-grid">
+        <span>当前占位</span><b>${escapeHtml(targetDisplayName(current) || group.currentTargetId || '无')}</b>
+        <span>最高目标</span><b>${escapeHtml(targetDisplayName(topTarget) || '无')}</b>
+        <span>下一步</span><b>${escapeHtml(nextStep)}</b>
+      </div>
+      <ul class="auto-target-status-list">
+        ${(group.targets ?? []).map((target) => `
+          <li>
+            <strong>${escapeHtml(targetDisplayName(target))}</strong>
+            <span class="tag ${autoStateTagClass(target.status)}">${escapeHtml(targetStatusText(target.status))}</span>
+            <small>最近原因：${escapeHtml(targetLastFailureText(target) || '暂无失败原因')}</small>
+          </li>
+        `).join('')}
+      </ul>
     `;
     return card;
   }));
   renderEvents();
+  updateAutoActionButtons();
 }
 
 function renderEvents() {
-  const events = [
-    ...state.localEvents,
-    ...state.currentEvents.filter((event) => !state.eventClearAt || Date.parse(event.at) > state.eventClearAt)
-  ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  const events = visibleAutoSelectionEvents();
   if (!events.length) {
     elements.autoEventLog.replaceChildren(empty('暂无事件'));
     return;
@@ -558,6 +786,48 @@ function renderEvents() {
     item.innerHTML = `<time>${escapeHtml(formatDate(event.at))}</time><span>${escapeHtml(event.message || event.type)}</span>`;
     return item;
   }));
+}
+
+function visibleAutoSelectionEvents() {
+  return [
+    ...state.localEvents,
+    ...state.currentEvents.filter((event) => !state.eventClearAt || Date.parse(event.at) > state.eventClearAt)
+  ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
+async function copyAutoSelectionEvents() {
+  await runTask('复制日志', async () => {
+    const text = visibleAutoSelectionEvents().map(formatEventLine).join('\n');
+    if (!text) {
+      log('暂无可复制日志。');
+      return;
+    }
+    if (globalThis.navigator?.clipboard?.writeText) {
+      await globalThis.navigator.clipboard.writeText(text);
+      log('日志已复制到剪贴板。');
+    } else if (typeof window.prompt === 'function') {
+      window.prompt('复制日志', text);
+      log('日志已生成，请从弹窗复制。');
+    } else {
+      throw new Error('当前浏览器不支持剪贴板复制。');
+    }
+  });
+}
+
+function exportAutoSelectionEvents() {
+  const task = currentTask();
+  downloadJson(`zhengfang-selection-assistant-auto-selection-log-${filenameTimestamp()}.json`, {
+    version: 1,
+    kind: 'zfxk.autoSelectionLog',
+    taskId: task?.id || null,
+    exportedAt: new Date().toISOString(),
+    events: visibleAutoSelectionEvents()
+  });
+  log('已导出自动选课日志。');
+}
+
+function formatEventLine(event) {
+  return `[${formatDate(event.at)}] ${event.message || event.type}`;
 }
 
 function clearRenderedEvents() {
@@ -697,6 +967,35 @@ function setButtonsDisabled(disabled) {
     if (button.id === 'autoHelpBtn') return;
     button.disabled = disabled;
   });
+  updateAutoActionButtons(disabled);
+}
+
+function updateAutoActionButtons(forceDisabled = false) {
+  const task = currentTask();
+  const canStart = !task || isTerminalAutoTask(task);
+  elements.autoPrecheckBtn.disabled = forceDisabled || !canStart;
+  elements.autoStartBtn.disabled = forceDisabled || !canStart;
+  elements.autoStartBtn.textContent = task && isTerminalAutoTask(task) ? '启动新任务' : '启动自动选课';
+  elements.autoPauseBtn.disabled = forceDisabled || !canPauseAutoTask(task);
+  elements.autoResumeBtn.disabled = forceDisabled || !canResumeAutoTask(task);
+  elements.autoCancelBtn.disabled = forceDisabled || !canCancelAutoTask(task);
+  elements.autoExportConfigBtn.disabled = Boolean(forceDisabled);
+}
+
+function canPauseAutoTask(task = currentTask()) {
+  return Boolean(task && PAUSABLE_AUTO_TASK_STATUSES.has(String(task.status)));
+}
+
+function canResumeAutoTask(task = currentTask()) {
+  return String(task?.status || '') === 'paused';
+}
+
+function canCancelAutoTask(task = currentTask()) {
+  return Boolean(task && !isTerminalAutoTask(task));
+}
+
+function isTerminalAutoTask(task) {
+  return TERMINAL_AUTO_TASK_STATUSES.has(String(task?.status || ''));
 }
 
 function log(message) {
@@ -762,14 +1061,73 @@ function selectedFailureStrategyLabel() {
   return elements.autoFailureStrategySelect.selectedOptions[0]?.textContent || '非容量失败跳过，容量满继续续刷';
 }
 
+function authStatusLabel(authStatus = '', taskStatus = '') {
+  const status = String(authStatus || '').toLowerCase();
+  if (status === 'logged-in') return '已验证';
+  if (status === 'logged-out' && taskStatus === 'queued') return '等待任务启动后验证';
+  if (status === 'logged-out') return '等待验证';
+  if (status === 'auth-refreshing' || taskStatus === 'auth-refreshing') return '验证中';
+  return authStatus || '等待任务启动后验证';
+}
+
+function taskSessionLabel(status = '') {
+  const labels = {
+    queued: '等待启动',
+    running: '运行中',
+    paused: '暂停中',
+    'auth-refreshing': '续期验证中',
+    succeeded: '已成功',
+    failed: '已失败',
+    cancelled: '已取消'
+  };
+  return labels[status] || status || '未启动';
+}
+
+function highestTargetForGroup(group) {
+  const targets = (group.targets ?? []).filter((target) => target.status !== 'skipped');
+  if (!targets.length) return null;
+  if (normalizeDraftGroupStrategy(group.strategy) === 'equivalent') return targets[0];
+  return [...targets].sort((a, b) => Number(b.priority) - Number(a.priority))[0];
+}
+
+function groupNextActionText(group, current, topTarget) {
+  if (group.state === 'SUCCEEDED' || group.isTopTargetSelected) return '已达到最高目标';
+  if (group.state === 'PAUSED') return '等待人工处理';
+  if (group.state === 'FAILED') return '已失败，等待重新配置';
+  if (!topTarget) return '暂无可监听目标';
+  if (!current) return `监听 ${targetDisplayName(topTarget)}`;
+  const higherTargets = (group.targets ?? [])
+    .filter((target) => target.status !== 'skipped' && Number(target.priority) > Number(current.priority))
+    .sort((a, b) => Number(b.priority) - Number(a.priority));
+  return higherTargets.length
+    ? `监听 ${higherTargets.map(targetDisplayName).join(' / ')}`
+    : '保持当前占位';
+}
+
+function targetDisplayName(target) {
+  if (!target) return '';
+  return String(target.label || target.classId || target.submitClassId || target.targetId || '未命名目标');
+}
+
 function targetStatusText(value = 'watching') {
   const labels = {
     selected: '已占位',
-    watching: '观察中',
+    watching: '监听中',
     skipped: '已跳过',
     failed: '失败'
   };
   return labels[value] || value;
+}
+
+function targetLastFailureText(target = {}) {
+  const message = String(target.lastMessage || '').trim();
+  if (message === 'capacity full') return '容量满，继续监听';
+  if (message === 'TEXTBOOK_REQUIRED') return '教材必选，已暂停';
+  if (message === 'CONFLICT') return '时间冲突，等待人工处理';
+  if (target.status === 'skipped') return message ? `非容量失败，已跳过：${message}` : '非容量失败，已跳过';
+  if (target.status === 'watching' && target.lastObservedRemaining === 0) return '容量满，继续监听';
+  if (target.status === 'watching') return '';
+  return message;
 }
 
 function autoStateTagClass(value = '') {
@@ -810,6 +1168,35 @@ function empty(text) {
 
 function uniqueValues(values) {
   return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))];
+}
+
+function scheduleSlotSet(item = {}) {
+  const text = stripHtml(item.scheduleText || '');
+  const days = [...text.matchAll(/星期[一二三四五六日天]|周[一二三四五六日天]/g)].map((match) => normalizeWeekday(match[0]));
+  const periodRanges = [...text.matchAll(/第\s*(\d+)(?:\s*[-~－—]\s*(\d+))?\s*节/g)];
+  const slots = new Set();
+  for (const day of days) {
+    for (const match of periodRanges) {
+      const start = Number(match[1]);
+      const end = Number(match[2] || match[1]);
+      if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+      for (let period = Math.min(start, end); period <= Math.max(start, end); period += 1) {
+        slots.add(`${day}:${period}`);
+      }
+    }
+  }
+  return slots;
+}
+
+function normalizeWeekday(value) {
+  return String(value || '').replace(/^周/, '星期').replace('天', '日');
+}
+
+function setsIntersect(left, right) {
+  for (const item of left) {
+    if (right.has(item)) return true;
+  }
+  return false;
 }
 
 function stripHtml(value) {

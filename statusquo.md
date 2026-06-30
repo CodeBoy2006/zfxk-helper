@@ -489,3 +489,14 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** Documentation-only change; screenshots are height-limited in the README to avoid taking too much vertical space.
+## [2026-06-30 12:21] License and Script Cleanup
+- **Changes:** Added Apache-2.0 LICENSE, updated package metadata/docs to Apache-2.0, and removed tracked `zzxkYzb*.js` reference scripts from the repository.
+- **Status:** Completed
+- **Next Steps:** Commit and push the cleanup.
+- **Context:** Existing user change in `test/web.test.js` was left untouched.
+
+## [2026-06-30 12:25] Complete Auto Selection Surface
+- **Changes:** Completed the standalone auto-selection precheck/status/log UI surface so the updated web tests pass, including action-button state helpers, task status summaries, event copy/export handlers, and related styles.
+- **Status:** Completed
+- **Next Steps:** Commit and push with the license cleanup.
+- **Context:** `npm test` passes with 64/64 tests.
