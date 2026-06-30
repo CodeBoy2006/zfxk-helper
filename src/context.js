@@ -4,6 +4,7 @@ const REQUEST_RAW_KEYS = [
   'rwlx',
   'xklc',
   'xkly',
+  'xszxzt',
   'bklx_id',
   'sfkkjyxdxnxq',
   'kzkcgs',

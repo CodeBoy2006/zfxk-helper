@@ -177,7 +177,7 @@ async function initialize() {
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
     if (activeType) {
-      await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(activeType) });
+      await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(activeType), allowFallback: true });
     } else {
       await state.client.bootstrap({ html: state.entryHtml });
     }
@@ -241,7 +241,7 @@ async function switchCourseType(key) {
     state.classes = [];
     state.selectedCourseId = null;
     state.remoteCourseFilterSignature = '';
-    await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(courseType) });
+    await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(courseType), allowFallback: true });
     state.filterGroups = await loadFilterGroups(state.transport, state.client.context);
     renderCourseTypeTabs();
     renderFilterPanel();

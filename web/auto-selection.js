@@ -132,7 +132,7 @@ async function initializeSession() {
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
     if (activeType) {
-      await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(activeType) });
+      await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(activeType), allowFallback: true });
     } else {
       await state.client.bootstrap({ html: state.entryHtml });
     }
@@ -962,7 +962,7 @@ function sameTargetDraft(left, right) {
 
 async function getTeachingClassesForCourseType(courseId, courseType) {
   if (courseType) {
-    await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(courseType) });
+    await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(courseType), allowFallback: true });
     state.activeCourseTypeKey = courseTypeKey(courseType);
   }
   return state.client.catalog.getTeachingClasses(courseId);

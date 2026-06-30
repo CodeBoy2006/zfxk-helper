@@ -64,16 +64,23 @@ export class ZfxkClient {
       html: input.html ?? this.entryHtml,
       raw: input.raw
     });
-    const display = await this.transport.post(
-      endpoints.display,
-      buildContextRequest(context, {
-        kspage: input.page?.start ?? 0,
-        jspage: input.page?.size ?? 0,
-        ...(input.extra ?? {})
-      })
-    );
+    let display;
+    try {
+      display = await this.transport.post(
+        endpoints.display,
+        buildContextRequest(context, {
+          kspage: input.page?.start ?? 0,
+          jspage: input.page?.size ?? 0,
+          ...(input.extra ?? {})
+        })
+      );
+    } catch (error) {
+      if (input.allowFallback) return context;
+      throw error;
+    }
 
     if (typeof display !== 'string') {
+      if (input.allowFallback) return context;
       throw new Error('CONTEXT_NOT_FOUND: expected course-type display HTML.');
     }
 

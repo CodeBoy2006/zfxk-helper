@@ -163,6 +163,7 @@ test('loadCourseTypeDisplayContext merges protected display fields before choosi
     <input id="firstZyhId" value="CS"/>
     <input id="iskxk" value="1"/>
     <input id="isinxksj" value="1"/>
+    <input id="xszxzt" value="1"/>
     <input id="sfyxsksjct" value="0"/>
     <input id="xksdxjckg" value="0"/>
     <ul id="nav_tab">
@@ -210,6 +211,7 @@ test('loadCourseTypeDisplayContext merges protected display fields before choosi
   const displayCall = transport.calls.find((call) => call.path === endpoints.display);
   assert.equal(displayCall.data.xkkz_id, 'KZ-PE');
   assert.equal(displayCall.data.kklxdm, '05');
+  assert.equal(displayCall.data.xszxzt, '1');
   assert.equal(displayCall.data.kspage, 0);
   assert.equal(displayCall.data.jspage, 0);
 
@@ -218,6 +220,42 @@ test('loadCourseTypeDisplayContext merges protected display fields before choosi
   assert.equal(saveCall.data.xklc, 'LC-PE');
   assert.equal(saveCall.data.rlkz, '1');
   assert.equal(saveCall.data.sxbj, '1');
+});
+
+test('loadCourseTypeDisplayContext can fall back when the display endpoint is rejected', async () => {
+  const entryHtml = `
+    <input id="xkxnm" value="2025"/>
+    <input id="xkxqm" value="12"/>
+    <input id="firstXkkzId" value="KZ-MAJOR"/>
+    <input id="firstKklxdm" value="01"/>
+    <input id="firstNjdmId" value="2024"/>
+    <input id="firstZyhId" value="CS"/>
+    <input id="iskxk" value="1"/>
+  `;
+  const transport = new MemoryTransport({
+    [endpoints.display]: { flag: '0', msg: 'no permission' }
+  });
+  const client = createZfxkClient({
+    baseUrl: 'https://example.edu.cn/jwglxt',
+    transport
+  });
+
+  const context = await client.loadCourseTypeDisplayContext({
+    html: entryHtml,
+    raw: {
+      kklxdm: '05',
+      xkkz_id: 'KZ-PE',
+      njdm_id: '2024',
+      zyh_id: 'CS',
+      xkkz_xh: '4'
+    },
+    allowFallback: true
+  });
+
+  assert.equal(context.current.kklxdm, '05');
+  assert.equal(context.current.xkkzId, 'KZ-PE');
+  assert.equal(context.raw.rwlx, undefined);
+  assert.equal(transport.calls[0].path, endpoints.display);
 });
 
 test('bootstrapFromPage rejects pages that do not contain selection context', async () => {

@@ -554,3 +554,9 @@
 - **Status:** Completed
 - **Next Steps:** Retry with a fresh logged-in cookie/session; the previously supplied cookie now opens the login page.
 - **Context:** Live save attempts for `跆拳道初级混-唐文兵周一67屏峰` reached the save endpoint but returned `无操作权限！`; the payload was missing Display-only fields such as `rwlx`, `xklc`, and capacity-control flags. `npm test` passes with 71/71 tests.
+
+## [2026-06-30 16:39] Display Context Fallback
+- **Changes:** Made Display context loading tolerate rejected Display responses with `allowFallback`, added `xszxzt` to context request payloads, and updated main page, auto-selection page, background tasks, SDK types, README, and regression tests.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and reinitialize; continue diagnosing the live save endpoint separately because the target selection still returns `无操作权限！`.
+- **Context:** The live `/xsxk/zzxkyzb_cxZzxkYzbDisplay.html` endpoint returns HTTP 911 for all course types with the fresh Cookie, so making it mandatory broke main-page initialization. Live validation after the fix loaded 4 course types, 1 active-page course, and 324 PE rows. `npm test` passes with 72/72 tests.

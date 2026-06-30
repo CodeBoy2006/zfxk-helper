@@ -118,7 +118,7 @@ async function applyCourseTypeContext(task, courseType) {
   const raw = courseTypeContextToRaw(courseType);
   if (!raw) return;
   if (typeof task.client?.loadCourseTypeDisplayContext === 'function') {
-    await task.client.loadCourseTypeDisplayContext({ raw });
+    await task.client.loadCourseTypeDisplayContext({ raw, allowFallback: true });
     return;
   }
   if (typeof task.client?.refreshContext !== 'function') return;
