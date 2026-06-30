@@ -465,3 +465,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** Documentation-only change; no runtime behavior changed.
+
+## [2026-06-30 12:00] Simplify Auto Upgrade Toggle
+- **Changes:** Removed the standalone `保底` column from the auto-selection target table, renamed the remaining upgrade toggle to `可退课后升级`, and made automatic drop-for-upgrade default to enabled for new and imported targets.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** Relevant checks pass: `npm test -- test/auto-selection.test.js` and `npm test -- test/web.test.js`. Untracked `1.png` was already present and left untouched.

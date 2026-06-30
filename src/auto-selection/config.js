@@ -145,7 +145,7 @@ function normalizeTarget(target = {}, createdOrder = 0) {
     label: stringOrUndefined(target.label),
     priority: Number(target.priority),
     isBackup: Boolean(target.isBackup),
-    allowAutoDrop: target.allowAutoDrop === undefined ? Boolean(target.isBackup) : Boolean(target.allowAutoDrop),
+    allowAutoDrop: target.allowAutoDrop === undefined ? true : Boolean(target.allowAutoDrop),
     recoverOnUpgradeFailure: target.recoverOnUpgradeFailure === undefined ? true : Boolean(target.recoverOnUpgradeFailure),
     skipAfterNonCapacityFailure: target.skipAfterNonCapacityFailure === undefined ? true : Boolean(target.skipAfterNonCapacityFailure),
     status: target.status || 'watching',

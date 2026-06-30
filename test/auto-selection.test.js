@@ -41,7 +41,7 @@ test('auto-selection config normalizes defaults, target ids, and priority order'
   assert.equal(config.groups[0].strategy, 'priority');
   assert.equal(config.groups[0].targets[0].classId, 'HIGH');
   assert.equal(config.groups[0].targets[0].targetId, 'KC1:HIGH:1');
-  assert.equal(config.groups[0].targets[0].allowAutoDrop, false);
+  assert.equal(config.groups[0].targets[0].allowAutoDrop, true);
   assert.equal(config.groups[0].targets[0].recoverOnUpgradeFailure, true);
   assert.equal(config.groups[0].targets[0].status, 'watching');
   assert.equal(config.groups[0].targets[1].targetId, 'KC1:LOW:0');

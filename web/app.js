@@ -793,7 +793,7 @@ function buildAutoTarget(teachingClass, group) {
     capacity: teachingClass.capacity,
     priority: nextAutoPriority(group),
     isBackup: isPriorityBackup,
-    allowAutoDrop: isPriorityBackup,
+    allowAutoDrop: true,
     recoverOnUpgradeFailure: true,
     skipAfterNonCapacityFailure: true,
     status: 'watching'

@@ -278,7 +278,7 @@ http://127.0.0.1:4173/auto-selection
 失败：尝试恢复原保底
 ```
 
-只有目标开启了 `allowAutoDrop`，系统才会为了升级自动退掉它。
+目标默认开启 `allowAutoDrop`。如果不希望系统为了升级自动退掉某个目标，可以在目标表格取消“可退课后升级”。
 
 ### 组选课策略
 
@@ -403,8 +403,7 @@ http://127.0.0.1:4173/auto-selection
           "submitClassId": "DO_HIGH",
           "label": "高优先级教学班",
           "priority": 100,
-          "isBackup": false,
-          "allowAutoDrop": false,
+          "allowAutoDrop": true,
           "skipAfterNonCapacityFailure": true
         }
       ]

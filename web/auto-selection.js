@@ -244,7 +244,7 @@ function addResolvedClassToAutoSelection(teachingClass) {
     capacity: teachingClass.capacity,
     priority: nextPriority(group),
     isBackup: group.strategy !== 'equivalent' && group.targets.length > 0,
-    allowAutoDrop: group.strategy !== 'equivalent' && group.targets.length > 0,
+    allowAutoDrop: true,
     recoverOnUpgradeFailure: true,
     skipAfterNonCapacityFailure: true,
     status: 'watching'
@@ -294,8 +294,7 @@ function renderAutoSelectionDraft() {
         ${showPriorityColumn ? '<th>优先级</th>' : ''}
         <th>教学班</th>
         <th>上课时间/地点</th>
-        <th>保底</th>
-        <th>可退保升级</th>
+        <th>可退课后升级</th>
         <th>状态</th>
         <th>操作</th>
       </tr>
@@ -317,8 +316,7 @@ function renderAutoSelectionDraft() {
         <span class="auto-target-id-line" title="${escapeHtml(targetIds)}">${escapeHtml(targetIds)}</span>
       </td>
       <td>${renderTargetMeeting(target)}</td>
-      <td><input data-auto-target-index="${index}" data-auto-target-field="isBackup" type="checkbox" ${target.isBackup ? 'checked' : ''}></td>
-      <td><input data-auto-target-index="${index}" data-auto-target-field="allowAutoDrop" type="checkbox" ${target.allowAutoDrop ? 'checked' : ''}></td>
+      <td><input data-auto-target-index="${index}" data-auto-target-field="allowAutoDrop" type="checkbox" ${target.allowAutoDrop !== false ? 'checked' : ''}></td>
       <td><span class="tag ${target.status === 'selected' ? 'ok' : ''}">${escapeHtml(targetStatusText(target.status))}</span></td>
       <td>
         <div class="auto-row-actions">
@@ -654,7 +652,7 @@ function sanitizeGroups(groups) {
       label: target.label,
       priority: Number(target.priority),
       isBackup: Boolean(target.isBackup),
-      allowAutoDrop: Boolean(target.allowAutoDrop),
+      allowAutoDrop: target.allowAutoDrop !== false,
       recoverOnUpgradeFailure: target.recoverOnUpgradeFailure !== false,
       skipAfterNonCapacityFailure: target.skipAfterNonCapacityFailure !== false
     }))

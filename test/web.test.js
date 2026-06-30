@@ -267,6 +267,10 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(html, /删除组/);
   assert.match(html, /id="autoTargetList"/);
   assert.match(html, /id="autoIdTargetForm"/);
+  assert.match(app, /可退课后升级/);
+  assert.doesNotMatch(app, /<th>保底<\/th>/);
+  assert.doesNotMatch(app, /data-auto-target-field="isBackup"/);
+  assert.match(app, /allowAutoDrop: true/);
   assert.match(html, /id="autoCourseIdInput"/);
   assert.match(html, /id="autoClassIdInput"/);
   assert.match(html, /获取详情并加入当前组/);
