@@ -542,3 +542,9 @@
 - **Status:** Completed
 - **Next Steps:** Try selecting a live available class again; if the save succeeds but the school system delays the selected list, use the logged prompt to refresh after a moment.
 - **Context:** Root cause was that the UI could submit successfully and immediately render an unchanged stale snapshot, making the click look like it had no effect.
+
+## [2026-06-30 15:24] PE Selection Course Name Payload
+- **Changes:** Added course-name restoration for teaching classes loaded from grouped course rows, so PE selections carry `raw.kcmc` into the Zhengfang save payload. Added web regression coverage for teaching-class course-name mapping.
+- **Status:** Completed
+- **Next Steps:** Retry the live PE selection after refreshing the main page session.
+- **Context:** Live read-only diagnostics for `跆拳道初级混-唐文兵周一67屏峰` showed the row is available and pre-save checks pass, but the detail endpoint omits the course name; the original Zhengfang page submits `kcmc`, while our payload could omit it.

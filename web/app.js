@@ -1,7 +1,7 @@
 import { createZfxkClient } from '../src/client.js';
 import { parseCourseTypeOptions } from '../src/course-types.js';
 import { applyLocalCourseFilters, filterPayloadSignature, splitFilterPayload } from './course-filters.js';
-import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from './course-groups.js';
+import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassCourseNamesById, teachingClassNamesById } from './course-groups.js';
 import { loadAllCoursePages } from './course-pages.js';
 import { buildCoursesForExport, buildSelectedSnapshotForExport } from './export-builders.js';
 import { buildCourseExport, buildSelectedCoursesExport, downloadJson } from './export-data.js';
@@ -306,8 +306,9 @@ async function fetchClassItemsForCourseKey(courseKey) {
   const courseIds = courseIdsForDisplayKey(state.courses, courseKey);
   const classGroups = await Promise.all(courseIds.map((courseId) => state.client.catalog.getTeachingClasses(courseId)));
   const classNames = teachingClassNamesById(state.courses, courseIds);
+  const courseNames = teachingClassCourseNamesById(state.courses, courseIds);
   return classGroups.flat().map((item, index) => ({
-    ...inheritCourseOwnership(mergeTeachingClassName(item, classNames)),
+    ...inheritCourseOwnership(mergeTeachingClassName(item, classNames, courseNames)),
     originalOrder: index
   }));
 }
@@ -1188,14 +1189,16 @@ function renderCourseTypeTabs() {
   }
 }
 
-function mergeTeachingClassName(item, classNames) {
+function mergeTeachingClassName(item, classNames, courseNames = new Map()) {
   const className = classNames.get(String(item.classId)) ?? classNames.get(String(item.submitClassId));
-  if (!className) return item;
+  const courseName = courseNames.get(String(item.classId)) ?? courseNames.get(String(item.submitClassId));
+  if (!className && !courseName) return item;
   return {
     ...item,
     raw: {
       ...item.raw,
-      jxbmc: className
+      ...(className ? { jxbmc: className } : {}),
+      ...(courseName ? { kcmc: courseName } : {})
     }
   };
 }

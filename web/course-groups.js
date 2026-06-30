@@ -51,6 +51,20 @@ export function teachingClassNamesById(courses = [], courseIds = []) {
   return names;
 }
 
+export function teachingClassCourseNamesById(courses = [], courseIds = []) {
+  const allowedCourseIds = new Set(courseIds.map(String));
+  const names = new Map();
+  for (const course of courses) {
+    if (allowedCourseIds.size && !allowedCourseIds.has(String(course.courseId))) continue;
+    const courseName = String(course.raw?.kcmc ?? course.name ?? '').trim();
+    if (!courseName) continue;
+    for (const classId of [course.raw?.jxb_id, course.raw?.do_jxb_id]) {
+      if (classId) names.set(String(classId), courseName);
+    }
+  }
+  return names;
+}
+
 function courseDisplayKey(course = {}) {
   return String(course.courseCode || course.courseId || '');
 }

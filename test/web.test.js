@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassNamesById } from '../web/course-groups.js';
+import { courseIdsForDisplayKey, groupCoursesForDisplay, teachingClassCourseNamesById, teachingClassNamesById } from '../web/course-groups.js';
 import { buildCoursesForExport } from '../web/export-builders.js';
 import { buildCourseExport, buildSelectedCoursesExport } from '../web/export-data.js';
 import { loadAllCoursePages } from '../web/course-pages.js';
@@ -95,6 +95,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /groupCoursesForDisplay/);
   assert.match(app, /courseIdsForDisplayKey/);
   assert.match(app, /teachingClassNamesById/);
+  assert.match(app, /teachingClassCourseNamesById/);
   assert.match(app, /groupCoursesForDisplay\(state\.courses\)/);
   assert.match(app, /courseIdsForDisplayKey\(state\.courses, courseKey\)/);
   assert.match(app, /bootstrap\(\{ html: state\.entryHtml, raw:/);
@@ -831,6 +832,18 @@ test('web teaching-class names are restored from course-list jxbmc rows', () => 
   assert.equal(names.get('JXB1'), '数据库-0001');
   assert.equal(names.get('DO2'), '数据库-0002');
   assert.equal(names.has('JXB3'), false);
+});
+
+test('web teaching-class course names are restored for selection save payloads', () => {
+  const names = teachingClassCourseNamesById([
+    { courseId: '13861', name: '体育', raw: { jxb_id: 'JXB-PE', jxbmc: '跆拳道初级混-唐文兵周一67屏峰' } },
+    { courseId: '13861', name: '体育', raw: { do_jxb_id: 'DO-PE', jxbmc: '网球初级混-陈芳芳周一67屏' } },
+    { courseId: 'KC2', name: '算法', raw: { jxb_id: 'JXB-CS', jxbmc: '算法-0001' } }
+  ], ['13861']);
+
+  assert.equal(names.get('JXB-PE'), '体育');
+  assert.equal(names.get('DO-PE'), '体育');
+  assert.equal(names.has('JXB-CS'), false);
 });
 
 test('web course search loads broad source row ranges until exhausted', async () => {
