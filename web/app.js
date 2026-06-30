@@ -62,7 +62,7 @@ const state = {
   filters: {},
   remoteCourseFilterSignature: '',
   expandedFilterRows: new Set(),
-  filtersCollapsed: false,
+  filtersCollapsed: true,
   draggedSelectedClassId: null,
   autoRefreshingClasses: false,
   lastAutoRefreshError: '',
@@ -180,7 +180,7 @@ async function initialize() {
     state.remoteCourseFilterSignature = '';
     state.filters = {};
     state.expandedFilterRows = new Set();
-    state.filtersCollapsed = false;
+    state.filtersCollapsed = true;
     state.filterGroups = await loadFilterGroups(transport, state.client.context);
     renderCourseTypeTabs();
     renderFilterPanel();
@@ -230,6 +230,7 @@ async function switchCourseType(key) {
     state.sourceCourses = [];
     state.sourceCoursesLoaded = false;
     state.expandedFilterRows = new Set();
+    state.filtersCollapsed = true;
     state.courses = [];
     state.classes = [];
     state.selectedCourseId = null;

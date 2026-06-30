@@ -294,17 +294,19 @@ textarea {
 .filter-search-row {
   display: grid;
   grid-template-columns: minmax(360px, 1fr) auto auto;
-  width: min(1060px, calc(100% - 96px));
-  margin: 6px auto 10px;
+  width: min(920px, calc(100% - 72px));
+  margin: 4px auto 7px;
 }
 
 .filter-search-row input {
   border-radius: 4px 0 0 4px;
-  min-height: 36px;
+  min-height: 32px;
+  padding-block: 5px;
 }
 
 .filter-search-row button {
   border-radius: 0;
+  min-height: 32px;
   min-width: 74px;
 }
 
@@ -314,29 +316,30 @@ textarea {
 
 .filter-rows {
   border-top: 1px solid #b8d4ec;
-  padding: 0 28px 38px 28px;
+  padding: 0 20px 30px 20px;
 }
 
 .filter-row {
   display: grid;
-  grid-template-columns: 112px 1fr;
-  column-gap: 12px;
-  min-height: 45px;
+  grid-template-columns: 98px 1fr;
+  column-gap: 10px;
+  min-height: 31px;
   align-items: start;
-  padding-top: 12px;
+  padding-top: 7px;
 }
 
 .filter-label {
   color: #2d2f33;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 26px;
+  line-height: 22px;
   text-align: right;
 }
 
 .filter-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px 22px;
+  gap: 4px 14px;
   align-items: center;
   min-width: 0;
 }
@@ -347,7 +350,7 @@ textarea {
   border: 0;
   background: transparent;
   color: #0d519d;
-  min-height: 26px;
+  min-height: 22px;
   padding: 0;
   font-weight: 700;
 }
@@ -355,19 +358,19 @@ textarea {
 .filter-option {
   border-bottom: 2px solid transparent;
   border-radius: 0;
-  font-size: 17px;
+  font-size: 15px;
 }
 
 .filter-option.active {
   color: #fff;
   background: #2d79b8;
   border-radius: 3px;
-  padding: 0 8px;
+  padding: 0 6px;
 }
 
 .filter-more {
-  margin-left: auto;
   color: #80b4df;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -422,13 +425,13 @@ textarea {
   left: 50%;
   transform: translateX(-50%);
   min-width: 112px;
-  min-height: 28px;
+  min-height: 24px;
   border: 1px solid #6bb2f2;
   border-bottom: 0;
   border-radius: 4px 4px 0 0;
   background: #e6f4ff;
   color: #0d519d;
-  font-size: 17px;
+  font-size: 15px;
 }
 
 .workspace {

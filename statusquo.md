@@ -471,3 +471,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** Relevant checks pass: `npm test -- test/auto-selection.test.js` and `npm test -- test/web.test.js`. Untracked `1.png` was already present and left untouched.
+
+## [2026-06-30 12:02] Compact Course Filters
+- **Changes:** Made the main course filter panel default to the collapsed state, reset it to collapsed after initialization/course-type changes, and tightened filter row spacing, font sizes, search controls, and expand controls in `web/styles.css`.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes. Untracked `1.png` was already present and left untouched.
