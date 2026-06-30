@@ -453,3 +453,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** GitHub URL is `https://github.com/CodeBoy2006/zfxk-helper`; links open in a new tab with `noopener noreferrer`.
+
+## [2026-06-30 11:36] Simplify GitHub Links
+- **Changes:** Replaced the main-page GitHub Star text button with a compact GitHub icon link, removed the duplicated main-page callout, and changed the setup page GitHub note into a top-right diagonal ribbon.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** Each affected page now has one GitHub entry point linking to `https://github.com/CodeBoy2006/zfxk-helper`.
