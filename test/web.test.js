@@ -431,6 +431,21 @@ test('web retry helper rethrows after the retry budget is exhausted', async () =
   assert.deepEqual(delays, [100, 200, 400]);
 });
 
+test('main page automatically refreshes the visible teaching-class list while idle', async () => {
+  const app = await readFile(new URL('../web/app.js', import.meta.url), 'utf8');
+
+  assert.match(app, /VISIBLE_CLASS_REFRESH_INTERVAL_MS\s*=\s*30_000/);
+  assert.match(app, /autoRefreshingClasses:\s*false/);
+  assert.match(app, /startVisibleClassAutoRefresh\(\)/);
+  assert.match(app, /setInterval\(\(\) => refreshVisibleClasses\(\),\s*VISIBLE_CLASS_REFRESH_INTERVAL_MS\)/);
+  assert.match(app, /async function refreshVisibleClasses\(\)/);
+  assert.match(app, /if \(!shouldRefreshVisibleClasses\(state\)\) return/);
+  assert.match(app, /fetchClassItemsForCourseKey\(courseKey\)/);
+  assert.match(app, /state\.client\.chosen\.snapshot\(\)/);
+  assert.match(app, /shouldApplyVisibleClassRefresh\(state,\s*courseKey,\s*actionVersion\)/);
+  assert.match(app, /自动刷新教学班失败/);
+});
+
 test('course export builder deduplicates repeated course rows before attaching teaching classes', async () => {
   const courses = [
     { courseId: '13861', courseCode: '413001', name: '体育', raw: { jxb_id: 'JXB1', jxbmc: '体育-01' } },

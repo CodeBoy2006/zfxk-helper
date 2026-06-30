@@ -43,6 +43,7 @@ const PERIODS = Array.from({ length: 12 }, (_, index) => index + 1);
 const AUTO_SELECTION_DRAFT_STORAGE_KEY = 'zfxk.autoSelection.draft.v1';
 const DEFAULT_AUTO_GROUP_STRATEGY = 'priority';
 const DEFAULT_AUTO_GROUP_NAME = '默认';
+const VISIBLE_CLASS_REFRESH_INTERVAL_MS = 30_000;
 
 const state = {
   client: null,
@@ -63,6 +64,9 @@ const state = {
   expandedFilterRows: new Set(),
   filtersCollapsed: false,
   draggedSelectedClassId: null,
+  autoRefreshingClasses: false,
+  lastAutoRefreshError: '',
+  actionVersion: 0,
   busy: false
 };
 
@@ -149,6 +153,7 @@ renderChosen();
 renderCourseTypeTabs();
 renderFilterPanel();
 renderSessionConfigSummary();
+startVisibleClassAutoRefresh();
 if (state.sessionConfig) initialize();
 
 async function initialize() {
@@ -288,16 +293,71 @@ async function loadClasses(courseKey) {
 async function loadClassesCore(courseKey) {
   state.selectedCourseId = courseKey;
   renderCourses();
-  const courseIds = courseIdsForDisplayKey(state.courses, courseKey);
-  const classGroups = await Promise.all(courseIds.map((courseId) => state.client.catalog.getTeachingClasses(courseId)));
-  const classNames = teachingClassNamesById(state.courses, courseIds);
-  state.classes = classGroups.flat().map((item, index) => ({
-    ...inheritCourseOwnership(mergeTeachingClassName(item, classNames)),
-    originalOrder: index
-  }));
+  state.classes = await fetchClassItemsForCourseKey(courseKey);
   sortClasses();
   renderClasses();
   log(`课程 ${courseKey} 加载 ${state.classes.length} 个教学班。`);
+}
+
+async function fetchClassItemsForCourseKey(courseKey) {
+  const courseIds = courseIdsForDisplayKey(state.courses, courseKey);
+  const classGroups = await Promise.all(courseIds.map((courseId) => state.client.catalog.getTeachingClasses(courseId)));
+  const classNames = teachingClassNamesById(state.courses, courseIds);
+  return classGroups.flat().map((item, index) => ({
+    ...inheritCourseOwnership(mergeTeachingClassName(item, classNames)),
+    originalOrder: index
+  }));
+}
+
+function startVisibleClassAutoRefresh() {
+  window.setInterval(() => refreshVisibleClasses(), VISIBLE_CLASS_REFRESH_INTERVAL_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshVisibleClasses();
+  });
+}
+
+async function refreshVisibleClasses() {
+  if (!shouldRefreshVisibleClasses(state)) return;
+  const courseKey = state.selectedCourseId;
+  const actionVersion = state.actionVersion;
+  state.autoRefreshingClasses = true;
+  try {
+    const [classes, snapshot] = await Promise.all([
+      fetchClassItemsForCourseKey(courseKey),
+      state.client.chosen.snapshot()
+    ]);
+    if (!shouldApplyVisibleClassRefresh(state, courseKey, actionVersion)) return;
+    state.classes = classes;
+    state.snapshot = snapshot;
+    state.lastAutoRefreshError = '';
+    sortClasses();
+    renderChosen();
+    renderClasses();
+    updateSessionSummary();
+  } catch (error) {
+    const message = `自动刷新教学班失败：${error.message}`;
+    if (message !== state.lastAutoRefreshError) log(message);
+    state.lastAutoRefreshError = message;
+  } finally {
+    state.autoRefreshingClasses = false;
+  }
+}
+
+function shouldRefreshVisibleClasses(state) {
+  return Boolean(
+    state.client?.context
+    && state.selectedCourseId
+    && state.courses.length
+    && !state.busy
+    && !state.autoRefreshingClasses
+    && !document.hidden
+  );
+}
+
+function shouldApplyVisibleClassRefresh(state, courseKey, actionVersion) {
+  return !state.busy
+    && state.actionVersion === actionVersion
+    && String(state.selectedCourseId) === String(courseKey);
 }
 
 function sortClasses() {
@@ -1327,6 +1387,7 @@ function filenameTimestamp(date = new Date()) {
 async function runTask(label, task) {
   if (state.busy) return;
   state.busy = true;
+  state.actionVersion += 1;
   setStatus(label);
   setButtonsDisabled(true);
   try {

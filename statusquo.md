@@ -417,3 +417,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; default sort restores the original teaching-class order from the loaded course result.
+
+## [2026-06-30 10:57] Visible Teaching-Class Auto Refresh
+- **Changes:** Added an idle-only Web auto-refresh loop for the currently visible teaching-class list and selected-course snapshot; protected it from overwriting user actions and added regression coverage.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend and leave a course open to confirm capacity/selected-state updates appear without manual reload.
+- **Context:** `npm test` passes. The loop runs every 30 seconds and also refreshes when a hidden tab becomes visible again.
