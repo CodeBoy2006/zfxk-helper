@@ -54,6 +54,27 @@
 - 已选课程导出。
 - 自动选课后台任务管理。
 
+界面预览：
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="docs/images/web-workbench-overview.png">
+        <img src="docs/images/web-workbench-overview.png" alt="Web 工作台主界面" height="260">
+      </a>
+      <br>
+      <sub>Web 工作台主界面</sub>
+    </td>
+    <td align="center">
+      <a href="docs/images/auto-selection-console.png">
+        <img src="docs/images/auto-selection-console.png" alt="自动选课控制台" height="260">
+      </a>
+      <br>
+      <sub>自动选课控制台</sub>
+    </td>
+  </tr>
+</table>
+
 ### 自动选课后台任务
 
 自动选课任务运行在本地 Node 进程中。

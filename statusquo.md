@@ -483,3 +483,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** Root cause was top-level `initializeSession()` running before the bottom-of-file `class ProxyTransport` declaration had been evaluated; manual initialization worked because the click happened after module loading. `npm test` passes.
+
+## [2026-06-30 12:14] Add README Screenshots
+- **Changes:** Moved root screenshots into `docs/images/` as descriptive assets and added compact linked previews to `README.md`.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** Documentation-only change; screenshots are height-limited in the README to avoid taking too much vertical space.
