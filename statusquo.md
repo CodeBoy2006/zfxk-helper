@@ -500,3 +500,9 @@
 - **Status:** Completed
 - **Next Steps:** Commit and push with the license cleanup.
 - **Context:** `npm test` passes with 64/64 tests.
+
+## [2026-06-30 12:25] Auto Selection UX Clarification
+- **Changes:** Updated the standalone auto-selection page with a collapsed advanced ID entry, clearer auto-drop upgrade wording, split session/auth status labels, constrained task buttons, precheck/start-summary flows, target failure reasons, group progress details, and log copy/export actions.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes with 64/64 tests. Existing staged license/script cleanup changes were left separate from this task.
