@@ -147,6 +147,79 @@ test('bootstrapFromPage fetches an authenticated page and parses hidden context'
   assert.equal(transport.calls[0].path, '/xsxk/index.html');
 });
 
+test('loadCourseTypeDisplayContext merges protected display fields before choosing', async () => {
+  const entryHtml = `
+    <input id="xkxnm" value="2025"/>
+    <input id="xkxqm" value="12"/>
+    <input id="xkkz_id" value=""/>
+    <input id="kklxdm" value=""/>
+    <input id="xklc" value=""/>
+    <input id="njdm_id" value=""/>
+    <input id="zyh_id" value=""/>
+    <input id="firstXkkzId" value="KZ-MAJOR"/>
+    <input id="firstKklxdm" value="01"/>
+    <input id="firstXkkzXh" value="1"/>
+    <input id="firstNjdmId" value="2024"/>
+    <input id="firstZyhId" value="CS"/>
+    <input id="iskxk" value="1"/>
+    <input id="isinxksj" value="1"/>
+    <input id="sfyxsksjct" value="0"/>
+    <input id="xksdxjckg" value="0"/>
+    <ul id="nav_tab">
+      <li><a onclick="queryCourse(this,'05','KZ-PE','2024','CS','4')">体育分项</a></li>
+    </ul>
+  `;
+  const displayHtml = `
+    <input id="rwlx" value="2"/>
+    <input id="xklc" value="LC-PE"/>
+    <input id="rlkz" value="1"/>
+    <input id="cdrlkz" value="0"/>
+    <input id="rlzlkz" value="0"/>
+  `;
+  const transport = new MemoryTransport({
+    '/xsxk/index.html': entryHtml,
+    [endpoints.display]: displayHtml,
+    [endpoints.teachingClasses]: [
+      { jxb_id: 'JXB-PE', do_jxb_id: 'DO-PE', kch_id: 'KC-PE', kcmc: '体育', jxbzls: '1', yxzrs: '1', jxbrl: '30' }
+    ],
+    [endpoints.chosenDisplay]: [
+      { kch_id: 'KC-PE', kcmc: '体育', jxb_id: 'JXB-PE', do_jxb_id: 'DO-PE', jxbmc: '跆拳道初级混', sfxkbj: '1' }
+    ]
+  });
+  const client = createZfxkClient({
+    baseUrl: 'https://example.edu.cn/jwglxt',
+    transport
+  });
+
+  await client.bootstrapFromPage({ path: '/xsxk/index.html' });
+  await client.loadCourseTypeDisplayContext({
+    raw: {
+      kklxdm: '05',
+      kklxmc: '体育分项',
+      xkkz_id: 'KZ-PE',
+      njdm_id: '2024',
+      zyh_id: 'CS',
+      xkkz_xh: '4'
+    }
+  });
+  transport.queue(endpoints.titleCheck, { flag: '1' });
+  transport.queue(endpoints.saveSelection, { flag: '1' });
+
+  await client.selection.choose({ courseId: 'KC-PE', classId: 'JXB-PE' });
+
+  const displayCall = transport.calls.find((call) => call.path === endpoints.display);
+  assert.equal(displayCall.data.xkkz_id, 'KZ-PE');
+  assert.equal(displayCall.data.kklxdm, '05');
+  assert.equal(displayCall.data.kspage, 0);
+  assert.equal(displayCall.data.jspage, 0);
+
+  const saveCall = transport.calls.find((call) => call.path === endpoints.saveSelection);
+  assert.equal(saveCall.data.rwlx, '2');
+  assert.equal(saveCall.data.xklc, 'LC-PE');
+  assert.equal(saveCall.data.rlkz, '1');
+  assert.equal(saveCall.data.sxbj, '1');
+});
+
 test('bootstrapFromPage rejects pages that do not contain selection context', async () => {
   const transport = new MemoryTransport({
     '/xsxk/index.html': '<html><title>login</title></html>'

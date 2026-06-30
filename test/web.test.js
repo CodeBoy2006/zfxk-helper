@@ -98,7 +98,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /teachingClassCourseNamesById/);
   assert.match(app, /groupCoursesForDisplay\(state\.courses\)/);
   assert.match(app, /courseIdsForDisplayKey\(state\.courses, courseKey\)/);
-  assert.match(app, /bootstrap\(\{ html: state\.entryHtml, raw:/);
+  assert.match(app, /loadCourseTypeDisplayContext\(\{ html: state\.entryHtml, raw:/);
   assert.match(app, /ProxyTransport/);
   assert.match(app, /requireSessionConfig\('\/'\)/);
   assert.match(app, /ensureSessionCookie/);
@@ -124,6 +124,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /textContent = '加入抢课'/);
   assert.match(app, /auto-class-menu-heading/);
   assert.match(app, /switchCourseType/);
+  assert.match(app, /loadCourseTypeDisplayContext/);
   assert.match(app, /renderCourseTypeTabs/);
   assert.match(app, /\/api\/proxy\/post/);
   assert.match(app, /loadFilterGroups/);
@@ -309,6 +310,7 @@ test('standalone auto-selection page implements the reference workflow surface',
 
   assert.match(app, /createZfxkClient/);
   assert.match(app, /parseCourseTypeOptions/);
+  assert.match(app, /loadCourseTypeDisplayContext/);
   assert.doesNotMatch(app, /loadAllCoursePages/);
   assert.match(app, /requireSessionConfig\('\/auto-selection'\)/);
   assert.match(app, /state\.sessionConfig/);

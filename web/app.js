@@ -176,7 +176,11 @@ async function initialize() {
     state.courseTypes = parseCourseTypeOptions(state.entryHtml);
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
-    await state.client.bootstrap({ html: state.entryHtml, raw: activeType ? courseTypeRaw(activeType) : undefined });
+    if (activeType) {
+      await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(activeType) });
+    } else {
+      await state.client.bootstrap({ html: state.entryHtml });
+    }
     state.sourceCourses = [];
     state.sourceCoursesLoaded = false;
     state.remoteCourseFilterSignature = '';
@@ -237,7 +241,7 @@ async function switchCourseType(key) {
     state.classes = [];
     state.selectedCourseId = null;
     state.remoteCourseFilterSignature = '';
-    await state.client.refreshContext({ html: state.entryHtml, raw: courseTypeRaw(courseType) });
+    await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(courseType) });
     state.filterGroups = await loadFilterGroups(state.transport, state.client.context);
     renderCourseTypeTabs();
     renderFilterPanel();

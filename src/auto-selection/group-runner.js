@@ -116,7 +116,12 @@ export async function applyTargetCourseTypeContext(task, target) {
 
 async function applyCourseTypeContext(task, courseType) {
   const raw = courseTypeContextToRaw(courseType);
-  if (!raw || typeof task.client?.refreshContext !== 'function') return;
+  if (!raw) return;
+  if (typeof task.client?.loadCourseTypeDisplayContext === 'function') {
+    await task.client.loadCourseTypeDisplayContext({ raw });
+    return;
+  }
+  if (typeof task.client?.refreshContext !== 'function') return;
   await task.client.refreshContext({ raw });
 }
 

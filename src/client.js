@@ -1,4 +1,5 @@
-import { loadRuntimeContext } from './context.js';
+import { buildContextRequest, extractHiddenFields, loadRuntimeContext } from './context.js';
+import { endpoints } from './endpoints.js';
 import { CatalogService, ChosenService, ListenerService, SelectionService, TextbookService, WaitlistService } from './services.js';
 import { HttpTransport } from './transport.js';
 
@@ -55,6 +56,37 @@ export class ZfxkClient {
       html: input.html ?? this.entryHtml,
       raw: input.raw
     });
+  }
+
+  async loadCourseTypeDisplayContext(input = {}) {
+    const context = await this.refreshContext({
+      context: input.context ?? this.context,
+      html: input.html ?? this.entryHtml,
+      raw: input.raw
+    });
+    const display = await this.transport.post(
+      endpoints.display,
+      buildContextRequest(context, {
+        kspage: input.page?.start ?? 0,
+        jspage: input.page?.size ?? 0,
+        ...(input.extra ?? {})
+      })
+    );
+
+    if (typeof display !== 'string') {
+      throw new Error('CONTEXT_NOT_FOUND: expected course-type display HTML.');
+    }
+
+    this.context = loadRuntimeContext({
+      baseUrl: this.baseUrl,
+      context,
+      html: display,
+      raw: {
+        ...extractHiddenFields(display),
+        ...(input.raw ?? {})
+      }
+    });
+    return this.requireContext();
   }
 
   requireContext() {

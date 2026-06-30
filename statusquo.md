@@ -548,3 +548,9 @@
 - **Status:** Completed
 - **Next Steps:** Retry the live PE selection after refreshing the main page session.
 - **Context:** Live read-only diagnostics for `跆拳道初级混-唐文兵周一67屏峰` showed the row is available and pre-save checks pass, but the detail endpoint omits the course name; the original Zhengfang page submits `kcmc`, while our payload could omit it.
+
+## [2026-06-30 16:27] Course Type Display Context
+- **Changes:** Added `loadCourseTypeDisplayContext()` to load Zhengfang Display hidden fields before catalog and selection calls, updated main-page and auto-selection course-type switching to use it, and documented the SDK call.
+- **Status:** Completed
+- **Next Steps:** Retry with a fresh logged-in cookie/session; the previously supplied cookie now opens the login page.
+- **Context:** Live save attempts for `跆拳道初级混-唐文兵周一67屏峰` reached the save endpoint but returned `无操作权限！`; the payload was missing Display-only fields such as `rwlx`, `xklc`, and capacity-control flags. `npm test` passes with 71/71 tests.

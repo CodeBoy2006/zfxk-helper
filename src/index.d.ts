@@ -285,6 +285,7 @@ export declare class ZfxkClient {
   bootstrap(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
   bootstrapFromPage(input: { path: string; raw?: Record<string, string>; request?: Record<string, unknown> }): Promise<RuntimeContext>;
   refreshContext(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
+  loadCourseTypeDisplayContext(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext; page?: { start?: number; size?: number }; extra?: Record<string, unknown> }): Promise<RuntimeContext>;
 }
 
 export type AutoSelectionTaskStatus = 'queued' | 'running' | 'auth-refreshing' | 'paused' | 'succeeded' | 'failed' | 'cancelled';

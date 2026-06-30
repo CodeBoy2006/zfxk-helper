@@ -271,8 +271,8 @@ test('auto-selection group planner applies each target course type context befor
   const calls = [];
   const task = {
     client: {
-      refreshContext: async ({ raw }) => {
-        calls.push(['context', raw.kklxdm, raw.xkkz_id, raw.xkkz_xh]);
+      loadCourseTypeDisplayContext: async ({ raw }) => {
+        calls.push(['display-context', raw.kklxdm, raw.xkkz_id, raw.xkkz_xh]);
       },
       catalog: {
         getTeachingClasses: async (courseId) => {
@@ -293,9 +293,9 @@ test('auto-selection group planner applies each target course type context befor
   const action = await planGroupAction(task, config.groups[0]);
 
   assert.deepEqual(calls, [
-    ['context', '10', 'KZ-GENERAL', 'GENERAL-TOKEN'],
+    ['display-context', '10', 'KZ-GENERAL', 'GENERAL-TOKEN'],
     ['classes', 'KC-GENERAL'],
-    ['context', '05', 'KZ-PE', 'PE-TOKEN'],
+    ['display-context', '05', 'KZ-PE', 'PE-TOKEN'],
     ['classes', 'KC-PE']
   ]);
   assert.equal(action.type, 'choose');
@@ -318,8 +318,8 @@ test('auto-selection group planner backfills course type context for legacy targ
       { label: '通识选修课', kklxdm: '10', xkkzId: 'KZ-GENERAL', njdmId: '2025', zyhId: '334', xkkzXh: 'GENERAL-TOKEN' }
     ],
     client: {
-      refreshContext: async ({ raw }) => {
-        calls.push(['context', raw.kklxdm]);
+      loadCourseTypeDisplayContext: async ({ raw }) => {
+        calls.push(['display-context', raw.kklxdm]);
       },
       catalog: {
         getTeachingClasses: async (courseId) => {
@@ -335,9 +335,9 @@ test('auto-selection group planner backfills course type context for legacy targ
   const action = await planGroupAction(task, config.groups[0]);
 
   assert.deepEqual(calls, [
-    ['context', '01'],
+    ['display-context', '01'],
     ['classes', 'KC-GENERAL'],
-    ['context', '10'],
+    ['display-context', '10'],
     ['classes', 'KC-GENERAL']
   ]);
   assert.equal(action.type, 'choose');

@@ -472,7 +472,12 @@ const client = createZfxkClient({
 await client.bootstrapFromPage({
   path: '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512'
 });
+
+await client.loadCourseTypeDisplayContext();
 ```
+
+`loadCourseTypeDisplayContext()` 会加载当前课程类型的 Display 面板隐藏字段。
+如果先切换了课程类型，需要传入该类型对应的 `kklxdm`、`xkkz_id`、`njdm_id`、`zyh_id` 和 `xkkz_xh`，再查询课程或提交选课。
 
 ### 2. 查询课程
 
