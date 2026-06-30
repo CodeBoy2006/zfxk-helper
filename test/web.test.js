@@ -312,6 +312,9 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.doesNotMatch(app, /autoTargetLabelInput/);
   assert.match(app, /auto-target-id-line/);
   assert.match(app, /title="\$\{escapeHtml\(targetIds\)\}"/);
+  assert.match(app, /showPriorityColumn/);
+  assert.match(app, /showPriorityColumn \? '<th>优先级<\/th>' : ''/);
+  assert.match(app, /showPriorityColumn \? `\s*<td><input data-auto-target-index="\$\{index\}" data-auto-target-field="priority"/s);
   assert.doesNotMatch(app, /data-auto-move-target/);
   assert.match(app, /reorderTarget/);
   assert.match(app, /normalizeDraftGroupStrategy/);

@@ -170,10 +170,16 @@ function selectAutoGroup(event) {
 
 function updateActiveGroupInfo() {
   const group = activeGroup();
+  const previousStrategy = normalizeDraftGroupStrategy(group.strategy);
   group.name = elements.autoGroupNameInput.value.trim() || group.name;
   group.strategy = normalizeDraftGroupStrategy(elements.autoGroupStrategyInput.value);
+  if (previousStrategy !== group.strategy) sortTargets(group);
   persistDraft();
-  renderGroupTabs();
+  if (previousStrategy !== group.strategy) {
+    renderAutoSelectionDraft();
+  } else {
+    renderGroupTabs();
+  }
 }
 
 function deleteActiveGroup() {
@@ -278,13 +284,14 @@ function renderAutoSelectionDraft() {
     return;
   }
 
+  const showPriorityColumn = normalizeDraftGroupStrategy(group.strategy) !== 'equivalent';
   const table = document.createElement('table');
   table.className = 'auto-target-table';
   table.innerHTML = `
     <thead>
       <tr>
         <th></th>
-        <th>优先级</th>
+        ${showPriorityColumn ? '<th>优先级</th>' : ''}
         <th>教学班</th>
         <th>上课时间/地点</th>
         <th>保底</th>
@@ -303,7 +310,8 @@ function renderAutoSelectionDraft() {
     row.dataset.autoTargetRow = String(index);
     row.innerHTML = `
       <td><button type="button" class="auto-drag-handle" aria-label="拖拽排序">☰</button></td>
-      <td><input data-auto-target-index="${index}" data-auto-target-field="priority" type="number" value="${Number(target.priority) || 0}"></td>
+      ${showPriorityColumn ? `
+      <td><input data-auto-target-index="${index}" data-auto-target-field="priority" type="number" value="${Number(target.priority) || 0}"></td>` : ''}
       <td>
         <strong>${escapeHtml(target.label || target.classId)}</strong>
         <span class="auto-target-id-line" title="${escapeHtml(targetIds)}">${escapeHtml(targetIds)}</span>

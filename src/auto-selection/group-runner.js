@@ -34,7 +34,8 @@ export function isGroupSucceeded(group) {
     return activeTargets.some((target) => sameTarget(group.currentPlacement, target));
   }
   const [topTarget] = activeTargets.sort(byPriorityDescThenCreatedOrder);
-  return sameTarget(group.currentPlacement, topTarget);
+  return activeTargets.some((target) =>
+    sameTarget(group.currentPlacement, target) && Number(target.priority) === Number(topTarget.priority));
 }
 
 export async function planGroupAction(task, group) {

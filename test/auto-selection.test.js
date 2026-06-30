@@ -234,6 +234,32 @@ test('auto-selection equivalent groups treat any selected target as satisfied', 
   assert.equal(action.type, 'none');
 });
 
+test('auto-selection priority groups treat selected targets in the same top priority tier as satisfied', () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: '体育课',
+      targets: [
+        { courseId: 'KC1', classId: 'A', priority: 100 },
+        { courseId: 'KC1', classId: 'B', priority: 100 },
+        { courseId: 'KC1', classId: 'LOW', priority: 10, isBackup: true }
+      ]
+    }]
+  });
+  const group = config.groups[0];
+
+  reconcileGroups(config.groups, makeSnapshot([{ courseId: 'KC1', classId: 'B', submitClassId: 'B' }]));
+  assert.equal(group.currentPlacement.targetId, group.targets[1].targetId);
+  assert.equal(group.state, 'SUCCEEDED');
+  assert.equal(group.isTopTargetSelected, true);
+
+  reconcileGroups(config.groups, makeSnapshot([{ courseId: 'KC1', classId: 'LOW', submitClassId: 'LOW' }]));
+  assert.equal(group.currentPlacement.targetId, group.targets[2].targetId);
+  assert.equal(group.state, 'HOLDING');
+  assert.equal(group.isTopTargetSelected, false);
+});
+
 test('auto-selection choose does a second snapshot before treating selected as confirmed', async () => {
   const events = createAutoSelectionEventLog();
   const target = {

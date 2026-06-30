@@ -423,3 +423,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and leave a course open to confirm capacity/selected-state updates appear without manual reload.
 - **Context:** `npm test` passes. The loop runs every 30 seconds and also refreshes when a hidden tab becomes visible again.
+
+## [2026-06-30 11:05] Equal Priority Auto Selection
+- **Changes:** Updated priority-mode group success logic so selected targets in the same top priority tier satisfy the group, hid the priority column for equivalent-mode target tables, and added regression coverage.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes; lower-priority holdings still remain in `HOLDING` until a higher-priority tier is selected.
