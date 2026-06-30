@@ -28,7 +28,7 @@ export function parseTeachers(jsxx) {
 
 export function mapCourse(row = {}) {
   return {
-    courseId: String(firstDefined(row.kch_id, row.courseId, '')),
+    courseId: String(firstDefined(row.t_kch_id, row.kch_id, row.courseId, '')),
     courseCode: firstDefined(row.kch, row.courseCode),
     name: String(firstDefined(row.kcmc, row.name, '')),
     credit: number(firstDefined(row.xf, row.credit)),
@@ -51,7 +51,7 @@ export function mapTeachingClass(row = {}) {
   return {
     classId: String(firstDefined(row.jxb_id, row.classId, '')),
     submitClassId: String(firstDefined(row.do_jxb_id, row.submitClassId, row.jxb_id, '')),
-    courseId: String(firstDefined(row.kch_id, row.courseId, '')),
+    courseId: String(firstDefined(row.t_kch_id, row.kch_id, row.courseId, '')),
     name: String(firstDefined(row.jxbmc, row.name, '')),
     childClassCount: number(firstDefined(row.jxbzls, row.childClassCount), 1),
     credit: number(firstDefined(row.xf, row.jxbxf, row.credit)),

@@ -530,3 +530,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** Documentation-only change; users should fall back to pasted logged-in cookies when automatic login is incompatible.
+
+## [2026-06-30 14:42] Physical Education Course ID Mapping
+- **Changes:** Updated SDK course and teaching-class mapping to prefer backend `t_kch_id` over display `kch_id`, and added regression coverage for physical-education rows such as `G2413161`.
+- **Status:** Completed
+- **Next Steps:** Refresh the Web frontend session and reopen 板块课(体育) courses to confirm teaching classes load from the live school system.
+- **Context:** Some Zhengfang deployments return the visible PE course code in `kch_id` while the teaching-class endpoint expects `t_kch_id`; sending the display code causes `Illegal access while loading teaching classes.`.

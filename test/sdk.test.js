@@ -273,6 +273,31 @@ test('maps course and teaching-class rows into SDK models', () => {
   assert.match(actualFormat.locationText, /健B105/);
 });
 
+test('mapCourse uses backend course id before display course code', () => {
+  const course = mapCourse({
+    t_kch_id: 'BACKEND-PE-KC1',
+    kch_id: 'G2413161',
+    kch: 'G2413161',
+    kcmc: '羽毛球',
+    kklxdm: '06'
+  });
+
+  assert.equal(course.courseId, 'BACKEND-PE-KC1');
+  assert.equal(course.courseCode, 'G2413161');
+});
+
+test('mapTeachingClass uses backend course id before display course code', () => {
+  const teachingClass = mapTeachingClass({
+    t_kch_id: 'BACKEND-PE-KC1',
+    kch_id: 'G2413161',
+    jxb_id: 'JXB-PE-0015',
+    jxbmc: '羽毛球（3）-0015'
+  });
+
+  assert.equal(teachingClass.courseId, 'BACKEND-PE-KC1');
+  assert.equal(teachingClass.classId, 'JXB-PE-0015');
+});
+
 test('searchCourses and getTeachingClasses post context-rich requests', async () => {
   const { client, transport } = makeClient({
     [endpoints.coursePage]: {
