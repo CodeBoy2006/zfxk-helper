@@ -435,3 +435,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `node --test test/web.test.js` passes.
+
+## [2026-06-30 11:25] Prefer Main Page Target Adding
+- **Changes:** Updated the auto-selection help dialog to recommend adding targets from the main page via `加入抢课`, with ID entry described as a supplemental path for known course/class IDs.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `node --test test/web.test.js` passes.
