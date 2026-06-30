@@ -1,4 +1,9 @@
-import { byPriorityDescThenCreatedOrder, courseTypeContextKey, courseTypeContextToRaw } from './config.js';
+import {
+  byPriorityDescThenCreatedOrder,
+  courseTypeContextKey,
+  courseTypeContextToRaw,
+  normalizeCourseTypeContext
+} from './config.js';
 import {
   classRemaining,
   findSnapshotSelection,
@@ -70,12 +75,13 @@ function compareTargetsForGroup(group, a, b) {
 
 export async function observeGroupTargets(task, group) {
   const observed = [];
-  for (const { courseId, courseType, targets } of targetRefreshBuckets(group.targets)) {
+  for (const { courseId, courseType, targets } of targetRefreshBuckets(task, group.targets)) {
     await applyCourseTypeContext(task, courseType);
     const teachingClasses = await task.client.catalog.getTeachingClasses(courseId);
     for (const teachingClass of teachingClasses) {
       const target = targets.find((candidate) => matchTarget(candidate, teachingClass));
       if (!target) continue;
+      if (!target.courseType && courseType) target.courseType = normalizeCourseTypeContext(courseType);
       target.lastObservedRemaining = classRemaining(teachingClass);
       target.lastMessage = target.lastObservedRemaining === 0 ? 'capacity full' : '';
       observed.push({ target, teachingClass });
@@ -84,19 +90,22 @@ export async function observeGroupTargets(task, group) {
   return observed;
 }
 
-function targetRefreshBuckets(targets = []) {
+function targetRefreshBuckets(task, targets = []) {
   const buckets = new Map();
   for (const target of targets) {
     if (!target.courseId) continue;
-    const key = [target.courseId, courseTypeContextKey(target.courseType)].join('::');
-    if (!buckets.has(key)) {
-      buckets.set(key, {
-        courseId: target.courseId,
-        courseType: target.courseType,
-        targets: []
-      });
+    const courseTypes = target.courseType ? [target.courseType] : (task.courseTypes?.length ? task.courseTypes : [undefined]);
+    for (const courseType of courseTypes) {
+      const key = [target.courseId, courseTypeContextKey(courseType)].join('::');
+      if (!buckets.has(key)) {
+        buckets.set(key, {
+          courseId: target.courseId,
+          courseType,
+          targets: []
+        });
+      }
+      buckets.get(key).targets.push(target);
     }
-    buckets.get(key).targets.push(target);
   }
   return [...buckets.values()];
 }

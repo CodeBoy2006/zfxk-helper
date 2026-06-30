@@ -518,3 +518,9 @@
 - **Status:** Completed
 - **Next Steps:** Re-add old targets that were saved before this field existed, or run precheck after adding from the main course list so new targets carry their tab context.
 - **Context:** Fixes通识/体育目标被默认主修课程上下文查询而返回 0 个教学班的问题. `npm test` passes with 66/66 tests.
+
+## [2026-06-30 12:49] Backfill Legacy Auto Selection Context
+- **Changes:** Added task-runner parsing of entry-page course types and group-runner fallback/backfill for legacy targets that do not yet have saved `courseType`, so old drafts can still locate the correct tab context during background polling.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** Supersedes the prior re-add-old-targets note; legacy targets are now backfilled in memory when a matching teaching class is observed. `npm test` passes with 67/67 tests.

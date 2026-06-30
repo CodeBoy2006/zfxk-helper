@@ -1,5 +1,6 @@
 import { createZfxkClient } from '../client.js';
 import { loginWithZfCaptcha } from '../auth/index.js';
+import { parseCourseTypeOptions } from '../course-types.js';
 import { createAutoSelectionEventLog } from './events.js';
 import { isGroupSucceeded, chooseTarget, planGroupAction, reconcileGroups } from './group-runner.js';
 import { maskUsername } from './config.js';
@@ -27,6 +28,7 @@ export class AutoSelectionTaskRunner {
     this.pauseScope = undefined;
     this.autoStart = options.autoStart !== false;
     this.consecutiveFailures = 0;
+    this.courseTypes = options.courseTypes ?? [];
     if (this.autoStart) this.start();
   }
 
@@ -140,6 +142,7 @@ export class AutoSelectionTaskRunner {
       config: this.config
     });
     await this.client.bootstrapFromPage({ path: this.config.pagePath });
+    this.courseTypes = parseCourseTypeOptions(this.client.entryHtml ?? '');
     this.authStatus = 'logged-in';
     this.status = 'running';
     this.events.add('auth-refreshed', 'Authentication ready');

@@ -302,6 +302,56 @@ test('auto-selection group planner applies each target course type context befor
   assert.equal(action.target.classId, 'GEN-A');
 });
 
+test('auto-selection group planner backfills course type context for legacy targets', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: '旧草稿',
+      targets: [{ courseId: 'KC-GENERAL', classId: 'GEN-A', priority: 100 }]
+    }]
+  });
+  const calls = [];
+  const task = {
+    courseTypes: [
+      { label: '主修课程', kklxdm: '01', xkkzId: 'KZ-MAJOR', njdmId: '2025', zyhId: '334', xkkzXh: 'MAJOR-TOKEN' },
+      { label: '通识选修课', kklxdm: '10', xkkzId: 'KZ-GENERAL', njdmId: '2025', zyhId: '334', xkkzXh: 'GENERAL-TOKEN' }
+    ],
+    client: {
+      refreshContext: async ({ raw }) => {
+        calls.push(['context', raw.kklxdm]);
+      },
+      catalog: {
+        getTeachingClasses: async (courseId) => {
+          calls.push(['classes', courseId]);
+          return calls.at(-2)?.[1] === '10'
+            ? [{ courseId, classId: 'GEN-A', submitClassId: 'DO-GEN-A', selectedCount: 1, capacity: 30, flags: { canSelect: true, full: false } }]
+            : [];
+        }
+      }
+    }
+  };
+
+  const action = await planGroupAction(task, config.groups[0]);
+
+  assert.deepEqual(calls, [
+    ['context', '01'],
+    ['classes', 'KC-GENERAL'],
+    ['context', '10'],
+    ['classes', 'KC-GENERAL']
+  ]);
+  assert.equal(action.type, 'choose');
+  assert.equal(action.target.classId, 'GEN-A');
+  assert.deepEqual(config.groups[0].targets[0].courseType, {
+    label: '通识选修课',
+    kklxdm: '10',
+    xkkzId: 'KZ-GENERAL',
+    njdmId: '2025',
+    zyhId: '334',
+    xkkzXh: 'GENERAL-TOKEN'
+  });
+});
+
 test('auto-selection equivalent groups treat any selected target as satisfied', async () => {
   const config = normalizeAutoSelectionConfig({
     baseUrl: 'https://xk.example.edu.cn/jwglxt',
