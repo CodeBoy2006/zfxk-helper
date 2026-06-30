@@ -173,6 +173,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.doesNotMatch(app, /MemoryTransport/);
   assert.doesNotMatch(app, /createDemoClient/);
   assert.match(css, /grid-template-columns/);
+  assert.match(css, /button\.danger\s*\{[^}]*color:\s*#fff/s);
   assert.match(css, /course-type-tabs/);
   assert.doesNotMatch(css, /course-type-placeholder/);
   assert.match(css, /section-sort-select/);

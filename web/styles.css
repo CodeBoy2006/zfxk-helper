@@ -51,6 +51,7 @@ button.secondary {
 button.danger {
   border-color: var(--danger);
   background: var(--danger);
+  color: #fff;
 }
 
 button:disabled {

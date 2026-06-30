@@ -506,3 +506,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes with 64/64 tests. Existing staged license/script cleanup changes were left separate from this task.
+
+## [2026-06-30 12:33] Danger Button Contrast
+- **Changes:** Updated shared danger button styling so red destructive buttons keep white text even when combined with secondary button classes, and added web coverage for the contrast rule.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test -- test/web.test.js` passes.
