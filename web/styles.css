@@ -139,6 +139,17 @@ textarea {
   background: #0b8d62;
 }
 
+.repo-link-button {
+  border-color: #24292f;
+  background: #24292f;
+  box-shadow: 0 8px 18px rgba(36, 41, 47, 0.18);
+}
+
+.repo-link-button:hover {
+  border-color: #111820;
+  background: #111820;
+}
+
 .config-link-button {
   border-color: #d4dfec;
   background: #ffffff;
@@ -154,6 +165,70 @@ textarea {
 .session-panel {
   margin-top: 12px;
   padding: 14px;
+}
+
+.repo-callout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  border: 1px solid #d6e2ef;
+  border-radius: 8px;
+  padding: 14px 16px;
+  background:
+    linear-gradient(90deg, rgba(36, 41, 47, 0.04), transparent 56%),
+    #fff;
+  box-shadow: var(--shadow);
+}
+
+.repo-callout-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.repo-callout-main span,
+.setup-repo-note span {
+  color: #65748c;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.repo-callout-main strong {
+  color: #172033;
+  font-size: 18px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.repo-callout-main p,
+.setup-repo-note p {
+  margin: 0;
+  color: #52627a;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.repo-callout-action {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-height: 38px;
+  border: 1px solid #f0c15a;
+  border-radius: 7px;
+  padding: 0 16px;
+  background: #fff7df;
+  color: #7a4b00;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.repo-callout-action:hover {
+  border-color: #dda633;
+  background: #ffefbd;
 }
 
 .checkbox {
@@ -762,6 +837,34 @@ body[data-page="setup"] {
   border-color: #f0c0bd;
   background: #fff5f4;
   color: var(--danger);
+}
+
+.setup-repo-note {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  border: 1px solid #dce6f1;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfdff;
+}
+
+.setup-repo-note > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.setup-repo-note a {
+  color: #1f73d0;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.setup-repo-note a:hover {
+  text-decoration: underline;
 }
 
 .auto-page-shell {
@@ -2036,6 +2139,7 @@ body[data-page="setup"] {
   }
 
   .topbar,
+  .repo-callout,
   .auto-page-topbar,
   .session-status-card,
   .setup-panel-heading,
@@ -2047,6 +2151,18 @@ body[data-page="setup"] {
   }
 
   .topbar {
+    display: grid;
+  }
+
+  .repo-callout {
+    align-items: stretch;
+  }
+
+  .repo-callout-action {
+    width: 100%;
+  }
+
+  .setup-repo-note > div {
     display: grid;
   }
 

@@ -5,6 +5,14 @@
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeBoy2006/zfxk-helper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CodeBoy2006/zfxk-helper/issues"
+  },
+  "homepage": "https://github.com/CodeBoy2006/zfxk-helper#readme",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",

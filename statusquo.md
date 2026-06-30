@@ -447,3 +447,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes.
+
+## [2026-06-30 11:29] Add GitHub Star Links
+- **Changes:** Added repository metadata to `package.json` and `package-lock.json`, added GitHub Star entry points on the main page and setup page, and styled the shared callouts/buttons in `web/styles.css`.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** GitHub URL is `https://github.com/CodeBoy2006/zfxk-helper`; links open in a new tab with `noopener noreferrer`.
