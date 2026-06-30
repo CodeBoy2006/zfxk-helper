@@ -9,6 +9,7 @@ export class ZfxkClient {
     this.auth = options.auth;
     this.mode = options.mode ?? 'commit';
     this.entryHtml = '';
+    this.entryPath = options.pagePath ?? options.entryPath ?? '';
     this.context = options.context ? loadRuntimeContext({ baseUrl: this.baseUrl, context: options.context }) : undefined;
     this.transport = options.transport ?? new HttpTransport({ baseUrl: this.baseUrl, auth: this.auth });
     this.catalog = new CatalogService(this);
@@ -21,6 +22,7 @@ export class ZfxkClient {
 
   async bootstrap(input = {}) {
     if (typeof input.html === 'string') this.entryHtml = input.html;
+    if (input.pagePath || input.path) this.entryPath = input.pagePath ?? input.path;
     if (input.html || input.raw || input.context) {
       this.context = loadRuntimeContext({ baseUrl: this.baseUrl, ...input });
     }
@@ -39,6 +41,7 @@ export class ZfxkClient {
       throw new Error('CONTEXT_NOT_FOUND: expected an HTML page response.');
     }
     this.entryHtml = html;
+    this.entryPath = path;
 
     const context = loadRuntimeContext({
       baseUrl: this.baseUrl,
@@ -59,6 +62,7 @@ export class ZfxkClient {
   }
 
   async loadCourseTypeDisplayContext(input = {}) {
+    if (input.pagePath || input.path) this.entryPath = input.pagePath ?? input.path;
     const context = await this.refreshContext({
       context: input.context ?? this.context,
       html: input.html ?? this.entryHtml,
@@ -67,7 +71,7 @@ export class ZfxkClient {
     let display;
     try {
       display = await this.transport.post(
-        endpoints.display,
+        this.functionPath(endpoints.display, input.gnmkdm),
         buildContextRequest(context, {
           kspage: input.page?.start ?? 0,
           jspage: input.page?.size ?? 0,
@@ -102,6 +106,10 @@ export class ZfxkClient {
     }
     return this.context;
   }
+
+  functionPath(path, gnmkdm) {
+    return withGnmkdm(path, gnmkdm ?? gnmkdmFromPath(this.entryPath));
+  }
 }
 
 export function createZfxkClient(options = {}) {
@@ -116,5 +124,20 @@ function assertSelectionContext(context) {
   if (!context.current.kklxdm) missing.push('kklxdm');
   if (missing.length) {
     throw new Error(`CONTEXT_NOT_FOUND: missing ${missing.join(', ')}. The page may be a login page or an unsupported selection entry.`);
+  }
+}
+
+function withGnmkdm(path, gnmkdm) {
+  if (!gnmkdm) return path;
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}gnmkdm=${encodeURIComponent(gnmkdm)}`;
+}
+
+function gnmkdmFromPath(path = '') {
+  if (!path) return '';
+  try {
+    return new URL(path, 'https://zfxk.local').searchParams.get('gnmkdm') ?? '';
+  } catch {
+    return '';
   }
 }

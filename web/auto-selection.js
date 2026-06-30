@@ -132,9 +132,9 @@ async function initializeSession() {
     const activeType = state.courseTypes.find((option) => option.active) ?? state.courseTypes[0];
     state.activeCourseTypeKey = activeType ? courseTypeKey(activeType) : '';
     if (activeType) {
-      await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(activeType), allowFallback: true });
+      await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(activeType), pagePath, allowFallback: true });
     } else {
-      await state.client.bootstrap({ html: state.entryHtml });
+      await state.client.bootstrap({ html: state.entryHtml, pagePath });
     }
     log('会话已初始化，可按课程 ID 和班级 ID 获取详情并加入目标。');
     renderSessionOverview();
@@ -962,7 +962,7 @@ function sameTargetDraft(left, right) {
 
 async function getTeachingClassesForCourseType(courseId, courseType) {
   if (courseType) {
-    await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(courseType), allowFallback: true });
+    await state.client.loadCourseTypeDisplayContext({ html: state.entryHtml, raw: courseTypeRaw(courseType), pagePath: state.sessionConfig.pagePath || DEFAULT_PAGE_PATH, allowFallback: true });
     state.activeCourseTypeKey = courseTypeKey(courseType);
   }
   return state.client.catalog.getTeachingClasses(courseId);

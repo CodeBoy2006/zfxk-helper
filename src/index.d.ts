@@ -145,6 +145,8 @@ export interface ZfxkClientOptions {
   baseUrl: string;
   auth?: { type: 'cookie'; cookie: string } | { type: 'custom'; [key: string]: unknown };
   mode?: Mode;
+  pagePath?: string;
+  entryPath?: string;
   context?: RuntimeContext;
   transport?: Transport;
 }
@@ -282,10 +284,10 @@ export declare class ZfxkClient {
   waitlist: Record<string, (...args: any[]) => Promise<unknown>>;
   listener: Record<string, (...args: any[]) => Promise<unknown>>;
   constructor(options: ZfxkClientOptions);
-  bootstrap(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
+  bootstrap(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext; pagePath?: string; path?: string }): Promise<RuntimeContext>;
   bootstrapFromPage(input: { path: string; raw?: Record<string, string>; request?: Record<string, unknown> }): Promise<RuntimeContext>;
   refreshContext(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext }): Promise<RuntimeContext>;
-  loadCourseTypeDisplayContext(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext; page?: { start?: number; size?: number }; extra?: Record<string, unknown>; allowFallback?: boolean }): Promise<RuntimeContext>;
+  loadCourseTypeDisplayContext(input?: { html?: string; raw?: Record<string, string>; context?: RuntimeContext; pagePath?: string; path?: string; gnmkdm?: string; page?: { start?: number; size?: number }; extra?: Record<string, unknown>; allowFallback?: boolean }): Promise<RuntimeContext>;
 }
 
 export type AutoSelectionTaskStatus = 'queued' | 'running' | 'auth-refreshing' | 'paused' | 'succeeded' | 'failed' | 'cancelled';

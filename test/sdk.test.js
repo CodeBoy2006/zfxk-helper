@@ -258,6 +258,93 @@ test('loadCourseTypeDisplayContext can fall back when the display endpoint is re
   assert.equal(transport.calls[0].path, endpoints.display);
 });
 
+test('loadCourseTypeDisplayContext preserves entry page gnmkdm for display requests', async () => {
+  const entryHtml = `
+    <input id="xkxnm" value="2025"/>
+    <input id="xkxqm" value="12"/>
+    <input id="firstXkkzId" value="KZ-MAJOR"/>
+    <input id="firstKklxdm" value="01"/>
+    <input id="firstNjdmId" value="2024"/>
+    <input id="firstZyhId" value="CS"/>
+    <input id="iskxk" value="1"/>
+  `;
+  const displayHtml = '<input id="rwlx" value="2"/><input id="xklc" value="1"/>';
+  const displayPath = `${endpoints.display}?gnmkdm=N253512`;
+  const transport = new MemoryTransport({
+    '/xsxk/index.html?gnmkdm=N253512': entryHtml,
+    [displayPath]: displayHtml
+  });
+  const client = createZfxkClient({
+    baseUrl: 'https://example.edu.cn/jwglxt',
+    transport
+  });
+
+  await client.bootstrapFromPage({ path: '/xsxk/index.html?gnmkdm=N253512' });
+  const context = await client.loadCourseTypeDisplayContext({
+    raw: {
+      kklxdm: '05',
+      xkkz_id: 'KZ-PE',
+      njdm_id: '2024',
+      zyh_id: 'CS'
+    }
+  });
+
+  assert.equal(context.raw.rwlx, '2');
+  assert.equal(context.current.xklc, '1');
+  assert.equal(transport.calls[1].path, displayPath);
+});
+
+test('selection.choose preserves entry page gnmkdm for save requests', async () => {
+  const entryHtml = `
+    <input id="xkxnm" value="2025"/>
+    <input id="xkxqm" value="12"/>
+    <input id="firstXkkzId" value="KZ-MAJOR"/>
+    <input id="firstKklxdm" value="01"/>
+    <input id="firstNjdmId" value="2024"/>
+    <input id="firstZyhId" value="CS"/>
+    <input id="iskxk" value="1"/>
+  `;
+  const displayPath = `${endpoints.display}?gnmkdm=N253512`;
+  const savePath = `${endpoints.saveSelection}?gnmkdm=N253512`;
+  const transport = new MemoryTransport({
+    '/xsxk/index.html?gnmkdm=N253512': entryHtml,
+    [displayPath]: `
+      <input id="rwlx" value="2"/>
+      <input id="xklc" value="1"/>
+      <input id="rlkz" value="0"/>
+      <input id="cdrlkz" value="0"/>
+      <input id="rlzlkz" value="0"/>
+    `,
+    [endpoints.teachingClasses]: [
+      { jxb_id: 'JXB-PE', do_jxb_id: 'DO-PE', kch_id: 'KC-PE', kcmc: '体育', jxbzls: '1', yxzrs: '1', jxbrl: '30', xxkbj: '0', cxbj: '0' }
+    ],
+    [endpoints.chosenDisplay]: [
+      { kch_id: 'KC-PE', kcmc: '体育', jxb_id: 'JXB-PE', do_jxb_id: 'DO-PE', jxbmc: '跆拳道初级混', sfxkbj: '1' }
+    ],
+    [savePath]: { flag: '1' }
+  });
+  const client = createZfxkClient({
+    baseUrl: 'https://example.edu.cn/jwglxt',
+    transport
+  });
+
+  await client.bootstrapFromPage({ path: '/xsxk/index.html?gnmkdm=N253512' });
+  await client.loadCourseTypeDisplayContext({
+    raw: {
+      kklxdm: '05',
+      xkkz_id: 'KZ-PE',
+      njdm_id: '2024',
+      zyh_id: 'CS'
+    }
+  });
+  transport.queue(endpoints.titleCheck, { flag: '1' });
+
+  await client.selection.choose({ courseId: 'KC-PE', classId: 'JXB-PE' });
+
+  const saveCall = transport.calls.find((call) => call.path.startsWith(endpoints.saveSelection));
+  assert.equal(saveCall.path, savePath);
+});
+
 test('bootstrapFromPage rejects pages that do not contain selection context', async () => {
   const transport = new MemoryTransport({
     '/xsxk/index.html': '<html><title>login</title></html>'

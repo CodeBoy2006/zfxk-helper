@@ -116,7 +116,7 @@ export class SelectionService {
     const textbookIds = await this.resolveTextbooks(context, prepared, policy);
     if (textbookIds.status) return textbookIds;
 
-    const saveResponse = await this.client.transport.post(endpoints.saveSelection, this.savePayload(context, prepared, textbookIds));
+    const saveResponse = await this.client.transport.post(this.client.functionPath(endpoints.saveSelection), this.savePayload(context, prepared, textbookIds));
     const saveResult = normalizeSaveSelection(saveResponse);
     if (!saveResult.ok) {
       if (saveResult.code === 'CAPACITY_FULL') {

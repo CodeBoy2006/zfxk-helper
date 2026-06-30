@@ -560,3 +560,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and reinitialize; continue diagnosing the live save endpoint separately because the target selection still returns `无操作权限！`.
 - **Context:** The live `/xsxk/zzxkyzb_cxZzxkYzbDisplay.html` endpoint returns HTTP 911 for all course types with the fresh Cookie, so making it mandatory broke main-page initialization. Live validation after the fix loaded 4 course types, 1 active-page course, and 324 PE rows. `npm test` passes with 72/72 tests.
+
+## [2026-06-30 17:08] Course Selection Permission Fix
+- **Changes:** Preserved the entry-page `gnmkdm` function code for Display and save-selection requests, passed page paths from the web entry points, updated SDK declarations and README guidance, and added regression coverage for both protected requests.
+- **Status:** Completed
+- **Next Steps:** Use the saved page path with `gnmkdm=N253512` for future course-selection sessions.
+- **Context:** Live diagnosis showed Display returns HTTP 911 without `gnmkdm`, and the save endpoint returns `无操作权限！` unless `gnmkdm` is included. A live save with `gnmkdm=N253512` returned `flag:1`; the read-only selected snapshot confirms `跆拳道初级混-唐文兵周一67屏峰` is selected. `npm test` passes with 74/74 tests.
