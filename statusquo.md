@@ -441,3 +441,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `node --test test/web.test.js` passes.
+
+## [2026-06-30 11:27] Auto Selection Backoff
+- **Changes:** Added exponential backoff for consecutive auto-selection polling errors in `src/auto-selection/task-runner.js`, documented the 2x/4x up to 16x behavior, and added regression coverage.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `npm test` passes.

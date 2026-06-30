@@ -453,6 +453,43 @@ test('auto-selection task runner serializes tick and write operations', async ()
   assert.equal(runner.status, 'running');
 });
 
+test('auto-selection task runner backs off consecutive polling errors and resets after success', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    username: '2023123456',
+    password: 'secret',
+    pagePath: '/xsxk/index.html',
+    groups: [{ name: '体育课', targets: [{ courseId: 'KC1', classId: 'A', priority: 1 }] }]
+  });
+  let shouldFail = true;
+  const runner = new AutoSelectionTaskRunner({
+    id: 'task_backoff',
+    config,
+    autoStart: false,
+    client: {
+      chosen: {
+        snapshot: async () => {
+          if (shouldFail) throw new Error('temporary polling failure');
+          return makeSnapshot([]);
+        }
+      },
+      catalog: { getTeachingClasses: async () => [] }
+    }
+  });
+  const scheduledDelays = [];
+  runner.autoStart = true;
+  runner.schedule = (delay = runner.config.intervalMs) => {
+    scheduledDelays.push(delay);
+  };
+
+  await runner.tick();
+  await runner.tick();
+  shouldFail = false;
+  await runner.tick();
+
+  assert.deepEqual(scheduledDelays, [3000, 6000, 1500]);
+});
+
 test('auto-selection task manager creates sanitized task snapshots and cancels timers', async () => {
   const manager = new AutoSelectionTaskManager({
     autoStartTasks: false,

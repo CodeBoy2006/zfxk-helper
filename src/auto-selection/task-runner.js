@@ -6,6 +6,8 @@ import { maskUsername } from './config.js';
 import { isSessionError } from './outcomes.js';
 import { upgradeTarget } from './upgrade-runner.js';
 
+const MAX_BACKOFF_FACTOR = 16;
+
 export class AutoSelectionTaskRunner {
   constructor(options = {}) {
     this.id = options.id;
@@ -24,6 +26,7 @@ export class AutoSelectionTaskRunner {
     this.writeLock = false;
     this.pauseScope = undefined;
     this.autoStart = options.autoStart !== false;
+    this.consecutiveFailures = 0;
     if (this.autoStart) this.start();
   }
 
@@ -95,18 +98,21 @@ export class AutoSelectionTaskRunner {
       }
 
       this.updateStatus();
+      this.resetBackoff();
       return this.snapshot();
     } catch (error) {
       if (isSessionError(error)) {
         await this.refreshAuth();
+        this.resetBackoff();
       } else {
+        this.recordFailure();
         this.events.add('task-error', error.message);
         if (this.status !== 'cancelled') this.status = 'running';
       }
       return this.snapshot();
     } finally {
       this.isTicking = false;
-      if (this.autoStart && this.status === 'running') this.schedule();
+      if (this.autoStart && this.status === 'running') this.schedule(this.nextDelay());
     }
   }
 
@@ -164,8 +170,23 @@ export class AutoSelectionTaskRunner {
   }
 
   handleTickError(error) {
+    this.recordFailure();
     this.events.add('task-error', error.message);
-    if (this.status === 'running') this.schedule();
+    if (this.status === 'running') this.schedule(this.nextDelay());
+  }
+
+  recordFailure() {
+    this.consecutiveFailures += 1;
+  }
+
+  resetBackoff() {
+    this.consecutiveFailures = 0;
+  }
+
+  nextDelay() {
+    if (this.consecutiveFailures <= 0) return this.config.intervalMs;
+    const factor = Math.min(2 ** this.consecutiveFailures, MAX_BACKOFF_FACTOR);
+    return this.config.intervalMs * factor;
   }
 
   snapshot() {
