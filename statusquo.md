@@ -429,3 +429,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes; lower-priority holdings still remain in `HOLDING` until a higher-priority tier is selected.
+
+## [2026-06-30 11:23] Expand Auto Selection Help
+- **Changes:** Expanded the auto-selection help dialog copy to explain setup, target adding, group strategies, task status, export scope, and local Node runtime limits.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** `node --test test/web.test.js` passes.
