@@ -1,58 +1,424 @@
 # 正方选课助手
 
-正方选课助手（npm 包名 `zfxk`）是面向正方 ZFXK/ZZXK 选课页的 HTTP 工作流 SDK。它不自动点击页面，也不依赖浏览器 DOM；调用方只需要提供已登录 Cookie，以及选课入口页里的运行时隐藏字段。
+`zfxk` 是一个面向正方选课系统的 Node.js SDK 与本地 Web 工作台。
 
-## 安装
+它的核心方式不是模拟浏览器点击，也不依赖页面 DOM，而是基于：
+
+- 自动登录获取 Cookie
+- 已登录 Cookie
+- 选课入口页隐藏字段
+- 正方选课接口
+- SDK 封装的 HTTP 工作流
+
+来完成课程查询、教学班查询、已选快照、选课、退课、志愿排序以及自动选课后台任务。
+
+## 功能概览
+
+### SDK 能力
+
+- 解析正方选课入口页隐藏字段。
+- 自动初始化运行时上下文。
+- 查询课程列表与教学班详情。
+- 查询已选课程快照。
+- 执行选课、退课、志愿排序。
+- 支持教材、候补、监听申请等相关接口封装。
+- 支持新版正方登录流程，包括滑块验证码、RSA 密码加密、Cookie 生成。
+- 提供自动选课后台任务模块，支持组选课、保底占位和高优先级升级。
+
+### Web 工作台
+
+本地 Web 工作台提供图形化操作界面：
+
+- 登录配置管理。
+- 课程类型切换。
+- 课程搜索与筛选。
+- 教学班查看。
+- 选课 / 退课。
+- 已选课程查看。
+- 已选志愿拖拽排序。
+- 课程导出。
+- 已选课程导出。
+- 自动选课后台任务管理。
+
+### 自动选课后台任务
+
+自动选课任务运行在本地 Node 进程中。
+
+启动 `npm run web` 后，即使关闭浏览器页面，只要 Node 服务仍在运行，后台任务会继续工作。
+
+支持：
+
+- 多个选课组。
+- 组内目标按 `priority` 优先级抢课。
+- 只刷新目标教学班所属课程，不做全量刷课。
+- 发现目标有余量后立即提交选课。
+- 容量满或被抢先时继续监听。
+- 非容量失败时跳过目标。
+- 低优先级课程先作为保底占位。
+- 高优先级目标出现余量后自动退保底并抢高优先级。
+- 高优先级抢课失败后尝试恢复原保底。
+- 自动使用用户名和密码续期登录。
+- 支持任务配置导入 / 导出。
+
+---
+
+## 环境要求
+
+- Node.js 20+
+- npm
+
+安装依赖并运行测试：
 
 ```bash
 npm install
 npm test
 ```
 
-项目要求 Node.js 20 或更高版本。
+当前测试覆盖 SDK、登录、验证码、自动选课、Web API、导出、筛选和文档生成。
 
-## 快速开始
+---
 
-```js
-import { createZfxkClient, loadRuntimeContext } from 'zfxk';
+## 快速开始：使用 Web 工作台
 
-const context = loadRuntimeContext({
-  baseUrl: 'https://example.edu.cn/jwglxt',
-  html: initialSelectionPageHtml
-});
+启动本地工作台：
 
-const client = createZfxkClient({
-  baseUrl: 'https://example.edu.cn/jwglxt',
-  auth: { type: 'cookie', cookie: 'JSESSIONID=...' },
-  context,
-  mode: 'commit'
-});
-
-const courses = await client.catalog.searchCourses({
-  keyword: '数据库',
-  page: { start: 1, size: 20 }
-});
-
-const classes = await client.catalog.getTeachingClasses(courses[0].courseId);
-const target = classes.find((item) => item.flags.canSelect);
-
-const result = await client.selection.choose(
-  { courseId: target.courseId, classId: target.classId },
-  {
-    confirm: async () => true,
-    chooseTextbooks: async ({ requiredItems }) => requiredItems.map((item) => item.id)
-  }
-);
-
-console.log(result.status);
+```bash
+npm run web
 ```
 
-已有有效 Cookie 时，也可以让客户端自行拉取选课入口页并解析隐藏字段：
+打开：
+
+```text
+http://127.0.0.1:4173/
+```
+
+首次进入会跳转到 `/setup` 页面，需要填写：
+
+| 配置项      | 说明                                                            |
+| -------- | ------------------------------------------------------------- |
+| Base URL | 教务系统根地址，例如 `https://example.edu.cn/jwglxt`                    |
+| Path     | 选课入口页路径，例如 `/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512` |
+| Cookie   | 已登录 Cookie，可手动粘贴，也可通过登录流程获取                                   |
+| 用户名      | 正方账号，用于登录和自动任务续期                                              |
+| 密码       | 正方密码，用于登录和自动任务续期                                              |
+
+建议使用用户密码（如果可用的话），避免自动抢课时 Cookie 过期。
+
+保存配置后，主页面会自动初始化选课上下文。
+
+浏览器只访问本地接口：
+
+```text
+/api/proxy/*
+/api/captcha/solve
+/api/login/zfcaptcha
+/api/auto-selection/*
+```
+
+真正访问学校系统的是本地 Node 代理，用于解决浏览器跨域和 Cookie 设置限制。
+
+---
+
+## Web 工作台使用说明
+
+### 1. 查看课程
+
+进入主页面后，系统会读取当前选课入口页隐藏字段，并加载课程类型。
+
+你可以：
+
+* 切换课程类型。
+* 输入课程名或课程号搜索。
+* 使用筛选条件过滤课程。
+* 点击课程查看教学班。
+* 查看教师、时间、地点、容量、余量、课程归属等信息。
+
+部分条件会在浏览器本地筛选以加速体验，例如：
+
+* 关键词
+* 教学班名称
+* 是否重修
+* 已加载课程的课程归属
+
+需要后端实时判断的条件仍由学校系统处理，例如：
+
+* 年级
+* 学院
+* 专业
+* 容量
+* 时间冲突
+* 可选范围
+
+### 2. 选课 / 退课
+
+在教学班列表中点击操作按钮：
+
+* `选课`：调用 SDK 的 `selection.choose()`。
+* `退选`：调用 SDK 的 `selection.drop()`。
+* `已选`：表示当前教学班不可退或页面规则不允许退课。
+
+已选课程快照中的 `canDrop` 会按原正方页面逻辑计算，不只是读取单个字段。它会综合判断：
+
+* `sfktk`
+* `zntgpk`
+* `sfxkbj`
+* 是否在选课时间内
+* 已选人数是否超过退课临界人数
+* 正选控制标志
+
+### 3. 志愿排序
+
+已选课程区域支持拖拽排序。
+
+排序会调用正方志愿排序接口，只对普通志愿生效。权重 / 积分模式下的目标不会参与普通志愿排序。
+
+### 4. 导出课程
+
+点击 `导出课程` 可导出当前已加载课程的完整 JSON 信息。
+
+导出时会：
+
+* 按课程 ID 去重。
+* 记录来源课程行数量。
+* 补拉每门课的教学班详情。
+* 将已知字段转换为中文可读字段。
+* 保留未映射的原始字段。
+
+### 5. 导出已选
+
+点击 `导出已选` 可导出当前已选课程快照。
+
+导出内容包含：
+
+* 汇总信息。
+* 已选课程。
+* 已选教学班。
+* 是否可退。
+* 不可退原因。
+* 时间、地点、教师、教学班详情。
+* 必要时补拉教学班详情。
+
+---
+
+## 自动选课后台任务
+
+自动选课页面位于：
+
+```text
+http://127.0.0.1:4173/auto-selection
+```
+
+自动选课任务只保存在当前 Node 进程内存中。停止 `npm run web` 后，运行中的任务会消失。
+
+### 基本概念
+
+自动选课以“选课组”为单位。
+
+一个任务可以包含多个选课组，每个选课组包含多个目标教学班，需要自行检查是否组内课程是否满足可选条件。
+
+```text
+自动选课任务
+  ├─ 选课组 A
+  │   ├─ 高优先级教学班
+  │   └─ 保底教学班
+  └─ 选课组 B
+      ├─ 高优先级教学班
+      └─ 其他备选教学班
+```
+
+### 目标优先级
+
+每个目标都有 `priority`。
+
+数字越大，优先级越高。
+
+例如：
+
+| 教学班 | priority | 说明  |
+| --- | -------: | --- |
+| A1  |      100 | 最想选 |
+| A2  |       80 | 次优  |
+| A3  |       10 | 保底  |
+
+自动任务会优先抢高优先级目标。
+
+如果高优先级都不可选，但低优先级有余量，系统会先选低优先级目标作为占位。
+
+### 保底占位与自动升级
+
+当低优先级目标已经选上后，任务不会立刻结束。
+
+如果之后发现更高优先级目标出现余量，系统会执行升级流程：
+
+```text
+发现高优先级有余量
+  ↓
+检查当前保底是否允许自动退课
+  ↓
+退掉低优先级保底
+  ↓
+立即抢高优先级目标
+  ↓
+成功：更新当前占位
+  ↓
+失败：尝试恢复原保底
+```
+
+只有目标开启了 `allowAutoDrop`，系统才会为了升级自动退掉它。
+
+### 组选课策略
+
+自动选课组支持两种策略：
+
+| 策略         | 说明                            |
+| ---------- | ----------------------------- |
+| priority   | 按优先级抢课。低优先级可保底，高优先级出现空位后尝试升级。 |
+| equivalent | 组内任一目标选中即视为满足，不再追求升级。         |
+
+### 刷新策略
+
+自动任务采用明确目标刷新：
+
+* 只刷新目标教学班所属课程。
+* 不做全量课程搜索。
+* 默认刷新间隔为 `1500ms`。
+* 连续失败时会退避。
+* 容量满不会跳过目标。
+* 非容量业务失败默认跳过目标。
+
+核心策略：
+
+```text
+1. priority 高的先抢
+2. 只刷目标列表，不全量刷课
+3. 发现余量立即提交
+4. 保存返回容量满就继续刷
+5. 非容量原因失败就跳过该目标
+6. 成功后刷新已选快照确认
+```
+
+### 后台任务状态
+
+任务状态包括：
+
+| 状态        | 说明            |
+| --------- | ------------- |
+| queued    | 已创建，等待初始化     |
+| running   | 正在后台轮询        |
+| paused    | 需要人工处理        |
+| succeeded | 所有选课组已满足      |
+| failed    | 所有目标失败或配置不可恢复 |
+| cancelled | 用户取消          |
+
+组选课状态包括：
+
+| 状态             | 说明             |
+| -------------- | -------------- |
+| WATCHING       | 正在监听目标         |
+| PRECHECK       | 发现更高优先级目标，准备升级 |
+| DROP_BACKUP    | 正在退当前保底        |
+| CHOOSE_TARGET  | 正在提交目标教学班      |
+| RECOVER_BACKUP | 高优先级失败后恢复保底    |
+| SELECTED       | 当前组已有选中目标      |
+
+### 需要人工处理的情况
+
+自动任务默认采用保守策略。
+
+以下情况会暂停任务或选课组，等待人工处理：
+
+* 时间冲突需要确认。
+* 教材必须选择。
+* 子教学班必须选择。
+* 权重 / 积分必须输入。
+* 短信验证码。
+* 登录需要身份确认。
+* 滑块连续失败。
+* 账号锁定。
+* 保底恢复失败。
+
+普通提示可以自动确认。
+
+---
+
+## 自动选课配置导入 / 导出
+
+自动选课页面支持导出任务配置为 JSON 文件。
+
+导出文件包含：
+
+* `baseUrl`
+* `pagePath`
+* `username`
+* `intervalMs`
+* `maxAttempts`
+* `deadlineAt`
+* `groups`
+* `targets`
+
+导出文件不会包含：
+
+* 密码
+* Cookie
+* 运行中状态
+* 事件日志
+* 已选快照
+
+示例：
+
+```json
+{
+  "version": 1,
+  "kind": "zfxk.autoSelectionTask",
+  "baseUrl": "https://example.edu.cn/jwglxt",
+  "pagePath": "/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512",
+  "username": "20230001",
+  "intervalMs": 1500,
+  "maxAttempts": null,
+  "deadlineAt": null,
+  "groups": [
+    {
+      "name": "体育课",
+      "strategy": "priority",
+      "targets": [
+        {
+          "courseId": "KC1",
+          "classId": "JXB_HIGH",
+          "submitClassId": "DO_HIGH",
+          "label": "高优先级教学班",
+          "priority": 100,
+          "isBackup": false,
+          "allowAutoDrop": false,
+          "skipAfterNonCapacityFailure": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+加载配置时：
+
+* 只加载为草稿。
+* 不会自动启动任务。
+* 不会覆盖正在运行的任务。
+* 需要重新输入密码后才能启动后台任务。
+
+---
+
+## SDK 使用方式
+
+### 1. 使用已有 Cookie
 
 ```js
+import { createZfxkClient } from 'zfxk';
+
 const client = createZfxkClient({
   baseUrl: 'https://example.edu.cn/jwglxt',
-  auth: { type: 'cookie', cookie: process.env.ZFXK_COOKIE },
+  auth: {
+    type: 'cookie',
+    cookie: process.env.ZFXK_COOKIE
+  },
   mode: 'commit'
 });
 
@@ -61,11 +427,80 @@ await client.bootstrapFromPage({
 });
 ```
 
-如果 Cookie 失效，或页面不是受支持的选课入口，`bootstrapFromPage()` 会抛出 `CONTEXT_NOT_FOUND`。
+### 2. 查询课程
 
-## 登录与 Cookie
+```js
+const courses = await client.catalog.searchCourses({
+  keyword: '数据库',
+  page: { start: 1, size: 20 }
+});
 
-`loginWithZfCaptcha()` 会执行新版正方常见登录流程：滑块验证、获取 RSA 公钥、加密密码、身份/锁定检查、提交登录表单，并返回已认证 Cookie。
+console.log(courses);
+```
+
+### 3. 查询教学班
+
+```js
+const classes = await client.catalog.getTeachingClasses(courses[0].courseId);
+
+const target = classes.find((item) => item.flags.canSelect);
+```
+
+### 4. 选课
+
+```js
+const result = await client.selection.choose(
+  {
+    courseId: target.courseId,
+    classId: target.classId
+  },
+  {
+    confirm: async () => true,
+    chooseTextbooks: async ({ requiredItems }) =>
+      requiredItems.map((item) => item.id)
+  }
+);
+
+console.log(result.status);
+```
+
+### 5. 退课
+
+```js
+const dropResult = await client.selection.drop({
+  courseId: target.courseId,
+  classId: target.classId
+});
+
+console.log(dropResult.status);
+```
+
+### 6. 查询已选快照
+
+```js
+const snapshot = await client.chosen.snapshot();
+
+console.log(snapshot.selectedCourses);
+console.log(snapshot.selectedClasses);
+```
+
+---
+
+## 登录辅助
+
+`loginWithZfCaptcha()` 支持新版正方常见登录流程：
+
+1. 获取滑块验证码。
+2. 识别滑块位置。
+3. 提交滑块轨迹。
+4. 获取登录页。
+5. 获取 RSA 公钥。
+6. 加密密码。
+7. 检查短信、身份确认、账号锁定。
+8. 提交登录表单。
+9. 返回认证 Cookie。
+
+示例：
 
 ```js
 import { createZfxkClient, loginWithZfCaptcha } from 'zfxk';
@@ -79,81 +514,134 @@ const login = await loginWithZfCaptcha({
 
 const client = createZfxkClient({
   baseUrl: 'https://example.edu.cn/jwglxt',
-  auth: { type: 'cookie', cookie: login.cookieHeader },
+  auth: {
+    type: 'cookie',
+    cookie: login.cookieHeader
+  },
   mode: 'commit'
 });
 ```
 
-仅需要滑块流程 Cookie 时，可使用 `solveZfCaptcha()` 和 `formatCookieHeader()`。该辅助函数不会提交账号密码；是否能直接访问目标页面取决于学校部署。
+仅需要滑块流程 Cookie 时，可使用：
 
-遇到交互式二次验证时，登录辅助函数会返回明确错误码，例如 `SMS_LOGIN_REQUIRED` 或 `IDENTITY_CONFIRMATION_REQUIRED`。
+```js
+import { solveZfCaptcha, formatCookieHeader } from 'zfxk';
+```
 
-## 已支持能力
+登录遇到交互式二次验证时，会返回明确错误码，例如：
 
-- 解析选课入口隐藏字段和课程类型标签。
-- 自动从入口页初始化运行时上下文。
-- 查询课程、教学班和已选课程快照。
-- 执行选课、退课、志愿排序，以及教材、候补、监听等端点包装。
-- 暴露 `loginWithZfCaptcha()` 和 `solveZfCaptcha()` 登录/Cookie 辅助能力。
+* `SMS_LOGIN_REQUIRED`
+* `IDENTITY_CONFIRMATION_REQUIRED`
+* `ACCOUNT_LOCKED`
 
-仓库根目录下的 `zzxkYzb*.js` 是原始页面脚本参考，用于核对端点名称和标志位含义。
-
-已选课程快照中的 `SelectedClass.canDrop` 会按原页面的退选按钮条件计算：除 `sfktk`/`zntgpk` 外，还会检查 `sfxkbj`、`isInxksj`、`yxzrs > tktjrs` 和正选控制标志。不可退时会附带 `dropRestriction`，Web 前端会像学校页面一样在操作列显示“已选”而不是退选按钮。
+---
 
 ## 文档
+
+生成 SDK 文档和 OpenAPI：
 
 ```bash
 npm run docs
 ```
 
-生成内容：
-
-- `docs/openapi.json`：SDK 操作的 OpenAPI 3.0.3 描述。
-- `docs/api/`：由 `src/index.d.ts` 生成的 TypeDoc API 文档。
-
-也可以分别运行：
+分别生成：
 
 ```bash
 npm run openapi
 npm run docs:api
 ```
 
-## Web 前端
+输出：
+
+| 文件                  | 说明               |
+| ------------------- | ---------------- |
+| `docs/openapi.json` | OpenAPI 3.0.3 描述 |
+| `docs/api/`         | TypeDoc API 文档   |
+
+---
+
+## 项目结构
+
+```text
+src/
+  auth/              登录流程
+  captcha/           滑块验证码流程
+  auto-selection/    自动选课后台任务核心
+  client.js          ZfxkClient
+  context.js         入口页隐藏字段解析
+  endpoints.js       正方接口端点
+  mappers.js         正方原始字段映射
+  normalizers.js     flag / 状态归一化
+  services.js        课程、教学班、选课、退课等服务
+
+web/
+  index.html         主工作台
+  app.js             主工作台逻辑
+  setup.html         配置页
+  setup.js           配置页逻辑
+  auto-selection.html 自动选课页
+  auto-selection.js   自动选课页逻辑
+
+scripts/
+  serve-web.js       本地 Web/API 服务
+  generate-openapi.js OpenAPI 生成
+
+test/
+  SDK、Web、自动选课、验证码、导出等测试
+
+docs/
+  OpenAPI、TypeDoc 和设计文档
+```
+
+---
+
+## 开发命令
+
+```bash
+npm test
+```
+
+运行测试。
 
 ```bash
 npm run web
 ```
 
-打开 `http://127.0.0.1:4173/` 使用完整正方选课助手。首次进入主页面或 `/auto-selection` 时，如果浏览器还没有保存配置，会先跳转到 `/setup` 初始化登录配置；保存后会回到目标页面。主页面右上角的 `配置` 可随时返回配置页修改。
+启动本地 Web 工作台。
 
-初始化配置需要填写：
+```bash
+npm run docs
+```
 
-- `Base URL`：教务系统根地址，例如 `https://example.edu.cn/jwglxt`。
-- `Cookie`：从浏览器复制的已登录 Cookie，或通过页面按钮获取。
-- `用户名` / `密码`：点击 `登录获取 Cookie` 时由本地 Node 进程使用；自动选课后台任务也会用它续期登录。
-- `Path`：用于解析隐藏运行时字段的选课入口路径。
+生成 OpenAPI 与 TypeDoc 文档。
 
-浏览器会用 `localStorage` 缓存 Base URL、Cookie、用户名、密码和 Path。主页面和自动选课页面会直接读取这份配置并自动初始化，不再显示重复的账号配置表单。浏览器只访问本地 `/api/proxy/*`、`/api/captcha/solve` 和 `/api/login/zfcaptcha`。本地 Node 代理再携带 Cookie 请求学校系统，以避开浏览器禁止前端脚本设置跨域原始 Cookie 的限制。缓存只保留在本地浏览器中，不会写入项目文件；请勿在共享设备上保存账号信息。
+---
 
-课程搜索会缓存当前课程类型和远程筛选条件下的完整课程列表。关键词、教学班名、是否重修和课程归属等可由已加载课程行判断的条件会在浏览器本地筛选；年级、学院、专业、容量和时间冲突等仍交给学校系统筛选，避免绕过后端范围和实时规则。
+## 适用范围
 
-## 自动选课后台任务
+本项目适用于个人本机环境下，对正方选课页进行：
 
-`npm run web` 现在包含本地自动选课任务运行器。任务启动后可以关闭浏览器页面；只要本地 Node 进程仍在，后台会继续刷新目标教学班、校验状态并提交选课。独立页面位于 `/auto-selection`，提供任务配置、组选课配置、教学班加入、后台状态、暂停/恢复/取消、事件日志、配置导入导出等完整操作面。
+* 查询。
+* 分析。
+* 导出。
+* 辅助选课。
+* 自动监听目标教学班。
+* 自动执行明确配置的选课任务。
 
-- 使用教学班列表中已经解析出的明确目标，不做全量课程搜索式抢课。
-- 主页面每个教学班都有 `加入抢课` 按钮，可直接选择要加入的选课组；独立页面也支持按课程 ID 和班级 ID 通过接口获取详情后添加目标。
-- 目标按选课组管理；组策略可选 `优先级模式` 或 `等价模式`，前者按优先级升级，后者选中任一目标即视为本组满足。
-- 低优先级目标可以先作为保底占位；高优先级目标出现余量后，后台会在允许自动退课时退保底并抢高优先级。
-- 升级失败或容量满时会尝试恢复原保底；非容量业务失败默认跳过该目标。
-- 自动任务优先使用用户名和密码续期登录；Cookie 只作为可选初始凭据。
-- 导出文件不包含密码、Cookie、运行事件或已选快照；加载配置只回填草稿，不会自动启动任务。
+不同学校的正方系统可能存在定制字段、定制端点或定制校验逻辑。遇到字段缺失、端点变化或上下文解析失败时，需要结合真实入口页和接口响应调整映射。
 
-第一版任务只保存在内存中。停止 `npm run web` 的 Node 进程会取消运行中的自动选课任务。
+仓库根目录下的 `zzxkYzb*.js` 是原始页面脚本参考，用于核对端点名称、字段含义和 flag 语义。
 
-通识选修课会展示课程归属，例如人文情怀、国际视野、艺术修养等；如果课程列表接口没有直接返回归属字段，前端会用学校的 `kcgs_list` 字典和只读筛选查询补全当前结果。
+---
 
-课程列表栏和已选课程栏分别提供独立导出按钮：
+## 免责声明
 
-- `导出课程`：导出当前已加载课程列表的完整 JSON 信息；重复课程行会按课程 ID 去重，并用 `来源课程行数量` 记录上游返回的行数。导出时会补拉每门课的教学班详情，详情请求最多重试 3 次并短延迟退避。已知字段会转换为中文可读字段，未映射的原始字段保留在 `额外原始字段`。
-- `导出已选`：导出当前已选课程快照、汇总、课程与教学班明细，必要时用教学班详情补齐课程时间/地点；详情请求最多重试 3 次并短延迟退避。导出包含是否可退及不可退原因，跳过内部 `Map` 索引字段。
+本项目仅用于个人学习、研究、数据整理和本机自动化辅助操作。使用者应遵守所在学校或机构的教务系统使用规范，并自行确认相关行为是否被允许。
+
+本项目不会绕过正方系统的后端权限校验、选课规则、容量限制、时间限制、短信验证、教材选择、权重输入或人工确认流程。所有选课、退课和排序操作最终均以后端接口返回结果为准。
+
+账号、密码和 Cookie 只应在个人可信设备上使用。Web 工作台会将配置保存在浏览器 `localStorage`，自动选课任务会在本地 Node 进程内存中使用这些凭据。请勿在共享设备或不可信环境中保存账号信息。
+
+自动选课功能不能保证一定选课成功。课程容量、退课释放时间、系统限流、网络状态、会话过期、学校定制逻辑和其他用户并发操作都会影响结果。使用自动退保底并抢高优先级课程时，退课和选课不是服务端原子事务，可能出现保底已退但高优先级未抢到的情况；本项目会尝试恢复保底，但不能保证恢复成功。
+
+使用本项目产生的任何操作结果由使用者自行承担。项目作者和贡献者不对选课结果、账号状态、课程安排变化或因使用本项目导致的任何后果承担责任。
