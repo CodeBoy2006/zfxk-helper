@@ -459,3 +459,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** Each affected page now has one GitHub entry point linking to `https://github.com/CodeBoy2006/zfxk-helper`.
+
+## [2026-06-30 11:46] Move README Disclaimer
+- **Changes:** Moved the README disclaimer to the top of the document, rewrote it as concise blockquote copy, and removed the old disclaimer section from the end.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** Documentation-only change; no runtime behavior changed.
