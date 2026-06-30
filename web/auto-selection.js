@@ -65,13 +65,15 @@ const state = {
   busy: false
 };
 
-restoreDraft();
-bindEvents();
-renderSessionOverview();
-renderAutoSelectionDraft();
-renderAutoTaskStatus();
-if (state.sessionConfig) initializeSession();
-pollAutoSelectionTasks();
+function startAutoSelectionPage() {
+  restoreDraft();
+  bindEvents();
+  renderSessionOverview();
+  renderAutoSelectionDraft();
+  renderAutoTaskStatus();
+  if (state.sessionConfig) initializeSession();
+  pollAutoSelectionTasks();
+}
 
 function bindEvents() {
   elements.autoInitBtn.addEventListener('click', () => initializeSession());
@@ -871,3 +873,5 @@ class ProxyTransport {
     return readResponse(response, path);
   }
 }
+
+startAutoSelectionPage();

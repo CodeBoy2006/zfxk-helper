@@ -359,6 +359,126 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(server, /action === 'pause'/);
 });
 
+test('standalone auto-selection auto-initializes after proxy transport is available', async () => {
+  class FakeElement {
+    constructor(id = '') {
+      this.id = id;
+      this.children = [];
+      this.dataset = {};
+      this.style = {};
+      this.value = '';
+      this.textContent = '';
+      this.disabled = false;
+      this.files = [];
+      this.selectedOptions = [];
+    }
+
+    addEventListener() {}
+
+    append(...children) {
+      this.children.push(...children);
+    }
+
+    replaceChildren(...children) {
+      this.children = children;
+    }
+
+    setAttribute(name, value) {
+      this[name] = String(value);
+    }
+
+    get innerHTML() {
+      return this.html || '';
+    }
+
+    set innerHTML(value) {
+      this.html = String(value);
+    }
+  }
+
+  const elements = new Map();
+  const elementFor = (selector) => {
+    const id = selector.startsWith('#') ? selector.slice(1) : selector;
+    if (!elements.has(id)) elements.set(id, new FakeElement(id));
+    return elements.get(id);
+  };
+  const storage = new Map([
+    ['zfxk.web.session.v1', JSON.stringify({
+      baseUrl: 'https://example.edu',
+      pagePath: '/xsxk/zzxkyzb_cxZzxkYzbIndex.html?gnmkdm=N253512',
+      cookie: 'JSESSIONID=test'
+    })]
+  ]);
+  let proxyGetCalls = 0;
+
+  const globals = ['window', 'document', 'localStorage', 'fetch', 'setTimeout', 'clearTimeout']
+    .map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]);
+  const setGlobal = (name, value) => Object.defineProperty(globalThis, name, {
+    configurable: true,
+    writable: true,
+    value
+  });
+
+  const localStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, String(value)),
+    removeItem: (key) => storage.delete(key),
+    clear: () => storage.clear()
+  };
+  const document = {
+    querySelector: elementFor,
+    querySelectorAll: () => [...elements.values()],
+    createElement: (tagName) => new FakeElement(tagName)
+  };
+  const response = (body, contentType = 'application/json; charset=UTF-8') => ({
+    ok: true,
+    status: 200,
+    headers: {
+      get: (name) => name.toLowerCase() === 'content-type' ? contentType : ''
+    },
+    text: () => typeof body === 'string' ? body : JSON.stringify(body),
+    json: () => body
+  });
+
+  try {
+    setGlobal('localStorage', localStorage);
+    setGlobal('document', document);
+    setGlobal('window', {
+      localStorage,
+      location: {
+        pathname: '/auto-selection',
+        search: '',
+        hash: '',
+        replace() {}
+      }
+    });
+    setGlobal('setTimeout', () => 0);
+    setGlobal('clearTimeout', () => {});
+    setGlobal('fetch', async (url) => {
+      if (url === '/api/proxy/get') {
+        proxyGetCalls += 1;
+        return response('<html></html>', 'text/html; charset=UTF-8');
+      }
+      if (url === '/api/auto-selection/tasks') {
+        return response({ tasks: [] });
+      }
+      return response({});
+    });
+
+    const moduleUrl = new URL('../web/auto-selection.js', import.meta.url);
+    moduleUrl.search = `?auto-init=${Date.now()}`;
+    await import(moduleUrl.href);
+    for (let index = 0; index < 20; index += 1) await Promise.resolve();
+
+    assert.equal(proxyGetCalls, 1);
+  } finally {
+    for (const [name, descriptor] of globals) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else Reflect.deleteProperty(globalThis, name);
+    }
+  }
+});
+
 test('setup page owns saved login configuration for web pages', async () => {
   const html = await readFile(new URL('../web/setup.html', import.meta.url), 'utf8');
   const setup = await readFile(new URL('../web/setup.js', import.meta.url), 'utf8');

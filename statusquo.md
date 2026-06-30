@@ -477,3 +477,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test` passes. Untracked `1.png` was already present and left untouched.
+
+## [2026-06-30 12:07] Fix Auto Selection Auto Initialization
+- **Changes:** Moved the standalone auto-selection page startup behind all local declarations so automatic initialization cannot access `ProxyTransport` while it is still in the module temporal dead zone; added a regression test that imports the page module with a saved Cookie and verifies auto-init reaches the proxy transport.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** Root cause was top-level `initializeSession()` running before the bottom-of-file `class ProxyTransport` declaration had been evaluated; manual initialization worked because the click happened after module loading. `npm test` passes.
