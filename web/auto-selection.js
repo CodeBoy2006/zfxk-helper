@@ -229,8 +229,12 @@ async function addIdTargetToAutoSelection() {
 }
 
 async function resolveIdTeachingClass(courseId, classId) {
-  const classes = await state.client.catalog.getTeachingClasses(courseId);
-  return classes.find((item) => matchIdTeachingClass(item, courseId, classId));
+  for (const courseType of orderedCourseTypes()) {
+    const classes = await getTeachingClassesForCourseType(courseId, courseType);
+    const found = classes.find((item) => matchIdTeachingClass(item, courseId, classId));
+    if (found) return { ...found, courseType: courseType ? courseTypeContext(courseType) : undefined };
+  }
+  return null;
 }
 
 function matchIdTeachingClass(item, courseId, classId) {
@@ -253,6 +257,7 @@ function addResolvedClassToAutoSelection(teachingClass) {
     locationText: teachingClass.locationText,
     selectedCount: teachingClass.selectedCount,
     capacity: teachingClass.capacity,
+    courseType: teachingClass.courseType ?? currentCourseTypeContext(),
     priority: nextPriority(group),
     isBackup: group.strategy !== 'equivalent' && group.targets.length > 0,
     allowAutoDrop: true,
@@ -314,7 +319,7 @@ function renderAutoSelectionDraft() {
   `;
   const tbody = table.querySelector('tbody');
   group.targets.forEach((target, index) => {
-    const targetIds = [target.courseId, target.submitClassId || target.classId].filter(Boolean).join(' · ');
+    const targetIds = [target.courseType?.label, target.courseId, target.submitClassId || target.classId].filter(Boolean).join(' · ');
     const row = document.createElement('tr');
     row.draggable = true;
     row.dataset.autoTargetRow = String(index);
@@ -540,15 +545,15 @@ function checkPrecheckBasicPayload(payload) {
 
 async function loadPrecheckTeachingClasses(groups, results) {
   const classCache = new Map();
-  const courseIds = uniqueValues(groups.flatMap((group) => (group.targets ?? []).map((target) => target.courseId)));
-  for (const courseId of courseIds) {
+  const buckets = precheckRefreshBuckets(groups.flatMap((group) => group.targets ?? []));
+  for (const bucket of buckets) {
     try {
-      const classes = await state.client.catalog.getTeachingClasses(courseId);
-      classCache.set(String(courseId), classes);
-      results.push(precheckResult('ok', '检查是否能拉到教学班详情', `${courseId} 返回 ${classes.length} 个教学班。`));
+      const classes = await getTeachingClassesForCourseType(bucket.courseId, bucket.courseType);
+      classCache.set(bucket.key, classes);
+      results.push(precheckResult('ok', '检查是否能拉到教学班详情', `${bucket.courseId}${courseTypeSuffix(bucket.courseType)} 返回 ${classes.length} 个教学班。`));
     } catch (error) {
-      results.push(precheckResult('fail', '检查是否能拉到教学班详情', `${courseId} 拉取失败：${error.message}`));
-      classCache.set(String(courseId), []);
+      results.push(precheckResult('fail', '检查是否能拉到教学班详情', `${bucket.courseId}${courseTypeSuffix(bucket.courseType)} 拉取失败：${error.message}`));
+      classCache.set(bucket.key, []);
     }
   }
 
@@ -676,7 +681,11 @@ function precheckResult(level, title, detail) {
 }
 
 function findCachedTeachingClass(classCache, target) {
-  const classes = classCache.get(String(target.courseId)) ?? [];
+  const primary = classCache.get(targetCourseCacheKey(target)) ?? [];
+  const fallback = target.courseType ? [] : [...classCache.entries()]
+    .filter(([key]) => key.startsWith(`${target.courseId}::`))
+    .flatMap(([, classes]) => classes);
+  const classes = [...primary, ...fallback];
   return classes.find((item) => matchIdTeachingClass(item, target.courseId, target.classId))
     ?? classes.find((item) => target.submitClassId && matchIdTeachingClass(item, target.courseId, target.submitClassId));
 }
@@ -922,6 +931,7 @@ function sanitizeGroups(groups) {
       classId: target.classId,
       submitClassId: target.submitClassId,
       label: target.label,
+      courseType: target.courseType,
       priority: Number(target.priority),
       isBackup: Boolean(target.isBackup),
       allowAutoDrop: target.allowAutoDrop !== false,
@@ -944,6 +954,60 @@ function sortTargets(group) {
 function sameTargetDraft(left, right) {
   return String(left.courseId) === String(right.courseId)
     && [left.classId, left.submitClassId].filter(Boolean).some((id) => [right.classId, right.submitClassId].filter(Boolean).includes(id));
+}
+
+async function getTeachingClassesForCourseType(courseId, courseType) {
+  if (courseType) {
+    await state.client.refreshContext({ html: state.entryHtml, raw: courseTypeRaw(courseType) });
+    state.activeCourseTypeKey = courseTypeKey(courseType);
+  }
+  return state.client.catalog.getTeachingClasses(courseId);
+}
+
+function orderedCourseTypes() {
+  if (!state.courseTypes.length) return [null];
+  const active = state.courseTypes.find((option) => courseTypeKey(option) === state.activeCourseTypeKey);
+  return [
+    active,
+    ...state.courseTypes.filter((option) => option !== active)
+  ].filter(Boolean);
+}
+
+function precheckRefreshBuckets(targets = []) {
+  const buckets = new Map();
+  for (const target of targets) {
+    if (!target.courseId) continue;
+    const courseTypes = target.courseType ? [target.courseType] : orderedCourseTypes();
+    for (const courseType of courseTypes) {
+      const key = targetCourseCacheKey({ ...target, courseType });
+      if (!buckets.has(key)) buckets.set(key, { key, courseId: target.courseId, courseType });
+    }
+  }
+  return [...buckets.values()];
+}
+
+function targetCourseCacheKey(target) {
+  return `${target.courseId}::${courseTypeKey(target.courseType ?? {})}`;
+}
+
+function currentCourseTypeContext() {
+  const option = state.courseTypes.find((item) => courseTypeKey(item) === state.activeCourseTypeKey);
+  return option ? courseTypeContext(option) : undefined;
+}
+
+function courseTypeContext(option) {
+  return option ? {
+    label: option.label,
+    kklxdm: option.kklxdm,
+    xkkzId: option.xkkzId,
+    njdmId: option.njdmId,
+    zyhId: option.zyhId,
+    xkkzXh: option.xkkzXh
+  } : undefined;
+}
+
+function courseTypeSuffix(courseType) {
+  return courseType?.label ? ` / ${courseType.label}` : '';
 }
 
 async function runTask(label, operation) {

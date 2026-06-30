@@ -315,6 +315,7 @@ http://127.0.0.1:4173/auto-selection
 自动任务采用明确目标刷新：
 
 * 只刷新目标教学班所属课程。
+* 目标会保存加入时的课程类别上下文，例如主修课程、通识选修课或体育分项；后台刷新前会先恢复该上下文，避免用错误 tab 查询到 0 个教学班。
 * 不做全量课程搜索。
 * 默认刷新间隔为 `1500ms`。
 * 连续轮询异常会按 `2x`、`4x` 递增退避，最高 `16x` 基础间隔；恢复成功后回到基础间隔。
@@ -423,6 +424,14 @@ http://127.0.0.1:4173/auto-selection
           "classId": "JXB_HIGH",
           "submitClassId": "DO_HIGH",
           "label": "高优先级教学班",
+          "courseType": {
+            "label": "通识选修课",
+            "kklxdm": "10",
+            "xkkzId": "KZ_GENERAL",
+            "njdmId": "2025",
+            "zyhId": "334",
+            "xkkzXh": "TAB_TOKEN"
+          },
           "priority": 100,
           "allowAutoDrop": true,
           "skipAfterNonCapacityFailure": true

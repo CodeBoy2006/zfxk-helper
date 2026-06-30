@@ -260,6 +260,7 @@ export declare class CaptchaSolver {
 
 export declare class ZfxkClient {
   context: RuntimeContext;
+  entryHtml: string;
   catalog: {
     searchCourses(query?: Record<string, unknown>): Promise<Course[]>;
     getTeachingClasses(courseId: string, query?: Record<string, unknown>): Promise<TeachingClass[]>;
@@ -291,12 +292,22 @@ export type AutoSelectionGroupStatus = 'WATCHING' | 'ATTEMPTING' | 'HOLDING' | '
 export type AutoSelectionGroupStrategy = 'priority' | 'equivalent';
 export type AutoSelectionTargetStatus = 'watching' | 'selected' | 'skipped' | 'failed';
 
+export interface AutoSelectionCourseTypeContext {
+  label?: string;
+  kklxdm?: string;
+  xkkzId?: string;
+  njdmId?: string;
+  zyhId?: string;
+  xkkzXh?: string;
+}
+
 export interface AutoSelectionTarget {
   targetId?: string;
   courseId: string;
   classId: string;
   submitClassId?: string;
   label?: string;
+  courseType?: AutoSelectionCourseTypeContext;
   priority: number;
   isBackup?: boolean;
   allowAutoDrop?: boolean;
@@ -354,6 +365,9 @@ export interface AutoSelectionTaskSnapshot {
 }
 
 export declare function normalizeAutoSelectionConfig(input: Partial<AutoSelectionTaskConfig>, options?: Record<string, unknown>): AutoSelectionTaskConfig & { errors: string[] };
+export declare function normalizeCourseTypeContext(input: Partial<AutoSelectionCourseTypeContext> | Record<string, unknown>): AutoSelectionCourseTypeContext | undefined;
+export declare function courseTypeContextToRaw(input: Partial<AutoSelectionCourseTypeContext> | Record<string, unknown>): Record<string, string> | undefined;
+export declare function courseTypeContextKey(input: Partial<AutoSelectionCourseTypeContext> | Record<string, unknown>): string;
 export declare function validateAutoSelectionConfig(input: Partial<AutoSelectionTaskConfig>, options?: Record<string, unknown>): { valid: boolean; errors: string[]; config: AutoSelectionTaskConfig };
 export declare function exportAutoSelectionConfig(input: AutoSelectionTaskConfig): Record<string, unknown>;
 export declare function importAutoSelectionConfig(input: Record<string, unknown>): { valid: boolean; errors: string[]; config: AutoSelectionTaskConfig };

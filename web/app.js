@@ -792,6 +792,7 @@ function buildAutoTarget(teachingClass, group) {
     locationText: teachingClass.locationText,
     selectedCount: teachingClass.selectedCount,
     capacity: teachingClass.capacity,
+    courseType: currentCourseTypeContext(),
     priority: nextAutoPriority(group),
     isBackup: isPriorityBackup,
     allowAutoDrop: true,
@@ -1443,6 +1444,18 @@ function courseTypeRaw(option) {
     zyh_id: option.zyhId,
     xkkz_xh: option.xkkzXh
   };
+}
+
+function currentCourseTypeContext() {
+  const option = state.courseTypes.find((item) => courseTypeKey(item) === state.activeCourseTypeKey);
+  return option ? {
+    label: option.label,
+    kklxdm: option.kklxdm,
+    xkkzId: option.xkkzId,
+    njdmId: option.njdmId,
+    zyhId: option.zyhId,
+    xkkzXh: option.xkkzXh
+  } : undefined;
 }
 
 async function loadFilterGroups(transport, context) {

@@ -512,3 +512,9 @@
 - **Status:** Completed
 - **Next Steps:** None.
 - **Context:** `npm test -- test/web.test.js` passes.
+
+## [2026-06-30 12:46] Preserve Auto Selection Course Type Context
+- **Changes:** Saved target course-type context in auto-selection drafts/configs, restored the target context before background refresh/choose/drop calls, searched all parsed course types for manual ID targets, and updated README/OpenAPI/TypeDoc plus regression tests.
+- **Status:** Completed
+- **Next Steps:** Re-add old targets that were saved before this field existed, or run precheck after adding from the main course list so new targets carry their tab context.
+- **Context:** Fixes通识/体育目标被默认主修课程上下文查询而返回 0 个教学班的问题. `npm test` passes with 66/66 tests.

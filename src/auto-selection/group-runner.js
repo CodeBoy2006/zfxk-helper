@@ -1,4 +1,4 @@
-import { byPriorityDescThenCreatedOrder } from './config.js';
+import { byPriorityDescThenCreatedOrder, courseTypeContextKey, courseTypeContextToRaw } from './config.js';
 import {
   classRemaining,
   findSnapshotSelection,
@@ -69,12 +69,12 @@ function compareTargetsForGroup(group, a, b) {
 }
 
 export async function observeGroupTargets(task, group) {
-  const courseIds = [...new Set(group.targets.map((target) => target.courseId).filter(Boolean))];
   const observed = [];
-  for (const courseId of courseIds) {
+  for (const { courseId, courseType, targets } of targetRefreshBuckets(group.targets)) {
+    await applyCourseTypeContext(task, courseType);
     const teachingClasses = await task.client.catalog.getTeachingClasses(courseId);
     for (const teachingClass of teachingClasses) {
-      const target = group.targets.find((candidate) => matchTarget(candidate, teachingClass));
+      const target = targets.find((candidate) => matchTarget(candidate, teachingClass));
       if (!target) continue;
       target.lastObservedRemaining = classRemaining(teachingClass);
       target.lastMessage = target.lastObservedRemaining === 0 ? 'capacity full' : '';
@@ -84,8 +84,36 @@ export async function observeGroupTargets(task, group) {
   return observed;
 }
 
+function targetRefreshBuckets(targets = []) {
+  const buckets = new Map();
+  for (const target of targets) {
+    if (!target.courseId) continue;
+    const key = [target.courseId, courseTypeContextKey(target.courseType)].join('::');
+    if (!buckets.has(key)) {
+      buckets.set(key, {
+        courseId: target.courseId,
+        courseType: target.courseType,
+        targets: []
+      });
+    }
+    buckets.get(key).targets.push(target);
+  }
+  return [...buckets.values()];
+}
+
+export async function applyTargetCourseTypeContext(task, target) {
+  await applyCourseTypeContext(task, target?.courseType);
+}
+
+async function applyCourseTypeContext(task, courseType) {
+  const raw = courseTypeContextToRaw(courseType);
+  if (!raw || typeof task.client?.refreshContext !== 'function') return;
+  await task.client.refreshContext({ raw });
+}
+
 export async function chooseTarget(task, group, target, options = {}) {
   group.state = 'CHOOSE_TARGET';
+  await applyTargetCourseTypeContext(task, target);
   const result = await callChoose(task, target, options.teachingClass);
   const outcome = normalizeChooseOutcome(result);
   if (outcome.type === 'selected' || outcome.type === 'pending-filter') {

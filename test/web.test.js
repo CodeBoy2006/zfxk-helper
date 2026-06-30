@@ -118,6 +118,7 @@ test('web frontend files expose the restored course-selection workspace', async 
   assert.match(app, /DEFAULT_AUTO_GROUP_NAME = '默认'/);
   assert.match(app, /renderAutoClassMenu/);
   assert.match(app, /addTeachingClassToAutoGroup/);
+  assert.match(app, /courseType:\s*currentCourseTypeContext\(\)/);
   assert.match(app, /auto-class-button/);
   assert.match(app, /textContent = '加入抢课'/);
   assert.match(app, /auto-class-menu-heading/);
@@ -318,6 +319,7 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.doesNotMatch(app, /renderTeachingClasses/);
   assert.match(app, /addIdTargetToAutoSelection/);
   assert.match(app, /resolveIdTeachingClass/);
+  assert.match(app, /courseType:\s*teachingClass\.courseType/);
   assert.match(app, /state\.client\.catalog\.getTeachingClasses\(courseId\)/);
   assert.match(app, /resolvedClassLabel/);
   assert.doesNotMatch(app, /autoSubmitClassIdInput/);

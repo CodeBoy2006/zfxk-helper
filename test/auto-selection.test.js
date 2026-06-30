@@ -48,6 +48,38 @@ test('auto-selection config normalizes defaults, target ids, and priority order'
   assert.equal(config.groups[0].targets[1].allowAutoDrop, true);
 });
 
+test('auto-selection config preserves target course type context', () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: '通识课',
+      targets: [{
+        courseId: 'KC1',
+        classId: 'JXB1',
+        priority: 100,
+        courseType: {
+          label: '通识选修课',
+          kklxdm: '10',
+          xkkzId: 'KZ-GENERAL',
+          njdmId: '2025',
+          zyhId: '334',
+          xkkzXh: 'TOKEN'
+        }
+      }]
+    }]
+  });
+
+  assert.deepEqual(config.groups[0].targets[0].courseType, {
+    label: '通识选修课',
+    kklxdm: '10',
+    xkkzId: 'KZ-GENERAL',
+    njdmId: '2025',
+    zyhId: '334',
+    xkkzXh: 'TOKEN'
+  });
+});
+
 test('auto-selection export and import omit password and cookie but keep runnable draft fields', () => {
   const normalized = normalizeAutoSelectionConfig({
     baseUrl: 'https://xk.example.edu.cn/jwglxt',
@@ -198,6 +230,76 @@ test('auto-selection group planner refreshes only target course ids and picks hi
   assert.equal(action.target.classId, 'LOW');
   assert.equal(config.groups[0].targets[0].lastObservedRemaining, 0);
   assert.equal(config.groups[0].targets[1].lastObservedRemaining, 25);
+});
+
+test('auto-selection group planner applies each target course type context before refreshing classes', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: '混合课程',
+      targets: [
+        {
+          courseId: 'KC-GENERAL',
+          classId: 'GEN-A',
+          priority: 100,
+          courseType: {
+            label: '通识选修课',
+            kklxdm: '10',
+            xkkzId: 'KZ-GENERAL',
+            njdmId: '2025',
+            zyhId: '334',
+            xkkzXh: 'GENERAL-TOKEN'
+          }
+        },
+        {
+          courseId: 'KC-PE',
+          classId: 'PE-A',
+          priority: 10,
+          courseType: {
+            label: '体育分项',
+            kklxdm: '05',
+            xkkzId: 'KZ-PE',
+            njdmId: '2025',
+            zyhId: '334',
+            xkkzXh: 'PE-TOKEN'
+          }
+        }
+      ]
+    }]
+  });
+  const calls = [];
+  const task = {
+    client: {
+      refreshContext: async ({ raw }) => {
+        calls.push(['context', raw.kklxdm, raw.xkkz_id, raw.xkkz_xh]);
+      },
+      catalog: {
+        getTeachingClasses: async (courseId) => {
+          calls.push(['classes', courseId]);
+          return [{
+            courseId,
+            classId: courseId === 'KC-GENERAL' ? 'GEN-A' : 'PE-A',
+            submitClassId: courseId === 'KC-GENERAL' ? 'DO-GEN-A' : 'DO-PE-A',
+            selectedCount: 0,
+            capacity: courseId === 'KC-GENERAL' ? 30 : 20,
+            flags: { canSelect: true, full: false }
+          }];
+        }
+      }
+    }
+  };
+
+  const action = await planGroupAction(task, config.groups[0]);
+
+  assert.deepEqual(calls, [
+    ['context', '10', 'KZ-GENERAL', 'GENERAL-TOKEN'],
+    ['classes', 'KC-GENERAL'],
+    ['context', '05', 'KZ-PE', 'PE-TOKEN'],
+    ['classes', 'KC-PE']
+  ]);
+  assert.equal(action.type, 'choose');
+  assert.equal(action.target.classId, 'GEN-A');
 });
 
 test('auto-selection equivalent groups treat any selected target as satisfied', async () => {

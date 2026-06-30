@@ -143,6 +143,7 @@ function normalizeTarget(target = {}, createdOrder = 0) {
     classId,
     submitClassId,
     label: stringOrUndefined(target.label),
+    courseType: normalizeCourseTypeContext(target.courseType),
     priority: Number(target.priority),
     isBackup: Boolean(target.isBackup),
     allowAutoDrop: target.allowAutoDrop === undefined ? true : Boolean(target.allowAutoDrop),
@@ -153,6 +154,39 @@ function normalizeTarget(target = {}, createdOrder = 0) {
     lastMessage: target.lastMessage || '',
     createdOrder
   };
+}
+
+export function normalizeCourseTypeContext(value = {}) {
+  const source = value ?? {};
+  const context = {
+    label: stringOrUndefined(source.label ?? source.kklxmc),
+    kklxdm: stringOrUndefined(source.kklxdm),
+    xkkzId: stringOrUndefined(source.xkkzId ?? source.xkkz_id),
+    njdmId: stringOrUndefined(source.njdmId ?? source.njdm_id),
+    zyhId: stringOrUndefined(source.zyhId ?? source.zyh_id),
+    xkkzXh: stringOrUndefined(source.xkkzXh ?? source.xkkz_xh)
+  };
+  return Object.values(context).some(Boolean) ? context : undefined;
+}
+
+export function courseTypeContextToRaw(value) {
+  const context = normalizeCourseTypeContext(value);
+  if (!context) return undefined;
+  return omitEmpty({
+    kklxdm: context.kklxdm,
+    kklxmc: context.label,
+    xkkz_id: context.xkkzId,
+    njdm_id: context.njdmId,
+    zyh_id: context.zyhId,
+    xkkz_xh: context.xkkzXh
+  });
+}
+
+export function courseTypeContextKey(value) {
+  const context = normalizeCourseTypeContext(value);
+  return context
+    ? [context.kklxdm, context.xkkzId, context.njdmId, context.zyhId, context.xkkzXh].map((item) => item || '').join('::')
+    : '';
 }
 
 function trimTrailingSlash(value) {
@@ -176,4 +210,8 @@ function stringOrUndefined(value) {
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
+}
+
+function omitEmpty(record) {
+  return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined && value !== ''));
 }

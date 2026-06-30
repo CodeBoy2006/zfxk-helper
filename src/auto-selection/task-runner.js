@@ -216,6 +216,7 @@ export class AutoSelectionTaskRunner {
           classId: target.classId,
           submitClassId: target.submitClassId,
           label: target.label,
+          courseType: target.courseType,
           priority: target.priority,
           isBackup: target.isBackup,
           allowAutoDrop: target.allowAutoDrop,

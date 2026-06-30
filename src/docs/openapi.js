@@ -489,12 +489,21 @@ const schemas = {
     classId: string(),
     conflictClassIds: arrayOf(string())
   }, ['courseId', 'classId']),
+  AutoSelectionCourseTypeContext: object({
+    label: string(),
+    kklxdm: string(),
+    xkkzId: string(),
+    njdmId: string(),
+    zyhId: string(),
+    xkkzXh: string()
+  }),
   AutoSelectionTarget: object({
     targetId: string(),
     courseId: string(),
     classId: string(),
     submitClassId: string(),
     label: string(),
+    courseType: ref('AutoSelectionCourseTypeContext'),
     priority: number(),
     isBackup: boolean(),
     allowAutoDrop: boolean(),

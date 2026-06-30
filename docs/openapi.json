@@ -1466,6 +1466,29 @@
           "classId"
         ]
       },
+      "AutoSelectionCourseTypeContext": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "kklxdm": {
+            "type": "string"
+          },
+          "xkkzId": {
+            "type": "string"
+          },
+          "njdmId": {
+            "type": "string"
+          },
+          "zyhId": {
+            "type": "string"
+          },
+          "xkkzXh": {
+            "type": "string"
+          }
+        }
+      },
       "AutoSelectionTarget": {
         "type": "object",
         "properties": {
@@ -1483,6 +1506,9 @@
           },
           "label": {
             "type": "string"
+          },
+          "courseType": {
+            "$ref": "#/components/schemas/AutoSelectionCourseTypeContext"
           },
           "priority": {
             "type": "number"

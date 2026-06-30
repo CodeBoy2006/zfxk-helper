@@ -1,4 +1,4 @@
-import { chooseTarget } from './group-runner.js';
+import { applyTargetCourseTypeContext, chooseTarget } from './group-runner.js';
 import { normalizeDropOutcome, snapshotHasTarget } from './outcomes.js';
 
 export async function upgradeTarget(task, group, current, next, options = {}) {
@@ -57,6 +57,7 @@ export async function recoverBackup(task, group, current) {
 
 async function callDrop(task, current) {
   try {
+    await applyTargetCourseTypeContext(task, current);
     return await task.client.selection.drop({
       courseId: current.courseId,
       classId: current.classId,

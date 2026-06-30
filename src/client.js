@@ -7,6 +7,7 @@ export class ZfxkClient {
     this.baseUrl = String(options.baseUrl ?? '').replace(/\/$/, '');
     this.auth = options.auth;
     this.mode = options.mode ?? 'commit';
+    this.entryHtml = '';
     this.context = options.context ? loadRuntimeContext({ baseUrl: this.baseUrl, context: options.context }) : undefined;
     this.transport = options.transport ?? new HttpTransport({ baseUrl: this.baseUrl, auth: this.auth });
     this.catalog = new CatalogService(this);
@@ -18,6 +19,7 @@ export class ZfxkClient {
   }
 
   async bootstrap(input = {}) {
+    if (typeof input.html === 'string') this.entryHtml = input.html;
     if (input.html || input.raw || input.context) {
       this.context = loadRuntimeContext({ baseUrl: this.baseUrl, ...input });
     }
@@ -35,6 +37,7 @@ export class ZfxkClient {
     if (typeof html !== 'string') {
       throw new Error('CONTEXT_NOT_FOUND: expected an HTML page response.');
     }
+    this.entryHtml = html;
 
     const context = loadRuntimeContext({
       baseUrl: this.baseUrl,
@@ -47,7 +50,11 @@ export class ZfxkClient {
   }
 
   async refreshContext(input = {}) {
-    return this.bootstrap(input);
+    return this.bootstrap({
+      context: input.context ?? this.context,
+      html: input.html ?? this.entryHtml,
+      raw: input.raw
+    });
   }
 
   requireContext() {
