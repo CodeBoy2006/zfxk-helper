@@ -572,3 +572,9 @@
 - **Status:** Completed
 - **Next Steps:** Refresh the Web frontend and retry 体育教学班筛选.
 - **Context:** The teaching-class detail endpoint can return every class for the same PE course after the course list has already been filtered, so unrelated classes could appear without restored `jxbmc` names. `npm test` passes with 75/75 tests.
+
+## [2026-07-01 13:11] Auto Selection Early Start Retry
+- **Changes:** Updated `src/auto-selection/task-runner.js` so selection-page bootstrap failures during early startup keep the task running and reschedule at the base refresh interval. Added regression coverage in `test/auto-selection.test.js` and documented the behavior in `README.md`.
+- **Status:** Completed
+- **Next Steps:** None.
+- **Context:** This allows users to start an automatic selection task before the school system opens the selection entry; the task keeps retrying initialization without needing another manual button press.

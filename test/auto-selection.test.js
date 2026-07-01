@@ -642,6 +642,45 @@ test('auto-selection task runner backs off consecutive polling errors and resets
   assert.deepEqual(scheduledDelays, [3000, 6000, 1500]);
 });
 
+test('auto-selection task runner retries selection-page bootstrap failures after early start', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    username: '2023123456',
+    password: 'secret',
+    pagePath: '/xsxk/index.html',
+    groups: [{ name: '体育课', targets: [{ courseId: 'KC1', classId: 'A', priority: 1 }] }]
+  });
+  let bootstrapCalls = 0;
+  const runner = new AutoSelectionTaskRunner({
+    id: 'task_waiting_window',
+    config,
+    autoStart: false,
+    login: async () => ({ cookieHeader: 'JSESSIONID=test' }),
+    createClient: () => ({
+      bootstrapFromPage: async () => {
+        bootstrapCalls += 1;
+        throw new Error('CONTEXT_NOT_FOUND: selection page is not open yet');
+      },
+      chosen: { snapshot: async () => makeSnapshot([]) },
+      catalog: { getTeachingClasses: async () => [] }
+    })
+  });
+  const scheduledDelays = [];
+  runner.autoStart = true;
+  runner.schedule = (delay = runner.config.intervalMs) => {
+    scheduledDelays.push(delay);
+  };
+
+  await assert.doesNotReject(() => runner.tick());
+
+  assert.equal(bootstrapCalls, 1);
+  assert.equal(runner.status, 'running');
+  assert.equal(runner.authStatus, 'logged-out');
+  assert.equal(runner.attempts, 1);
+  assert.deepEqual(scheduledDelays, [1500]);
+  assert.match(runner.events.list().at(-1).message, /selection page is not open yet/);
+});
+
 test('auto-selection task manager creates sanitized task snapshots and cancels timers', async () => {
   const manager = new AutoSelectionTaskManager({
     autoStartTasks: false,

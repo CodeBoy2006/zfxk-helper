@@ -104,12 +104,9 @@ export class AutoSelectionTaskRunner {
       return this.snapshot();
     } catch (error) {
       if (isSessionError(error)) {
-        await this.refreshAuth();
-        this.resetBackoff();
+        await this.handleSessionError(error);
       } else {
-        this.recordFailure();
-        this.events.add('task-error', error.message);
-        if (this.status !== 'cancelled') this.status = 'running';
+        this.handleTransientError(error);
       }
       return this.snapshot();
     } finally {
@@ -146,6 +143,34 @@ export class AutoSelectionTaskRunner {
     this.authStatus = 'logged-in';
     this.status = 'running';
     this.events.add('auth-refreshed', 'Authentication ready');
+  }
+
+  async handleSessionError(error) {
+    this.client = null;
+    if (this.status === 'auth-refreshing') {
+      this.handleAuthRefreshFailure(error);
+      return;
+    }
+
+    try {
+      await this.refreshAuth();
+      this.resetBackoff();
+    } catch (authError) {
+      this.handleAuthRefreshFailure(authError);
+    }
+  }
+
+  handleAuthRefreshFailure(error) {
+    this.client = null;
+    this.authStatus = 'logged-out';
+    this.events.add('auth-refresh-failed', error.message);
+    if (this.status !== 'cancelled') this.status = 'running';
+  }
+
+  handleTransientError(error) {
+    this.recordFailure();
+    this.events.add('task-error', error.message);
+    if (this.status !== 'cancelled') this.status = 'running';
   }
 
   async withWriteLock(operation) {
