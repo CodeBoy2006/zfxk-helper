@@ -81,13 +81,31 @@ export async function observeGroupTargets(task, group) {
     for (const teachingClass of teachingClasses) {
       const target = targets.find((candidate) => matchTarget(candidate, teachingClass));
       if (!target) continue;
-      if (!target.courseType && courseType) target.courseType = normalizeCourseTypeContext(courseType);
-      target.lastObservedRemaining = classRemaining(teachingClass);
+      syncObservedTarget(target, teachingClass, courseType);
       target.lastMessage = target.lastObservedRemaining === 0 ? 'capacity full' : '';
       observed.push({ target, teachingClass });
     }
   }
   return observed;
+}
+
+function syncObservedTarget(target, teachingClass, courseType) {
+  target.courseId = teachingClass.courseId ?? target.courseId;
+  target.classId = teachingClass.classId ?? target.classId;
+  target.submitClassId = teachingClass.submitClassId ?? target.submitClassId;
+  target.label = teachingClass.raw?.jxbmc || teachingClass.name || target.label || target.classId || target.submitClassId;
+  target.lastObservedRemaining = classRemaining(teachingClass);
+  target.selectedCount = teachingClass.selectedCount;
+  target.capacity = teachingClass.capacity;
+  if (teachingClass.scheduleText) target.scheduleText = teachingClass.scheduleText;
+  if (teachingClass.locationText) target.locationText = teachingClass.locationText;
+  if (teachingClass.raw?.kcmc || teachingClass.courseName) {
+    target.courseName = teachingClass.raw?.kcmc || teachingClass.courseName;
+  }
+  if (Array.isArray(teachingClass.teachers)) {
+    target.teachers = teachingClass.teachers.map((teacher) => teacher?.name).filter(Boolean).join('、');
+  }
+  if (!target.courseType && courseType) target.courseType = normalizeCourseTypeContext(courseType);
 }
 
 function targetRefreshBuckets(task, targets = []) {

@@ -215,6 +215,9 @@ function deleteActiveGroup() {
 
 async function addIdTargetToAutoSelection() {
   if (!state.client) {
+    const pendingCourseId = elements.autoCourseIdInput.value.trim();
+    const pendingClassId = elements.autoClassIdInput.value.trim();
+    if (pendingCourseId && pendingClassId) addPendingIdTargetToAutoSelection(pendingCourseId, pendingClassId);
     log('请先初始化页面，以便读取教学班详情。');
     return;
   }
@@ -226,6 +229,12 @@ async function addIdTargetToAutoSelection() {
   }
   await runTask('按 ID 获取教学班', async () => {
     const teachingClass = await resolveIdTeachingClass(courseId, classId);
+    if (!teachingClass) {
+      addPendingIdTargetToAutoSelection(courseId, classId);
+      log(`课程 ${courseId} 下未找到班级 ${classId}，已先保存到当前组，启动任务后会继续尝试。`);
+      elements.autoClassIdInput.value = '';
+      return;
+    }
     if (!teachingClass) throw new Error(`课程 ${courseId} 下未找到班级 ${classId}`);
     addResolvedClassToAutoSelection(teachingClass);
     elements.autoClassIdInput.value = '';
@@ -273,6 +282,38 @@ function addResolvedClassToAutoSelection(teachingClass) {
   if (!exists) {
     group.targets.push(target);
     log(`已加入目标：${target.label}`);
+  } else {
+    log(`目标已在当前组：${target.label}`);
+  }
+  sortTargets(group);
+  persistDraft();
+  renderAutoSelectionDraft();
+}
+
+function addPendingIdTargetToAutoSelection(courseId, classId) {
+  const group = activeGroup();
+  const target = {
+    courseId,
+    classId,
+    submitClassId: undefined,
+    label: classId,
+    courseName: courseId,
+    teachers: '',
+    scheduleText: '',
+    locationText: '',
+    selectedCount: undefined,
+    capacity: undefined,
+    courseType: currentCourseTypeContext(),
+    priority: nextPriority(group),
+    isBackup: group.strategy !== 'equivalent' && group.targets.length > 0,
+    allowAutoDrop: true,
+    recoverOnUpgradeFailure: true,
+    skipAfterNonCapacityFailure: true,
+    status: 'watching'
+  };
+  const exists = group.targets.some((item) => sameTargetDraft(item, target));
+  if (!exists) {
+    group.targets.push(target);
   } else {
     log(`目标已在当前组：${target.label}`);
   }

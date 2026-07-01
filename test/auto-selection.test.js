@@ -352,6 +352,50 @@ test('auto-selection group planner backfills course type context for legacy targ
   });
 });
 
+test('auto-selection group planner backfills unresolved manual id targets after refresh', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: 'manual ids',
+      targets: [{ courseId: 'KC1', classId: 'DO-LOW', priority: 100 }]
+    }]
+  });
+  const task = {
+    client: {
+      catalog: {
+        getTeachingClasses: async (courseId) => [{
+          courseId,
+          classId: 'LOW',
+          submitClassId: 'DO-LOW',
+          courseName: 'PE',
+          name: 'PE-1',
+          selectedCount: 5,
+          capacity: 30,
+          scheduleText: 'Mon 1-2',
+          locationText: 'Gym',
+          teachers: [{ name: 'Teacher Li' }],
+          flags: { canSelect: true, full: false }
+        }]
+      }
+    }
+  };
+
+  const action = await planGroupAction(task, config.groups[0]);
+  const target = config.groups[0].targets[0];
+
+  assert.equal(action.type, 'choose');
+  assert.equal(action.target, target);
+  assert.equal(target.classId, 'LOW');
+  assert.equal(target.submitClassId, 'DO-LOW');
+  assert.equal(target.label, 'PE-1');
+  assert.equal(target.courseName, 'PE');
+  assert.equal(target.teachers, 'Teacher Li');
+  assert.equal(target.selectedCount, 5);
+  assert.equal(target.capacity, 30);
+  assert.equal(target.lastObservedRemaining, 25);
+});
+
 test('auto-selection equivalent groups treat any selected target as satisfied', async () => {
   const config = normalizeAutoSelectionConfig({
     baseUrl: 'https://xk.example.edu.cn/jwglxt',
