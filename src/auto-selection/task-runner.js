@@ -93,7 +93,10 @@ export class AutoSelectionTaskRunner {
         const action = await planGroupAction(this, group);
         if (action.type === 'none') continue;
         await this.withWriteLock(async () => {
-          if (action.type === 'choose') await chooseTarget(this, group, action.target, { teachingClass: action.teachingClass });
+          if (action.type === 'choose') await chooseTarget(this, group, action.target, {
+            sourceTarget: action.sourceTarget,
+            teachingClass: action.teachingClass
+          });
           if (action.type === 'upgrade') await upgradeTarget(this, group, action.current, action.next, { teachingClass: action.teachingClass });
         });
         break;
@@ -243,6 +246,7 @@ export class AutoSelectionTaskRunner {
           courseId: target.courseId,
           classId: target.classId,
           submitClassId: target.submitClassId,
+          teacherName: target.teacherName,
           label: target.label,
           courseType: target.courseType,
           priority: target.priority,

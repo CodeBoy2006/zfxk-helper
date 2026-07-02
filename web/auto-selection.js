@@ -40,6 +40,7 @@ const elements = {
   autoIdTargetForm: document.querySelector('#autoIdTargetForm'),
   autoCourseIdInput: document.querySelector('#autoCourseIdInput'),
   autoClassIdInput: document.querySelector('#autoClassIdInput'),
+  autoTeacherNameInput: document.querySelector('#autoTeacherNameInput'),
   autoRefreshTasksBtn: document.querySelector('#autoRefreshTasksBtn'),
   autoTaskSummary: document.querySelector('#autoTaskSummary'),
   autoGroupStatusList: document.querySelector('#autoGroupStatusList'),
@@ -217,22 +218,39 @@ async function addIdTargetToAutoSelection() {
   if (!state.client) {
     const pendingCourseId = elements.autoCourseIdInput.value.trim();
     const pendingClassId = elements.autoClassIdInput.value.trim();
-    if (pendingCourseId && pendingClassId) addPendingIdTargetToAutoSelection(pendingCourseId, pendingClassId);
+    const pendingTeacherName = elements.autoTeacherNameInput.value.trim();
+    if (pendingCourseId && (pendingClassId || pendingTeacherName)) {
+      addPendingIdTargetToAutoSelection(pendingCourseId, pendingClassId, pendingTeacherName);
+    }
     log('请先初始化页面，以便读取教学班详情。');
     return;
   }
   const courseId = elements.autoCourseIdInput.value.trim();
   const classId = elements.autoClassIdInput.value.trim();
-  if (!courseId || !classId) {
-    log('请填写课程 ID 和班级 ID。');
+  const teacherName = elements.autoTeacherNameInput.value.trim();
+  if (!courseId || (!classId && !teacherName)) {
+    log('请填写课程 ID，以及班级 ID 或任课教师姓名。');
     return;
   }
   await runTask('按 ID 获取教学班', async () => {
+    if (!classId) {
+      const teachingClasses = await resolveTeacherTeachingClasses(courseId, teacherName);
+      addPendingIdTargetToAutoSelection(courseId, '', teacherName);
+      if (teachingClasses.length) {
+        log(`课程 ${courseId} 下已找到 ${teachingClasses.length} 个教师为 ${teacherName} 的教学班，已保存为待解析目标。`);
+      } else {
+        log(`课程 ${courseId} 下暂未找到教师 ${teacherName} 的教学班，已先保存到当前组，启动任务后会继续尝试。`);
+      }
+      elements.autoClassIdInput.value = '';
+      elements.autoTeacherNameInput.value = '';
+      return;
+    }
     const teachingClass = await resolveIdTeachingClass(courseId, classId);
     if (!teachingClass) {
       addPendingIdTargetToAutoSelection(courseId, classId);
       log(`课程 ${courseId} 下未找到班级 ${classId}，已先保存到当前组，启动任务后会继续尝试。`);
       elements.autoClassIdInput.value = '';
+      elements.autoTeacherNameInput.value = '';
       return;
     }
     if (!teachingClass) throw new Error(`课程 ${courseId} 下未找到班级 ${classId}`);
@@ -250,11 +268,30 @@ async function resolveIdTeachingClass(courseId, classId) {
   return null;
 }
 
+async function resolveTeacherTeachingClasses(courseId, teacherName) {
+  const matches = [];
+  for (const courseType of orderedCourseTypes()) {
+    const classes = await getTeachingClassesForCourseType(courseId, courseType);
+    const found = classes
+      .filter((item) => matchTeacherTeachingClass(item, courseId, teacherName))
+      .map((item) => ({ ...item, courseType: courseType ? courseTypeContext(courseType) : undefined }));
+    matches.push(...found);
+  }
+  return matches;
+}
+
 function matchIdTeachingClass(item, courseId, classId) {
   if (String(item.courseId) !== String(courseId)) return false;
   return [item.classId, item.submitClassId]
     .filter(Boolean)
     .some((id) => String(id) === String(classId));
+}
+
+function matchTeacherTeachingClass(item, courseId, teacherName) {
+  if (String(item.courseId) !== String(courseId)) return false;
+  const expected = normalizeTeacherName(teacherName);
+  if (!expected) return false;
+  return teacherNamesForTeachingClass(item).some((name) => normalizeTeacherName(name) === expected);
 }
 
 function addResolvedClassToAutoSelection(teachingClass) {
@@ -290,15 +327,16 @@ function addResolvedClassToAutoSelection(teachingClass) {
   renderAutoSelectionDraft();
 }
 
-function addPendingIdTargetToAutoSelection(courseId, classId) {
+function addPendingIdTargetToAutoSelection(courseId, classId, teacherName = '') {
   const group = activeGroup();
   const target = {
     courseId,
     classId,
     submitClassId: undefined,
-    label: classId,
+    teacherName: teacherName || undefined,
+    label: classId || teacherName || courseId,
     courseName: courseId,
-    teachers: '',
+    teachers: teacherName || '',
     scheduleText: '',
     locationText: '',
     selectedCount: undefined,
@@ -332,6 +370,16 @@ function resolvedCourseName(item) {
 
 function resolvedTeacherNames(item) {
   return item.teachers?.map((teacher) => teacher.name).filter(Boolean).join('、') || '';
+}
+
+function teacherNamesForTeachingClass(item = {}) {
+  if (Array.isArray(item.teachers)) return item.teachers.map((teacher) => teacher?.name).filter(Boolean);
+  if (typeof item.teachers === 'string') return [item.teachers].filter(Boolean);
+  return [];
+}
+
+function normalizeTeacherName(value) {
+  return String(value || '').replace(/\s+/g, '').toLowerCase();
 }
 
 function renderAutoSelectionDraft() {
@@ -732,7 +780,8 @@ function findCachedTeachingClass(classCache, target) {
     .flatMap(([, classes]) => classes);
   const classes = [...primary, ...fallback];
   return classes.find((item) => matchIdTeachingClass(item, target.courseId, target.classId))
-    ?? classes.find((item) => target.submitClassId && matchIdTeachingClass(item, target.courseId, target.submitClassId));
+    ?? classes.find((item) => target.submitClassId && matchIdTeachingClass(item, target.courseId, target.submitClassId))
+    ?? classes.find((item) => target.teacherName && matchTeacherTeachingClass(item, target.courseId, target.teacherName));
 }
 
 async function pollAutoSelectionTasks(options = {}) {
@@ -975,6 +1024,7 @@ function sanitizeGroups(groups) {
       courseId: target.courseId,
       classId: target.classId,
       submitClassId: target.submitClassId,
+      teacherName: target.teacherName,
       label: target.label,
       courseType: target.courseType,
       priority: Number(target.priority),
@@ -997,8 +1047,13 @@ function sortTargets(group) {
 }
 
 function sameTargetDraft(left, right) {
-  return String(left.courseId) === String(right.courseId)
-    && [left.classId, left.submitClassId].filter(Boolean).some((id) => [right.classId, right.submitClassId].filter(Boolean).includes(id));
+  if (String(left.courseId) !== String(right.courseId)) return false;
+  const leftIds = [left.classId, left.submitClassId].filter(Boolean);
+  const rightIds = [right.classId, right.submitClassId].filter(Boolean);
+  if (leftIds.some((id) => rightIds.includes(id))) return true;
+  const leftTeacher = normalizeTeacherName(left.teacherName);
+  const rightTeacher = normalizeTeacherName(right.teacherName);
+  return Boolean(leftTeacher && rightTeacher && leftTeacher === rightTeacher);
 }
 
 async function getTeachingClassesForCourseType(courseId, courseType) {

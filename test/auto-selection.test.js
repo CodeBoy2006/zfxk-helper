@@ -119,6 +119,17 @@ test('auto-selection validation reports invalid targets without throwing', () =>
   assert.match(result.errors.join('\n'), /priority must be a finite number/);
 });
 
+test('auto-selection validation accepts teacher-name targets without class ids', () => {
+  const result = validateAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{ name: 'PE', targets: [{ courseId: 'KC1', teacherName: 'Teacher Li', priority: 1 }] }]
+  });
+
+  assert.equal(result.valid, true);
+  assert.equal(result.config.groups[0].targets[0].teacherName, 'Teacher Li');
+});
+
 test('auto-selection target matching accepts classId and submitClassId aliases', () => {
   const target = { courseId: 'KC1', classId: 'JXB1', submitClassId: 'DO1' };
 
@@ -126,6 +137,14 @@ test('auto-selection target matching accepts classId and submitClassId aliases',
   assert.equal(matchTarget(target, { courseId: 'KC1', classId: 'DO1', submitClassId: 'JXB1' }), true);
   assert.equal(matchTarget(target, { courseId: 'KC1', classId: 'OTHER', submitClassId: 'NOPE' }), false);
   assert.equal(matchTarget(target, { courseId: 'KC2', classId: 'JXB1', submitClassId: 'DO1' }), false);
+});
+
+test('auto-selection target matching accepts teacher-name queries', () => {
+  const target = { courseId: 'KC1', teacherName: 'Teacher Li' };
+
+  assert.equal(matchTarget(target, { courseId: 'KC1', teachers: [{ name: 'Teacher Li' }] }), true);
+  assert.equal(matchTarget(target, { courseId: 'KC1', teachers: [{ name: 'Teacher Wang' }] }), false);
+  assert.equal(matchTarget(target, { courseId: 'KC2', teachers: [{ name: 'Teacher Li' }] }), false);
 });
 
 test('auto-selection outcome separates capacity full from human required and business failure', () => {
@@ -394,6 +413,55 @@ test('auto-selection group planner backfills unresolved manual id targets after 
   assert.equal(target.selectedCount, 5);
   assert.equal(target.capacity, 30);
   assert.equal(target.lastObservedRemaining, 25);
+});
+
+test('auto-selection group planner can choose teacher-name targets without class ids', async () => {
+  const config = normalizeAutoSelectionConfig({
+    baseUrl: 'https://xk.example.edu.cn/jwglxt',
+    pagePath: '/xsxk/index.html',
+    groups: [{
+      name: 'teacher query',
+      targets: [{ courseId: 'KC1', teacherName: 'Teacher Li', priority: 100 }]
+    }]
+  });
+  const task = {
+    client: {
+      catalog: {
+        getTeachingClasses: async (courseId) => [
+          {
+            courseId,
+            classId: 'LOW',
+            submitClassId: 'DO-LOW',
+            courseName: 'PE',
+            name: 'PE-1',
+            selectedCount: 30,
+            capacity: 30,
+            teachers: [{ name: 'Teacher Li' }],
+            flags: { canSelect: true, full: true }
+          },
+          {
+            courseId,
+            classId: 'HIGH',
+            submitClassId: 'DO-HIGH',
+            courseName: 'PE',
+            name: 'PE-2',
+            selectedCount: 5,
+            capacity: 30,
+            teachers: [{ name: 'Teacher Li' }],
+            flags: { canSelect: true, full: false }
+          }
+        ]
+      }
+    }
+  };
+
+  const action = await planGroupAction(task, config.groups[0]);
+
+  assert.equal(action.type, 'choose');
+  assert.equal(action.sourceTarget, config.groups[0].targets[0]);
+  assert.equal(action.target.classId, 'HIGH');
+  assert.equal(action.target.submitClassId, 'DO-HIGH');
+  assert.equal(action.target.teacherName, 'Teacher Li');
 });
 
 test('auto-selection equivalent groups treat any selected target as satisfied', async () => {
