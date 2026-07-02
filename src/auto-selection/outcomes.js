@@ -27,7 +27,11 @@ export function matchTarget(target = {}, teachingClass = {}) {
   const classIds = [teachingClass.classId, teachingClass.submitClassId, teachingClass.doJxbId]
     .filter(Boolean)
     .map(String);
-  return classIds.some((id) => targetIds.has(id));
+  if (classIds.some((id) => targetIds.has(id))) return true;
+
+  const targetTeacher = normalizeTeacherName(target.teacherName);
+  if (!targetTeacher) return false;
+  return teachingClassTeacherNames(teachingClass).some((name) => normalizeTeacherName(name) === targetTeacher);
 }
 
 export function sameTarget(a = {}, b = {}) {
@@ -48,6 +52,20 @@ export function findSnapshotSelection(snapshot, target) {
   }
 
   return (snapshot?.selectedClasses ?? []).find((selected) => matchTarget(target, selected));
+}
+
+function teachingClassTeacherNames(teachingClass = {}) {
+  const names = [];
+  if (Array.isArray(teachingClass.teachers)) {
+    names.push(...teachingClass.teachers.map((teacher) => teacher?.name));
+  }
+  if (typeof teachingClass.teachers === 'string') names.push(teachingClass.teachers);
+  if (typeof teachingClass.teacherName === 'string') names.push(teachingClass.teacherName);
+  return names.map((name) => String(name || '').trim()).filter(Boolean);
+}
+
+function normalizeTeacherName(value) {
+  return String(value || '').replace(/\s+/g, '').toLowerCase();
 }
 
 export function classRemaining(teachingClass = {}) {

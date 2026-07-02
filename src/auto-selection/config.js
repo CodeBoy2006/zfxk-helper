@@ -37,8 +37,8 @@ export function validateAutoSelectionConfig(input = {}, options = {}) {
     if (!group.targets.length) errors.push(`groups[${groupIndex}].targets must contain at least one target`);
     group.targets.forEach((target, targetIndex) => {
       if (!target.courseId) errors.push(`groups[${groupIndex}].targets[${targetIndex}].courseId is required`);
-      if (!target.classId && !target.submitClassId) {
-        errors.push(`groups[${groupIndex}].targets[${targetIndex}].classId or submitClassId is required`);
+      if (!target.classId && !target.submitClassId && !target.teacherName) {
+        errors.push(`groups[${groupIndex}].targets[${targetIndex}].classId, submitClassId, or teacherName is required`);
       }
       if (!Number.isFinite(target.priority)) {
         errors.push(`groups[${groupIndex}].targets[${targetIndex}].priority must be a finite number`);
@@ -137,11 +137,13 @@ function normalizeTarget(target = {}, createdOrder = 0) {
   const courseId = String(target.courseId || '');
   const submitClassId = target.submitClassId ? String(target.submitClassId) : undefined;
   const classId = String(target.classId || submitClassId || '');
+  const teacherName = stringOrUndefined(target.teacherName);
   return {
-    targetId: target.targetId || `${courseId}:${classId || submitClassId || 'target'}:${createdOrder}`,
+    targetId: target.targetId || `${courseId}:${classId || submitClassId || teacherName || 'target'}:${createdOrder}`,
     courseId,
     classId,
     submitClassId,
+    teacherName,
     label: stringOrUndefined(target.label),
     courseType: normalizeCourseTypeContext(target.courseType),
     priority: Number(target.priority),

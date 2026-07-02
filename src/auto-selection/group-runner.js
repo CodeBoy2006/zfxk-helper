@@ -53,7 +53,7 @@ export async function planGroupAction(task, group) {
 
   const next = available[0];
   if (!group.currentPlacement) {
-    return { type: 'choose', target: next.target, teachingClass: next.teachingClass };
+    return { type: 'choose', target: next.target, sourceTarget: next.sourceTarget, teachingClass: next.teachingClass };
   }
   if (group.strategy === 'equivalent') return { type: 'none' };
   if (sameTarget(group.currentPlacement, next.target)) return { type: 'none' };
@@ -62,6 +62,7 @@ export async function planGroupAction(task, group) {
       type: 'upgrade',
       current: group.currentPlacement,
       next: next.target,
+      sourceTarget: next.sourceTarget,
       teachingClass: next.teachingClass
     };
   }
@@ -79,15 +80,41 @@ export async function observeGroupTargets(task, group) {
     await applyCourseTypeContext(task, courseType);
     const teachingClasses = await task.client.catalog.getTeachingClasses(courseId);
     for (const teachingClass of teachingClasses) {
-      const target = targets.find((candidate) => matchTarget(candidate, teachingClass));
-      if (!target) continue;
-      if (!target.courseType && courseType) target.courseType = normalizeCourseTypeContext(courseType);
-      target.lastObservedRemaining = classRemaining(teachingClass);
-      target.lastMessage = target.lastObservedRemaining === 0 ? 'capacity full' : '';
-      observed.push({ target, teachingClass });
+      const matchedTargets = targets.filter((candidate) => matchTarget(candidate, teachingClass));
+      for (const sourceTarget of matchedTargets) {
+        const target = sourceTarget.classId || sourceTarget.submitClassId
+          ? syncObservedTarget(sourceTarget, teachingClass, courseType)
+          : syncObservedTarget({ ...sourceTarget }, teachingClass, courseType);
+        sourceTarget.lastObservedRemaining = target.lastObservedRemaining;
+        sourceTarget.lastMessage = target.lastObservedRemaining === 0 ? 'capacity full' : '';
+        if (!sourceTarget.courseType && courseType) {
+          sourceTarget.courseType = normalizeCourseTypeContext(courseType);
+        }
+        observed.push({ target, sourceTarget, teachingClass });
+      }
     }
   }
   return observed;
+}
+
+function syncObservedTarget(target, teachingClass, courseType) {
+  target.courseId = teachingClass.courseId ?? target.courseId;
+  target.classId = teachingClass.classId ?? target.classId;
+  target.submitClassId = teachingClass.submitClassId ?? target.submitClassId;
+  target.label = teachingClass.raw?.jxbmc || teachingClass.name || target.label || target.classId || target.submitClassId;
+  target.lastObservedRemaining = classRemaining(teachingClass);
+  target.selectedCount = teachingClass.selectedCount;
+  target.capacity = teachingClass.capacity;
+  if (teachingClass.scheduleText) target.scheduleText = teachingClass.scheduleText;
+  if (teachingClass.locationText) target.locationText = teachingClass.locationText;
+  if (teachingClass.raw?.kcmc || teachingClass.courseName) {
+    target.courseName = teachingClass.raw?.kcmc || teachingClass.courseName;
+  }
+  if (Array.isArray(teachingClass.teachers)) {
+    target.teachers = teachingClass.teachers.map((teacher) => teacher?.name).filter(Boolean).join('、');
+  }
+  if (!target.courseType && courseType) target.courseType = normalizeCourseTypeContext(courseType);
+  return target;
 }
 
 function targetRefreshBuckets(task, targets = []) {
@@ -126,14 +153,16 @@ async function applyCourseTypeContext(task, courseType) {
 }
 
 export async function chooseTarget(task, group, target, options = {}) {
+  const sourceTarget = options.sourceTarget ?? target;
+  const concreteTarget = sourceTarget === target ? target : syncObservedTarget({ ...sourceTarget }, options.teachingClass ?? target, sourceTarget.courseType);
   group.state = 'CHOOSE_TARGET';
-  await applyTargetCourseTypeContext(task, target);
-  const result = await callChoose(task, target, options.teachingClass);
+  await applyTargetCourseTypeContext(task, concreteTarget);
+  const result = await callChoose(task, concreteTarget, options.teachingClass);
   const outcome = normalizeChooseOutcome(result);
   if (outcome.type === 'selected' || outcome.type === 'pending-filter') {
-    return confirmSelection(task, group, target, result, outcome);
+    return confirmSelection(task, group, sourceTarget, concreteTarget, result, outcome);
   }
-  applyChooseFailure(task, group, target, outcome);
+  applyChooseFailure(task, group, sourceTarget, outcome);
   return outcome;
 }
 
@@ -154,31 +183,32 @@ async function callChoose(task, target, teachingClass) {
   }
 }
 
-async function confirmSelection(task, group, target, result, outcome) {
+async function confirmSelection(task, group, sourceTarget, concreteTarget, result, outcome) {
   const snapshots = [];
   if (result?.snapshot) snapshots.push(result.snapshot);
-  for (let attempt = 0; attempt < 2 && !snapshots.some((snapshot) => snapshotHasTarget(snapshot, target)); attempt += 1) {
+  for (let attempt = 0; attempt < 2 && !snapshots.some((snapshot) => snapshotHasTarget(snapshot, concreteTarget)); attempt += 1) {
     snapshots.push(await task.client.chosen.snapshot());
   }
 
   const selected = snapshots
-    .map((snapshot) => findSnapshotSelection(snapshot, target))
+    .map((snapshot) => findSnapshotSelection(snapshot, concreteTarget))
     .find(Boolean);
 
   if (!selected) {
     const transient = { type: 'transient-error', reason: 'SNAPSHOT_CONFIRM_FAILED' };
     group.state = group.currentPlacement ? 'HOLDING' : 'WATCHING';
-    target.lastMessage = transient.reason;
-    task.events?.add('choose-transient', `${group.name}: snapshot did not confirm ${target.label || target.classId}`);
+    sourceTarget.lastMessage = transient.reason;
+    task.events?.add('choose-transient', `${group.name}: snapshot did not confirm ${concreteTarget.label || concreteTarget.classId}`);
     return transient;
   }
 
-  target.status = 'selected';
-  group.currentPlacement = target;
+  syncObservedTarget(sourceTarget, concreteTarget, concreteTarget.courseType);
+  sourceTarget.status = 'selected';
+  group.currentPlacement = sourceTarget;
   group.isTopTargetSelected = isGroupSucceeded(group);
   group.state = group.isTopTargetSelected ? 'SUCCEEDED' : 'HOLDING';
-  task.events?.add('choose-selected', `${group.name}: selected ${target.label || target.classId}`, {
-    targetId: target.targetId
+  task.events?.add('choose-selected', `${group.name}: selected ${sourceTarget.label || sourceTarget.classId}`, {
+    targetId: sourceTarget.targetId
   });
   return outcome;
 }
@@ -195,7 +225,7 @@ function applyChooseFailure(task, group, target, outcome) {
     if (outcome.pauseScope === 'task') task.pauseScope = 'task';
     return;
   }
-  if (outcome.type === 'business-failed' && target.skipAfterNonCapacityFailure) {
+  if (outcome.type === 'business-failed' && target.skipAfterNonCapacityFailure && !(target.teacherName && !target.classId && !target.submitClassId)) {
     target.status = 'skipped';
   }
   group.state = group.targets.every((candidate) => candidate.status === 'skipped') ? 'FAILED' : 'WATCHING';

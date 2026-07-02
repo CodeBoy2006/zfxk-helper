@@ -288,6 +288,7 @@ test('standalone auto-selection page implements the reference workflow surface',
   assert.match(app, /allowAutoDrop: true/);
   assert.match(html, /id="autoCourseIdInput"/);
   assert.match(html, /id="autoClassIdInput"/);
+  assert.match(html, /id="autoTeacherNameInput"/);
   assert.match(html, /获取详情并加入当前组/);
   assert.doesNotMatch(html, /id="autoSubmitClassIdInput"/);
   assert.doesNotMatch(html, /id="autoTargetLabelInput"/);
